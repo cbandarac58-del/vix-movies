@@ -9,16 +9,18 @@ const movies = data.results || [];
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>Vix Movies - Free Streaming</title>
+    <title>Vix Movies - Free HD Streaming</title>
   </head>
   <body style="background-color: #0f172a; color: white; font-family: sans-serif; padding: 20px;">
     <h1>Trending Movies</h1>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
       {movies.map((movie) => (
-        <div style="border: 1px solid #334155; padding: 10px; border-radius: 8px;">
-          <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} style="width: 100%; border-radius: 6px;" />
-          <h3 style="font-size: 14px; margin-top: 8px;">{movie.title}</h3>
-        </div>
+        <a href={`/movie/${movie.id}`} style="text-decoration: none; color: white;">
+          <div style="border: 1px solid #334155; padding: 10px; border-radius: 8px; background: #1e293b;">
+            <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} style="width: 100%; border-radius: 6px;" />
+            <h3 style="font-size: 14px; margin-top: 8px;">{movie.title}</h3>
+          </div>
+        </a>
       ))}
     </div>
   </body>
