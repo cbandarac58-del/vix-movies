@@ -6,10 +6,8 @@ const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 const res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_KEY}`);
 const movie = await res.json();
 
-// Multi-source Streaming Embed URLs
-const server1 = `https://vidsrc.cc/v2/embed/movie/${id}`;
-const server2 = `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1`;
-const server3 = `https://autoembed.co/movie/tmdb/${id}`;
+// Working AutoEmbed Stream URL
+const embedUrl = `https://autoembed.co/movie/tmdb/${id}`;
 ---
 
 <html lang="en">
@@ -25,20 +23,14 @@ const server3 = `https://autoembed.co/movie/tmdb/${id}`;
     <h1 style="font-size: 22px; margin-top: 15px;">{movie.title} ({movie.release_date ? movie.release_date.split('-')[0] : ''})</h1>
     <p style="color: #94a3b8; font-size: 14px;">⭐ {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'} / 10</p>
 
-    <!-- Server Selector Buttons -->
-    <div style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
-      <button onclick={`document.getElementById('player').src='${server1}'`} style="background: #2563eb; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">Server 1 (VidSrc)</button>
-      <button onclick={`document.getElementById('player').src='${server2}'`} style="background: #059669; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">Server 2 (MultiEmbed)</button>
-      <button onclick={`document.getElementById('player').src='${server3}'`} style="background: #d97706; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">Server 3 (AutoEmbed)</button>
-    </div>
-
-    <!-- Video Player Embed Container -->
-    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #334155; margin-top: 10px; background: #000;">
+    <!-- Strict Sandbox Player (Blocks ALL Popups and Ad Redirects) -->
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #334155; margin-top: 15px; background: #000;">
       <iframe 
         id="player"
-        src={server2} 
+        src={embedUrl} 
         style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border:0;" 
-        allowfullscreen>
+        allowfullscreen
+        sandbox="allow-scripts allow-same-origin">
       </iframe>
     </div>
 
