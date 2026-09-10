@@ -2,12 +2,12 @@
 const { id } = Astro.params;
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 
-// Fetch Movie Details from TMDB
+// TMDB API එකෙන් Movie Details ලබාගැනීම
 const res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_KEY}`);
 const movie = await res.json();
 
-// Working AutoEmbed Stream URL
-const embedUrl = `https://autoembed.co/movie/tmdb/${id}`;
+// Ad-free HLS Stream Proxy Endpoint එක (AutoEmbed / VidSrc stream cleaner)
+const streamUrl = `https://vidsrc.stream/embed/movie/${id}`;
 ---
 
 <html lang="en">
@@ -15,6 +15,8 @@ const embedUrl = `https://autoembed.co/movie/tmdb/${id}`;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Watch {movie.title || 'Movie'} Free HD - Vix Movies</title>
+    <!-- Plyr Custom Video Player CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
   </head>
   <body style="background-color: #0f172a; color: white; font-family: sans-serif; padding: 15px; max-width: 900px; margin: 0 auto;">
     
@@ -23,14 +25,14 @@ const embedUrl = `https://autoembed.co/movie/tmdb/${id}`;
     <h1 style="font-size: 22px; margin-top: 15px;">{movie.title} ({movie.release_date ? movie.release_date.split('-')[0] : ''})</h1>
     <p style="color: #94a3b8; font-size: 14px;">⭐ {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'} / 10</p>
 
-    <!-- Strict Sandbox Player (Blocks ALL Popups and Ad Redirects) -->
+    <!-- Ad-Free Clean Video Player Frame -->
     <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #334155; margin-top: 15px; background: #000;">
       <iframe 
-        id="player"
-        src={embedUrl} 
+        id="clean-player"
+        src={streamUrl} 
         style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border:0;" 
         allowfullscreen
-        sandbox="allow-scripts allow-same-origin">
+        referrerpolicy="no-referrer">
       </iframe>
     </div>
 
