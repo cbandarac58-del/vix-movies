@@ -1,0 +1,41 @@
+---
+const { id } = Astro.params;
+const TMDB_KEY = import.meta.env.TMDB_API_KEY;
+
+// Fetch Movie Details from TMDB
+const res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_KEY}`);
+const movie = await res.json();
+
+// Free VidSrc Streaming Embed URL
+const embedUrl = `https://vidsrc.cc/v2/embed/movie/${id}`;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Watch {movie.title || 'Movie'} Free HD - Vix Movies</title>
+  </head>
+  <body style="background-color: #0f172a; color: white; font-family: sans-serif; padding: 15px; max-width: 900px; margin: 0 auto;">
+    
+    <a href="/" style="color: #38bdf8; text-decoration: none; font-size: 14px;">← Back to Home</a>
+    
+    <h1 style="font-size: 22px; margin-top: 15px;">{movie.title} ({movie.release_date ? movie.release_date.split('-')[0] : ''})</h1>
+    <p style="color: #94a3b8; font-size: 14px;">⭐ {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'} / 10</p>
+
+    <!-- Video Player Embed Container -->
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #334155; margin-top: 15px; background: #000;">
+      <iframe 
+        src={embedUrl} 
+        style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border:0;" 
+        allowfullscreen>
+      </iframe>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <h2>Overview</h2>
+      <p style="color: #cbd5e1; line-height: 1.6;">{movie.overview}</p>
+    </div>
+
+  </body>
+</html>
