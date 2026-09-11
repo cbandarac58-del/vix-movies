@@ -1,104 +1,52 @@
 ---
+const { activePage = 'home' } = Astro.props;
 ---
-<nav class="navbar">
-  <div class="nav-container">
-    <a href="/" class="logo">
-      <span class="logo-vix">VIX</span> <span class="logo-movies">MOVIES</span>
-    </a>
 
-    <div class="nav-links">
-      <a href="/" class="nav-item">Home</a>
-      <a href="/tv" class="nav-item">TV Series</a>
-      <a href="/search?q=Hindi" class="nav-item">Bollywood</a>
-    </div>
-
-    <form action="/search" method="GET" class="search-form">
-      <input 
-        type="text" 
-        name="q" 
-        placeholder="Search movies, TV shows..." 
-        required 
-        class="search-input"
-      />
-      <button type="submit" class="search-btn">Search</button>
-    </form>
+<nav class="nav-bar">
+  <div class="brand">
+    <a href="/" class="logo"><span class="blue">VIX</span> MOVIES</a>
+  </div>
+  <div class="nav-links">
+    <a href="/" class={activePage === 'home' ? 'nav-item active' : 'nav-item'}>Home</a>
+    <a href="/tv" class={activePage === 'tv' ? 'nav-item active' : 'nav-item'}>TV Series</a>
+    <a href="/bollywood" class={activePage === 'bollywood' ? 'nav-item active' : 'nav-item'}>Bollywood</a>
   </div>
 </nav>
 
 <style>
-  .navbar {
-    background: #0f172a;
-    border-bottom: 1px solid #334155;
-    padding: 12px 0;
-    margin-bottom: 25px;
-    border-radius: 0 0 12px 12px;
-  }
-  .nav-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
+  .nav-bar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px 0;
   }
   .logo {
-    text-decoration: none;
     font-size: 22px;
     font-weight: 900;
-    letter-spacing: 1px;
+    color: white;
+    text-decoration: none;
+    letter-spacing: 0.5px;
   }
-  .logo-vix {
+  .blue {
     color: #38bdf8;
-  }
-  .logo-movies {
-    color: #ffffff;
   }
   .nav-links {
     display: flex;
     gap: 20px;
   }
   .nav-item {
-    color: #cbd5e1;
+    color: #94a3b8;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     transition: color 0.2s;
   }
   .nav-item:hover {
+    color: #f8fafc;
+  }
+  .nav-item.active {
     color: #38bdf8;
-  }
-  .search-form {
-    display: flex;
-    gap: 8px;
-    flex-grow: 1;
-    max-width: 350px;
-  }
-  .search-input {
-    width: 100%;
-    background: #1e293b;
-    border: 1px solid #334155;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    outline: none;
-  }
-  .search-input:focus {
-    border-color: #38bdf8;
-  }
-  .search-btn {
-    background: #0284c7;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  .search-btn:hover {
-    background: #0369a1;
+    border-bottom: 2px solid #38bdf8;
+    padding-bottom: 2px;
   }
 </style>
