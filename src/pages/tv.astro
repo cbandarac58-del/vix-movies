@@ -1,0 +1,112 @@
+---
+import Navbar from '../components/Navbar.astro';
+
+const TMDB_KEY = import.meta.env.TMDB_API_KEY;
+
+// Fetch Popular TV Series
+const res = await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_KEY}`);
+const data = await res.json();
+const tvShows = data.results || [];
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TV Series - Vix Movies</title>
+    <style>
+      body {
+        background-color: #0b0f19;
+        color: #f8fafc;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0 15px 40px 15px;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .page-title {
+        font-size: 18px;
+        font-weight: 800;
+        margin: 15px 0;
+        color: #38bdf8;
+      }
+      .grid-movies {
+        display: grid;
+        grid-template-columns: repeat(2, calc(50% - 6px));
+        gap: 12px;
+      }
+      @media (min-width: 640px) {
+        .grid-movies { grid-template-columns: repeat(3, calc(33.33% - 8px)); }
+      }
+      @media (min-width: 900px) {
+        .grid-movies { grid-template-columns: repeat(4, calc(25% - 9px)); }
+      }
+      .movie-card {
+        text-decoration: none;
+        color: white;
+      }
+      .poster-box {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        aspect-ratio: 2/3;
+        background: #1e293b;
+        border: 1px solid #334155;
+      }
+      .poster-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .badge-hd {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        background: #0284c7;
+        font-size: 9px;
+        font-weight: bold;
+        padding: 2px 5px;
+        border-radius: 4px;
+      }
+      .badge-rating {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        background: rgba(15, 23, 42, 0.85);
+        font-size: 9px;
+        font-weight: bold;
+        padding: 2px 5px;
+        border-radius: 4px;
+      }
+      .card-title {
+        font-size: 12px;
+        margin: 6px 0 0 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <Navbar activePage="tv" />
+
+      <h1 class="page-title">📺 Popular TV Series</h1>
+
+      <div class="grid-movies">
+        {tvShows.map((s) => (
+          <a href={`/tv/${s.id}`} class="movie-card">
+            <div class="poster-box">
+              <img src={s.poster_path ? `https://image.tmdb.org/t/p/w500${s.poster_path}` : 'https://via.placeholder.com/500x750'} alt={s.name} loading="lazy" />
+              <span class="badge-hd">HD</span>
+              <span class="badge-rating">⭐ {s.vote_average ? s.vote_average.toFixed(1) : 'N/A'}</span>
+            </div>
+            <h3 class="card-title">{s.name}</h3>
+          </a>
+        ))}
+      </div>
+    </div>
+  </body>
+</html>
