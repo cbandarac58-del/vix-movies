@@ -92,6 +92,71 @@ const similarMovies = (simData.results || []).slice(0, 6);
         border: 0;
       }
 
+      /* Action Bar (Like & Share) */
+      .action-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #1e293b;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-top: 15px;
+        border: 1px solid #334155;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .vote-container, .share-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .share-title {
+        font-size: 13px;
+        color: #94a3b8;
+        font-weight: 600;
+      }
+      .vote-btn {
+        background: #0f172a;
+        color: #f8fafc;
+        border: 1px solid #334155;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        transition: background 0.2s;
+      }
+      .vote-btn:hover {
+        background: #334155;
+      }
+      .vote-btn.active-like {
+        background: #22c55e;
+        border-color: #22c55e;
+        color: white;
+      }
+      .vote-btn.active-dislike {
+        background: #ef4444;
+        border-color: #ef4444;
+        color: white;
+      }
+      .share-btn {
+        border: none;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      .share-btn:hover {
+        opacity: 0.85;
+      }
+      .share-btn.wa { background: #25D366; }
+      .share-btn.fb { background: #1877F2; }
+      .share-btn.tg { background: #229ED9; }
+      .share-btn.copy { background: #475569; }
+
       /* Comment System Styling */
       .comments-section {
         margin-top: 35px;
@@ -220,6 +285,26 @@ const similarMovies = (simData.results || []).slice(0, 6);
         </iframe>
       </div>
 
+      <!-- Action Bar (Like & Share) -->
+      <div class="action-bar">
+        <div class="vote-container">
+          <button id="like-btn" class="vote-btn">
+            👍 <span id="like-count">0</span>
+          </button>
+          <button id="dislike-btn" class="vote-btn">
+            👎 <span id="dislike-count">0</span>
+          </button>
+        </div>
+
+        <div class="share-container">
+          <span class="share-title">Share:</span>
+          <button id="share-wa" class="share-btn wa">WhatsApp</button>
+          <button id="share-fb" class="share-btn fb">Facebook</button>
+          <button id="share-tg" class="share-btn tg">Telegram</button>
+          <button id="copy-link" class="share-btn copy">📋 Copy Link</button>
+        </div>
+      </div>
+
       <!-- Overview -->
       <div style="margin-top: 25px;">
         <h2 style="font-size: 18px;">Overview</h2>
@@ -258,7 +343,7 @@ const similarMovies = (simData.results || []).slice(0, 6);
       )}
     </div>
 
-    <script is:inline define:vars={{ tmdbId: id }}>
+    <script is:inline define:vars={{ tmdbId: id, movieTitle: movie.title }}>
       document.addEventListener('DOMContentLoaded', () => {
         // Server Switcher Listener
         const serverButtons = document.querySelectorAll('.server-btn');
@@ -278,6 +363,86 @@ const similarMovies = (simData.results || []).slice(0, 6);
               player.src = `https://autoembed.co/movie/tmdb/${tmdbId}`;
             }
           });
+        });
+
+        // Like / Dislike Logic
+        const likeKey = `vix_like_movie_${tmdbId}`;
+        const dislikeKey = `vix_dislike_movie_${tmdbId}`;
+        const userVoteKey = `vix_uservote_movie_${tmdbId}`;
+
+        const likeBtn = document.getElementById('like-btn');
+        const dislikeBtn = document.getElementById('dislike-btn');
+        const likeCountEl = document.getElementById('like-count');
+        const dislikeCountEl = document.getElementById('dislike-count');
+
+        let likes = parseInt(localStorage.getItem(likeKey) || '15');
+        let dislikes = parseInt(localStorage.getItem(dislikeKey) || '1');
+        let userVote = localStorage.getItem(userVoteKey);
+
+        function renderVotes() {
+          likeCountEl.innerText = likes;
+          dislikeCountEl.innerText = dislikes;
+
+          likeBtn.classList.remove('active-like');
+          dislikeBtn.classList.remove('active-dislike');
+
+          if (userVote === 'like') likeBtn.classList.add('active-like');
+          if (userVote === 'dislike') dislikeBtn.classList.add('active-dislike');
+        }
+
+        likeBtn.addEventListener('click', () => {
+          if (userVote === 'like') {
+            likes--;
+            userVote = null;
+          } else {
+            if (userVote === 'dislike') dislikes--;
+            likes++;
+            userVote = 'like';
+          }
+          localStorage.setItem(likeKey, likes);
+          localStorage.setItem(dislikeKey, dislikes);
+          if (userVote) localStorage.setItem(userVoteKey, userVote);
+          else localStorage.removeItem(userVoteKey);
+          renderVotes();
+        });
+
+        dislikeBtn.addEventListener('click', () => {
+          if (userVote === 'dislike') {
+            dislikes--;
+            userVote = null;
+          } else {
+            if (userVote === 'like') likes--;
+            dislikes++;
+            userVote = 'dislike';
+          }
+          localStorage.setItem(likeKey, likes);
+          localStorage.setItem(dislikeKey, dislikes);
+          if (userVote) localStorage.setItem(userVoteKey, userVote);
+          else localStorage.removeItem(userVoteKey);
+          renderVotes();
+        });
+
+        renderVotes();
+
+        // Share Buttons Logic
+        const currentUrl = encodeURIComponent(window.location.href);
+        const shareText = encodeURIComponent(`Watch "${movieTitle || 'Movie'}" for free in HD on Vix Movies!`);
+
+        document.getElementById('share-wa').addEventListener('click', () => {
+          window.open(`https://api.whatsapp.com/send?text=${shareText}%20${currentUrl}`, '_blank');
+        });
+
+        document.getElementById('share-fb').addEventListener('click', () => {
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`, '_blank');
+        });
+
+        document.getElementById('share-tg').addEventListener('click', () => {
+          window.open(`https://t.me/share/url?url=${currentUrl}&text=${shareText}`, '_blank');
+        });
+
+        document.getElementById('copy-link').addEventListener('click', () => {
+          navigator.clipboard.writeText(window.location.href);
+          alert('Link copied to clipboard!');
         });
 
         // Comment System Logic
