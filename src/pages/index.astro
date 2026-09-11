@@ -1,5 +1,6 @@
 ---
 import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
 
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 
@@ -26,7 +27,8 @@ const featured = movies[0] || {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vix Movies - Watch Free HD Movies</title>
+    <title>Vix Movies - Watch Free HD Movies & TV Shows</title>
+    <meta name="description" content="Watch high-definition movies, trending TV series, Bollywood, and Hollywood releases online for free on Vix Movies." />
     <style is:global>
       * {
         box-sizing: border-box;
@@ -251,6 +253,9 @@ const featured = movies[0] || {
           </a>
         ))}
       </div>
+
+      <!-- Footer Component -->
+      <Footer />
     </div>
 
     <script is:inline define:vars={{ tmdbKey: TMDB_KEY }}>
