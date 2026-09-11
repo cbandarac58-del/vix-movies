@@ -97,6 +97,75 @@ const seasons = show.seasons ? show.seasons.filter((s) => s.season_number > 0) :
         color: white;
         border-color: #0284c7;
       }
+
+      /* Native Comment Section Styling */
+      .comments-section {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #334155;
+      }
+      .comment-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 25px;
+        background: #1e293b;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+      }
+      .comment-input, .comment-textarea {
+        background: #0f172a;
+        border: 1px solid #334155;
+        color: white;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 14px;
+        outline: none;
+      }
+      .comment-input:focus, .comment-textarea:focus {
+        border-color: #38bdf8;
+      }
+      .comment-submit-btn {
+        background: #0284c7;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        align-self: flex-start;
+      }
+      .comment-submit-btn:hover {
+        background: #0369a1;
+      }
+      .comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      .comment-card {
+        background: #1e293b;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+      }
+      .comment-author {
+        font-weight: 700;
+        font-size: 14px;
+        color: #38bdf8;
+      }
+      .comment-date {
+        font-size: 11px;
+        color: #64748b;
+        margin-left: 8px;
+      }
+      .comment-text {
+        font-size: 13px;
+        color: #cbd5e1;
+        margin-top: 6px;
+        line-height: 1.4;
+      }
     </style>
   </head>
   <body>
@@ -151,6 +220,21 @@ const seasons = show.seasons ? show.seasons.filter((s) => s.season_number > 0) :
         <h2 style="font-size: 18px;">Overview</h2>
         <p style="color: #cbd5e1; line-height: 1.6; font-size: 14px;">{show.overview}</p>
       </div>
+
+      <!-- Native Comment Section -->
+      <div class="comments-section">
+        <h2 style="font-size: 18px; margin-bottom: 15px;">💬 Leave a Comment</h2>
+        
+        <form id="comment-form" class="comment-form">
+          <input type="text" id="author-name" class="comment-input" placeholder="Your Name" required />
+          <textarea id="comment-msg" class="comment-textarea" rows="3" placeholder="Write your comment here..." required></textarea>
+          <button type="submit" class="comment-submit-btn">Post Comment</button>
+        </form>
+
+        <div id="comments-list" class="comments-list">
+          <!-- Comments will appear here -->
+        </div>
+      </div>
     </div>
 
     <script is:inline define:vars={{ tmdbId: id, seasonsData: seasons }}>
@@ -199,8 +283,54 @@ const seasons = show.seasons ? show.seasons.filter((s) => s.season_number > 0) :
           });
         });
 
-        // Initial Load
+        // Local Storage / Client-side Comment Handling
+        const commentForm = document.getElementById('comment-form');
+        const commentsList = document.getElementById('comments-list');
+        const storageKey = `comments_tv_${tmdbId}`;
+
+        function loadComments() {
+          const comments = JSON.parse(localStorage.getItem(storageKey) || '[]');
+          commentsList.innerHTML = '';
+          if (comments.length === 0) {
+            commentsList.innerHTML = '<p style="color: #64748b; font-size: 13px;">No comments yet. Be the first to comment!</p>';
+            return;
+          }
+          comments.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'comment-card';
+            div.innerHTML = `
+              <div>
+                <span class="comment-author">${c.name}</span>
+                <span class="comment-date">${c.date}</span>
+              </div>
+              <div class="comment-text">${c.message}</div>
+            `;
+            commentsList.appendChild(div);
+          });
+        }
+
+        commentForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const nameInput = document.getElementById('author-name');
+          const msgInput = document.getElementById('comment-msg');
+
+          const newComment = {
+            name: nameInput.value.trim(),
+            message: msgInput.value.trim(),
+            date: new Date().toLocaleDateString()
+          };
+
+          const comments = JSON.parse(localStorage.getItem(storageKey) || '[]');
+          comments.unshift(newComment);
+          localStorage.setItem(storageKey, JSON.stringify(comments));
+
+          msgInput.value = '';
+          loadComments();
+        });
+
+        // Initial Loads
         updateEpisodes();
+        loadComments();
       });
     </script>
   </body>
