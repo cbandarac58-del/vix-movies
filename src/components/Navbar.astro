@@ -1,0 +1,24 @@
+---
+---
+<nav style="background-color: #1e293b; padding: 15px 20px; border-radius: 10px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+  <div style="display: flex; align-items: center; gap: 20px;">
+    <a href="/" style="font-size: 20px; font-weight: bold; color: #38bdf8; text-decoration: none;">VIX MOVIES</a>
+    <div style="display: flex; gap: 15px;">
+      <a href="/" style="color: white; text-decoration: none; font-size: 14px;">Movies</a>
+      <a href="/tv" style="color: #94a3b8; text-decoration: none; font-size: 14px;">TV Series</a>
+      <a href="/trending" style="color: #94a3b8; text-decoration: none; font-size: 14px;">Trending</a>
+    </div>
+  </div>
+
+  <!-- Search Input -->
+  <form action="/search" method="GET" style="display: flex; gap: 5px;">
+    <input 
+      type="text" 
+      name="q" 
+      placeholder="Search movies, TV shows..." 
+      style="padding: 8px 12px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 14px; outline: none;"
+      required
+    />
+    <button type="submit" style="background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 14px;">Search</button>
+  </form>
+</nav>
