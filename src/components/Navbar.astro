@@ -8,8 +8,9 @@ const { activePage = 'home' } = Astro.props;
   </div>
   <div class="nav-links">
     <a href="/" class={activePage === 'home' ? 'nav-item active' : 'nav-item'}>Home</a>
-    <a href="/tv" class={activePage === 'tv' ? 'nav-item active' : 'nav-item'}>TV Series</a>
+    <a href="/hollywood" class={activePage === 'hollywood' ? 'nav-item active' : 'nav-item'}>Hollywood</a>
     <a href="/bollywood" class={activePage === 'bollywood' ? 'nav-item active' : 'nav-item'}>Bollywood</a>
+    <a href="/tv" class={activePage === 'tv' ? 'nav-item active' : 'nav-item'}>TV Series</a>
   </div>
 </nav>
 
@@ -32,13 +33,16 @@ const { activePage = 'home' } = Astro.props;
   }
   .nav-links {
     display: flex;
-    gap: 20px;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
   }
   .nav-item {
     color: #94a3b8;
     text-decoration: none;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
+    white-space: nowrap;
     transition: color 0.2s;
   }
   .nav-item:hover {
