@@ -24,22 +24,36 @@ const seasons = show.seasons || [];
     <h1 style="font-size: 22px; margin-top: 15px;">{show.name}</h1>
     <p style="color: #94a3b8; font-size: 14px;">⭐ {show.vote_average ? show.vote_average.toFixed(1) : 'N/A'} / 10 | Total Seasons: {show.number_of_seasons}</p>
 
-    <!-- Season and Episode Controls -->
-    <div style="margin: 15px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-      <label style="font-size: 14px;">Season:</label>
-      <select id="season-select" style="padding: 6px 10px; background: #1e293b; color: white; border: 1px solid #334155; border-radius: 6px; outline: none;">
-        {seasons.map((s) => (
-          s.season_number > 0 && <option value={s.season_number}>Season {s.season_number}</option>
-        ))}
-      </select>
+    <!-- Controls Bar -->
+    <div style="margin: 15px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #1e293b; padding: 12px; border-radius: 8px;">
+      
+      <div>
+        <label style="font-size: 13px; color: #94a3b8;">Server: </label>
+        <select id="server-select" style="padding: 6px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 6px; outline: none;">
+          <option value="autoembed">Server 1 (AutoEmbed)</option>
+          <option value="vidsrc">Server 2 (VidSrc)</option>
+          <option value="smashystream">Server 3 (SmashyStream)</option>
+        </select>
+      </div>
 
-      <label style="font-size: 14px;">Episode:</label>
-      <input id="episode-input" type="number" value="1" min="1" style="width: 60px; padding: 6px; background: #1e293b; color: white; border: 1px solid #334155; border-radius: 6px; outline: none;" />
+      <div>
+        <label style="font-size: 13px; color: #94a3b8;">Season: </label>
+        <select id="season-select" style="padding: 6px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 6px; outline: none;">
+          {seasons.map((s) => (
+            s.season_number > 0 && <option value={s.season_number}>Season {s.season_number}</option>
+          ))}
+        </select>
+      </div>
 
-      <button id="update-btn" style="background: #0284c7; color: white; border: none; padding: 7px 15px; border-radius: 6px; cursor: pointer; font-size: 14px;">Play Episode</button>
+      <div>
+        <label style="font-size: 13px; color: #94a3b8;">Episode: </label>
+        <input id="episode-input" type="number" value="1" min="1" style="width: 50px; padding: 6px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 6px; outline: none;" />
+      </div>
+
+      <button id="update-btn" style="background: #0284c7; color: white; border: none; padding: 7px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 5px;">Play Episode</button>
     </div>
 
-    <!-- TV Player Container -->
+    <!-- Video Player -->
     <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #334155; background: #000;">
       <iframe 
         id="tv-player"
@@ -55,15 +69,27 @@ const seasons = show.seasons || [];
     </div>
 
     <script is:inline define:vars={{ tmdbId: id }}>
+      const serverSelect = document.getElementById('server-select');
       const seasonSelect = document.getElementById('season-select');
       const episodeInput = document.getElementById('episode-input');
       const updateBtn = document.getElementById('update-btn');
       const player = document.getElementById('tv-player');
 
+      function getEmbedUrl(server, season, episode) {
+        if (server === 'vidsrc') {
+          return `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
+        } else if (server === 'smashystream') {
+          return `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
+        }
+        // Default: AutoEmbed
+        return `https://autoembed.co/tv/tmdb/${tmdbId}-${season}-${episode}`;
+      }
+
       updateBtn.addEventListener('click', () => {
+        const server = serverSelect.value;
         const season = seasonSelect.value || 1;
         const episode = episodeInput.value || 1;
-        player.src = `https://autoembed.co/tv/tmdb/${tmdbId}-${season}-${episode}`;
+        player.src = getEmbedUrl(server, season, episode);
       });
     </script>
 
