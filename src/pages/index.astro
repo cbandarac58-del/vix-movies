@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar.astro';
 
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 
-// Fetch Genres from TMDB
+// Fetch Genres
 const genreRes = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_KEY}`);
 const genreData = await genreRes.json();
 const genres = genreData.genres || [
@@ -23,166 +23,229 @@ const trendData = await trendRes.json();
 const movies = trendData.results || [];
 ---
 
-<div class="category-wrapper">
-  <button class="cat-pill active" data-genre="all">All</button>
-  {genres.map((g) => (
-    <button class="cat-pill" data-genre={g.id}>{g.name}</button>
-  ))}
-</div>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vix Movies - Watch Free HD Movies</title>
+    <style>
+      body {
+        background-color: #0b0f19;
+        color: #f8fafc;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0 15px 40px 15px;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
 
-<!-- Movies Grid Area -->
-<div class="section-title">
-  <h2 id="category-heading">🔥 Trending Today</h2>
-</div>
+      /* Improved Category Pills Section */
+      .category-section {
+        margin: 20px 0 15px 0;
+      }
+      .category-title {
+        font-size: 14px;
+        color: #94a3b8;
+        font-weight: 600;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .category-wrapper {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 4px 2px 10px 2px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .category-wrapper::-webkit-scrollbar {
+        display: none;
+      }
+      .cat-pill {
+        background: #1e293b;
+        color: #cbd5e1;
+        border: 1px solid #334155;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+      .cat-pill:hover {
+        background: #334155;
+        color: white;
+      }
+      .cat-pill.active {
+        background: #0284c7;
+        border-color: #38bdf8;
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(2, 132, 199, 0.4);
+      }
 
-<div id="movies-container" class="grid-movies">
-  {movies.map((m) => (
-    <a href={`/movie/${m.id}`} class="movie-card" data-genres={JSON.stringify(m.genre_ids)}>
-      <div class="poster-box">
-        <img src={m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750'} alt={m.title} />
-        <span class="badge-hd">HD</span>
-        <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
-      </div>
-      <h3 class="card-title">{m.title}</h3>
-    </a>
-  ))}
-</div>
-
-<style>
-  .category-wrapper {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    padding: 10px 0;
-    margin: 15px 0;
-    scrollbar-width: none; /* Hide scrollbar Firefox */
-  }
-  .category-wrapper::-webkit-scrollbar {
-    display: none; /* Hide scrollbar Chrome/Safari */
-  }
-  .cat-pill {
-    background: #1e293b;
-    color: #cbd5e1;
-    border: 1px solid #334155;
-    padding: 8px 18px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-  }
-  .cat-pill:hover {
-    background: #334155;
-    color: white;
-  }
-  .cat-pill.active {
-    background: #0284c7;
-    border-color: #38bdf8;
-    color: white;
-    box-shadow: 0 0 10px rgba(2, 132, 199, 0.5);
-  }
-  .grid-movies {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 15px;
-  }
-  .movie-card {
-    text-decoration: none;
-    color: white;
-  }
-  .poster-box {
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    aspect-ratio: 2/3;
-  }
-  .poster-box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .badge-hd {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    background: #0284c7;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-  .badge-rating {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(15, 23, 42, 0.8);
-    font-size: 10px;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-  .card-title {
-    font-size: 13px;
-    margin: 8px 0 0 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-</style>
-
-<script is:inline define:vars={{ tmdbKey: TMDB_KEY }}>
-  document.addEventListener('DOMContentLoaded', () => {
-    const pills = document.querySelectorAll('.cat-pill');
-    const heading = document.getElementById('category-heading');
-    const container = document.getElementById('movies-container');
-
-    pills.forEach(pill => {
-      pill.addEventListener('click', async (e) => {
-        // Active Button UI Highlight Update
-        pills.forEach(p => p.classList.remove('active'));
-        e.target.classList.add('active');
-
-        const genreId = e.target.getAttribute('data-genre');
-        const genreName = e.target.innerText;
-
-        heading.innerText = genreId === 'all' ? '🔥 Trending Today' : `🎬 ${genreName} Movies`;
-
-        // Local Filter / Fetching API
-        if (genreId === 'all') {
-          const cards = container.querySelectorAll('.movie-card');
-          cards.forEach(c => c.style.display = 'block');
-        } else {
-          // Fetch directly from TMDB for full genre results
-          container.innerHTML = '<p style="color: #94a3b8; font-size: 14px;">Loading movies...</p>';
-          try {
-            const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${tmdbKey}&with_genres=${genreId}`);
-            const data = await res.json();
-            
-            container.innerHTML = '';
-            if (data.results && data.results.length > 0) {
-              data.results.forEach(m => {
-                const card = document.createElement('a');
-                card.href = `/movie/${m.id}`;
-                card.className = 'movie-card';
-                card.innerHTML = `
-                  <div class="poster-box">
-                    <img src="${m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://via.placeholder.com/500x750'}" alt="${m.title}" />
-                    <span class="badge-hd">HD</span>
-                    <span class="badge-rating">⭐ ${m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
-                  </div>
-                  <h3 class="card-title">${m.title}</h3>
-                `;
-                container.appendChild(card);
-              });
-            } else {
-              container.innerHTML = '<p style="color: #94a3b8;">No movies found in this category.</p>';
-            }
-          } catch (err) {
-            container.innerHTML = '<p style="color: #ef4444;">Failed to load movies.</p>';
-          }
+      /* Perfect 2-Column Responsive Grid */
+      .grid-movies {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      @media (min-width: 640px) {
+        .grid-movies {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
         }
+      }
+      @media (min-width: 868px) {
+        .grid-movies {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      @media (min-width: 1024px) {
+        .grid-movies {
+          grid-template-columns: repeat(5, 1fr);
+        }
+      }
+
+      .movie-card {
+        text-decoration: none;
+        color: white;
+        display: flex;
+        flex-direction: column;
+      }
+      .poster-box {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 2/3;
+        background: #1e293b;
+        border: 1px solid #334155;
+      }
+      .poster-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .badge-hd {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        background: #0284c7;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .badge-rating {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        background: rgba(15, 23, 42, 0.85);
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 4px;
+        backdrop-filter: blur(4px);
+      }
+      .card-title {
+        font-size: 13px;
+        margin: 8px 0 0 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <Navbar activePage="home" />
+
+      <!-- Categories Navigation -->
+      <div class="category-section">
+        <div class="category-title">Genres</div>
+        <div class="category-wrapper">
+          <button class="cat-pill active" data-genre="all">🔥 All</button>
+          {genres.map((g) => (
+            <button class="cat-pill" data-genre={g.id}>{g.name}</button>
+          ))}
+        </div>
+      </div>
+
+      <!-- Heading -->
+      <div style="margin-bottom: 15px;">
+        <h2 id="category-heading" style="font-size: 18px; font-weight: 700; margin: 0;">🔥 Trending Today</h2>
+      </div>
+
+      <!-- Movies Grid -->
+      <div id="movies-container" class="grid-movies">
+        {movies.map((m) => (
+          <a href={`/movie/${m.id}`} class="movie-card">
+            <div class="poster-box">
+              <img src={m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750'} alt={m.title} loading="lazy" />
+              <span class="badge-hd">HD</span>
+              <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
+            </div>
+            <h3 class="card-title">{m.title}</h3>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <script is:inline define:vars={{ tmdbKey: TMDB_KEY }}>
+      document.addEventListener('DOMContentLoaded', () => {
+        const pills = document.querySelectorAll('.cat-pill');
+        const heading = document.getElementById('category-heading');
+        const container = document.getElementById('movies-container');
+
+        pills.forEach(pill => {
+          pill.addEventListener('click', async (e) => {
+            pills.forEach(p => p.classList.remove('active'));
+            e.target.classList.add('active');
+
+            const genreId = e.target.getAttribute('data-genre');
+            const genreName = e.target.innerText;
+
+            heading.innerText = genreId === 'all' ? '🔥 Trending Today' : `🎬 ${genreName} Movies`;
+
+            container.innerHTML = '<p style="color: #94a3b8; font-size: 14px; grid-column: 1 / -1;">Loading movies...</p>';
+            
+            try {
+              const url = genreId === 'all' 
+                ? `https://api.themoviedb.org/3/trending/movie/day?api_key=${tmdbKey}`
+                : `https://api.themoviedb.org/3/discover/movie?api_key=${tmdbKey}&with_genres=${genreId}`;
+
+              const res = await fetch(url);
+              const data = await res.json();
+              
+              container.innerHTML = '';
+              if (data.results && data.results.length > 0) {
+                data.results.forEach(m => {
+                  const card = document.createElement('a');
+                  card.href = `/movie/${m.id}`;
+                  card.className = 'movie-card';
+                  card.innerHTML = `
+                    <div class="poster-box">
+                      <img src="${m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://via.placeholder.com/500x750'}" alt="${m.title}" loading="lazy" />
+                      <span class="badge-hd">HD</span>
+                      <span class="badge-rating">⭐ ${m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
+                    </div>
+                    <h3 class="card-title">${m.title}</h3>
+                  `;
+                  container.appendChild(card);
+                });
+              } else {
+                container.innerHTML = '<p style="color: #94a3b8; grid-column: 1 / -1;">No movies found in this category.</p>';
+              }
+            } catch (err) {
+              container.innerHTML = '<p style="color: #ef4444; grid-column: 1 / -1;">Failed to load movies.</p>';
+            }
+          });
+        });
       });
-    });
-  });
-</script>
+    </script>
+  </body>
+</html>
