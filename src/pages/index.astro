@@ -20,14 +20,101 @@ const featured = movies[0] || {
   overview: 'Teenage Moana answers the Ocean\'s call and voyages beyond the reef of her island...',
   backdrop_path: '/3V4kSt8AL9A38y3VE8A3L.jpg'
 };
+
+// Website Canonical & Base URL Configuration
+const SITE_URL = 'https://vixmovies.com'; // Change to your custom domain or Cloudflare Pages URL
+
+// Schema.org Structured Data (SEO, AEO & GEO Engine Optimization)
+const schemaData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      "url": SITE_URL,
+      "name": "Vix Movies",
+      "description": "Watch high-definition movies, trending TV series, and cinema releases online for free.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Vix Movies",
+        "url": SITE_URL
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": `${SITE_URL}/search?q={search_term_string}`,
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "ItemList",
+      "name": "Trending Movies Today",
+      "itemListElement": movies.slice(0, 10).map((m, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": {
+          "@type": "Movie",
+          "name": m.title,
+          "url": `${SITE_URL}/movie/${m.id}`,
+          "image": m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : ''
+        }
+      }))
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Vix Movies?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Vix Movies is a free online streaming platform providing access to trending HD movies, TV shows, Hollywood, and global release information."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Vix Movies free to watch?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, Vix Movies allows user access to trending movie details, trailers, and streaming options without subscription fees."
+          }
+        }
+      ]
+    }
+  ]
+};
 ---
 
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vix Movies - Watch Free HD Movies & TV Shows</title>
-    <meta name="description" content="Watch high-definition movies, trending TV series, Bollywood, and Hollywood releases online for free on Vix Movies." />
+    
+    <!-- Primary Meta Tags (SEO) -->
+    <title>Vix Movies - Watch Free HD Movies & TV Series Online</title>
+    <meta name="title" content="Vix Movies - Watch Free HD Movies & TV Series Online" />
+    <meta name="description" content="Watch high-definition movies, trending TV series, Hollywood, and global cinema releases online for free on Vix Movies. Stream trending titles in 1080p." />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="author" content="Vix Movies" />
+    <link rel="canonical" href={SITE_URL} />
+
+    <!-- Open Graph / Facebook / WhatsApp (Social SEO) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={SITE_URL} />
+    <meta property="og:title" content="Vix Movies - Watch Free HD Movies & TV Series Online" />
+    <meta property="og:description" content="Stream high-definition movies and trending TV shows for free on Vix Movies." />
+    <meta property="og:image" content={`https://image.tmdb.org/t/p/w1280${featured.backdrop_path || featured.poster_path}`} />
+
+    <!-- Twitter / X Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={SITE_URL} />
+    <meta name="twitter:title" content="Vix Movies - Watch Free HD Movies & TV Series Online" />
+    <meta name="twitter:description" content="Stream high-definition movies and trending TV shows for free on Vix Movies." />
+    <meta name="twitter:image" content={`https://image.tmdb.org/t/p/w1280${featured.backdrop_path || featured.poster_path}`} />
+
+    <!-- Structured Data (JSON-LD for Google, Perplexity & AI Search Crawlers) -->
+    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+
     <style is:global>
       * {
         box-sizing: border-box;
@@ -133,7 +220,7 @@ const featured = movies[0] || {
         color: white;
       }
 
-      /* STRICT FIXED GRID LAYOUT */
+      /* Grid Layout */
       .grid-movies {
         display: grid !important;
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -209,9 +296,28 @@ const featured = movies[0] || {
         width: 100%;
       }
 
-      /* FOOTER STYLES */
-      .site-footer {
+      /* AEO / GEO Content Section */
+      .aeo-section {
         margin-top: 40px;
+        padding: 20px;
+        background: #1e293b;
+        border-radius: 12px;
+        border: 1px solid #334155;
+      }
+      .aeo-section h2 {
+        font-size: 16px;
+        color: #38bdf8;
+        margin-top: 0;
+      }
+      .aeo-section p, .aeo-section li {
+        font-size: 13px;
+        color: #cbd5e1;
+        line-height: 1.6;
+      }
+
+      /* Footer Styles */
+      .site-footer {
+        margin-top: 30px;
         padding-top: 20px;
         border-top: 1px solid #334155;
         text-align: center;
@@ -227,7 +333,6 @@ const featured = movies[0] || {
         text-decoration: none;
         font-size: 13px;
         font-weight: 500;
-        transition: color 0.2s;
       }
       .footer-links a:hover {
         color: #38bdf8;
@@ -243,44 +348,57 @@ const featured = movies[0] || {
     <div class="container">
       <Navbar activePage="home" />
 
-      <!-- Hero Banner -->
-      <div class="hero-card">
-        <img class="hero-bg" src={`https://image.tmdb.org/t/p/w1280${featured.backdrop_path || featured.poster_path}`} alt={featured.title} />
-        <div class="hero-overlay">
-          <span class="badge-featured">FEATURED #1 TRENDING</span>
-          <h1 class="hero-title">{featured.title}</h1>
-          <p class="hero-desc">{featured.overview}</p>
-          <a href={`/movie/${featured.id}`} class="btn-watch">► Watch Now</a>
-        </div>
-      </div>
+      <!-- Main Semantic Hero Section -->
+      <main>
+        <article class="hero-card">
+          <img class="hero-bg" src={`https://image.tmdb.org/t/p/w1280${featured.backdrop_path || featured.poster_path}`} alt={`Watch ${featured.title} on Vix Movies`} />
+          <div class="hero-overlay">
+            <span class="badge-featured">FEATURED #1 TRENDING</span>
+            <h1 class="hero-title">{featured.title}</h1>
+            <p class="hero-desc">{featured.overview}</p>
+            <a href={`/movie/${featured.id}`} class="btn-watch" aria-label={`Watch ${featured.title} now`}>► Watch Now</a>
+          </div>
+        </article>
 
-      <!-- Category Filter Pills -->
-      <div class="category-container">
-        <div class="category-wrapper">
-          <button class="cat-pill active" data-genre="all">🔥 All</button>
-          {genres.map((g) => (
-            <button class="cat-pill" data-genre={g.id}>{g.name}</button>
+        <!-- Category Filter Pills -->
+        <nav class="category-container" aria-label="Movie Genre Filters">
+          <div class="category-wrapper">
+            <button class="cat-pill active" data-genre="all">🔥 All</button>
+            {genres.map((g) => (
+              <button class="cat-pill" data-genre={g.id}>{g.name}</button>
+            ))}
+          </div>
+        </nav>
+
+        <div style="margin-bottom: 12px;">
+          <h2 id="category-heading" style="font-size: 16px; font-weight: 800; margin: 0;">🔥 Trending Today</h2>
+        </div>
+
+        <!-- Movie Grid -->
+        <section id="movies-container" class="grid-movies" aria-label="Trending Movies List">
+          {movies.map((m) => (
+            <a href={`/movie/${m.id}`} class="movie-card" title={`Watch ${m.title} online`}>
+              <div class="poster-box">
+                <img src={m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750'} alt={`${m.title} Poster`} loading="lazy" width="500" height="750" />
+                <span class="badge-hd">HD</span>
+                <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
+              </div>
+              <h3 class="card-title">{m.title}</h3>
+            </a>
           ))}
-        </div>
-      </div>
+        </section>
 
-      <div style="margin-bottom: 12px;">
-        <h2 id="category-heading" style="font-size: 16px; font-weight: 800; margin: 0;">🔥 Trending Today</h2>
-      </div>
-
-      <!-- Movie Grid -->
-      <div id="movies-container" class="grid-movies">
-        {movies.map((m) => (
-          <a href={`/movie/${m.id}`} class="movie-card">
-            <div class="poster-box">
-              <img src={m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750'} alt={m.title} loading="lazy" />
-              <span class="badge-hd">HD</span>
-              <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
-            </div>
-            <h3 class="card-title">{m.title}</h3>
-          </a>
-        ))}
-      </div>
+        <!-- AEO & GEO Direct Information Box (Helps Perplexity, ChatGPT & Gemini Indexing) -->
+        <section class="aeo-section">
+          <h2>About Vix Movies Free Streaming</h2>
+          <p><strong>Vix Movies</strong> is an online movie database and streaming discovery platform designed to provide high-quality stream links, release information, and ratings for global movies and TV series.</p>
+          <h3>Frequently Asked Questions</h3>
+          <ul>
+            <li><strong>Is Vix Movies free?</strong> Yes, you can browse and watch trending content without hidden subscription fees.</li>
+            <li><strong>How often is content updated?</strong> Daily trending lists are automatically updated via real-time TMDB API integration.</li>
+          </ul>
+        </section>
+      </main>
 
       <!-- SEO Footer Structure -->
       <footer class="site-footer">
@@ -324,9 +442,10 @@ const featured = movies[0] || {
                   const card = document.createElement('a');
                   card.href = `/movie/${m.id}`;
                   card.className = 'movie-card';
+                  card.title = `Watch ${m.title} online`;
                   card.innerHTML = `
                     <div class="poster-box">
-                      <img src="${m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://via.placeholder.com/500x750'}" alt="${m.title}" loading="lazy" />
+                      <img src="${m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://via.placeholder.com/500x750'}" alt="${m.title} Poster" loading="lazy" width="500" height="750" />
                       <span class="badge-hd">HD</span>
                       <span class="badge-rating">⭐ ${m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
                     </div>
