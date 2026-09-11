@@ -20,7 +20,7 @@ const trendRes = await fetch(`https://api.themoviedb.org/3/trending/movie/day?ap
 const trendData = await trendRes.json();
 const movies = trendData.results || [];
 
-// Featured Movie (First trending movie or fallback to Moana)
+// Featured Movie
 const featured = movies[0] || {
   id: 1241982,
   title: 'Moana 2',
@@ -47,7 +47,7 @@ const featured = movies[0] || {
         margin: 0 auto;
       }
 
-      /* Search Bar Styling */
+      /* Search Bar */
       .search-bar {
         display: flex;
         gap: 8px;
@@ -84,7 +84,7 @@ const featured = movies[0] || {
       }
       .hero-bg {
         width: 100%;
-        height: 320px;
+        height: 300px;
         object-fit: cover;
         display: block;
         filter: brightness(0.7);
@@ -105,7 +105,7 @@ const featured = movies[0] || {
         text-transform: uppercase;
       }
       .hero-title {
-        font-size: 26px;
+        font-size: 24px;
         font-weight: 800;
         margin: 4px 0 8px 0;
       }
@@ -132,7 +132,7 @@ const featured = movies[0] || {
         font-size: 14px;
       }
 
-      /* Category Pills Bar with Visual Indicator */
+      /* Category Pills Bar */
       .category-container {
         position: relative;
         margin-bottom: 20px;
@@ -141,19 +141,16 @@ const featured = movies[0] || {
         display: flex;
         gap: 10px;
         overflow-x: auto;
-        padding-bottom: 8px;
+        padding-bottom: 10px;
         scrollbar-width: thin;
-        scrollbar-color: #334155 transparent;
+        scrollbar-color: #38bdf8 #1e293b;
       }
       .category-wrapper::-webkit-scrollbar {
-        height: 3px;
+        height: 4px;
       }
       .category-wrapper::-webkit-scrollbar-thumb {
-        background: #38bdf8;
+        background: #0284c7;
         border-radius: 4px;
-      }
-      .category-wrapper::-webkit-scrollbar-track {
-        background: #1e293b;
       }
       .cat-pill {
         background: #1e293b;
@@ -173,22 +170,25 @@ const featured = movies[0] || {
         color: white;
       }
 
-      /* 2-Column Responsive Movie Grid */
+      /* Grid Styling Enforced strictly for 2 Columns on Mobile */
       .grid-movies {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        width: 100% !important;
       }
       @media (min-width: 640px) {
-        .grid-movies { grid-template-columns: repeat(3, 1fr); }
+        .grid-movies { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
       }
       @media (min-width: 900px) {
-        .grid-movies { grid-template-columns: repeat(4, 1fr); }
+        .grid-movies { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
       }
 
       .movie-card {
         text-decoration: none;
         color: white;
+        display: block;
+        width: 100%;
       }
       .poster-box {
         position: relative;
@@ -197,11 +197,13 @@ const featured = movies[0] || {
         aspect-ratio: 2/3;
         background: #1e293b;
         border: 1px solid #334155;
+        width: 100%;
       }
       .poster-box img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
       }
       .badge-hd {
         position: absolute;
@@ -217,7 +219,7 @@ const featured = movies[0] || {
         position: absolute;
         top: 6px;
         right: 6px;
-        background: rgba(15, 23, 42, 0.8);
+        background: rgba(15, 23, 42, 0.85);
         font-size: 10px;
         font-weight: bold;
         padding: 2px 6px;
@@ -253,13 +255,10 @@ const featured = movies[0] || {
         </div>
       </div>
 
-      <!-- Categories with Horizontal Indicator -->
+      <!-- Categories Navigation -->
       <div class="category-container">
         <div class="category-wrapper">
-          <button class="cat-pill active" data-genre="all">Action</button>
-          <button class="cat-pill" data-genre="35">Comedy</button>
-          <button class="cat-pill" data-genre="18">Drama</button>
-          <button class="cat-pill" data-genre="27">Horror</button>
+          <button class="cat-pill active" data-genre="all">🔥 All</button>
           {genres.map((g) => (
             <button class="cat-pill" data-genre={g.id}>{g.name}</button>
           ))}
@@ -271,7 +270,7 @@ const featured = movies[0] || {
         <h2 id="category-heading" style="font-size: 18px; font-weight: 800; margin: 0;">🔥 Trending Today</h2>
       </div>
 
-      <!-- Movie List -->
+      <!-- Movies Grid -->
       <div id="movies-container" class="grid-movies">
         {movies.map((m) => (
           <a href={`/movie/${m.id}`} class="movie-card">
