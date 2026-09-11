@@ -22,7 +22,7 @@ const featured = movies[0] || {
 };
 
 // Website Canonical & Base URL Configuration
-const SITE_URL = 'https://vixmovies.com'; // Change to your custom domain or Cloudflare Pages URL
+const SITE_URL = 'https://vixmovies.com';
 
 // Schema.org Structured Data (SEO, AEO & GEO Engine Optimization)
 const schemaData = {
@@ -351,7 +351,7 @@ const schemaData = {
       <!-- Main Semantic Hero Section -->
       <main>
         <article class="hero-card">
-          <img class="hero-bg" src={`https://image.tmdb.org/t/p/w1280${featured.backdrop_path || featured.poster_path}`} alt={`Watch ${featured.title} on Vix Movies`} />
+          <img class="hero-bg" src={`https://image.tmdb.org/t/p/w1280${featured.backdrop_path || featured.poster_path}`} alt={`Watch ${featured.title} on Vix Movies`} decoding="async" />
           <div class="hero-overlay">
             <span class="badge-featured">FEATURED #1 TRENDING</span>
             <h1 class="hero-title">{featured.title}</h1>
@@ -379,7 +379,7 @@ const schemaData = {
           {movies.map((m) => (
             <a href={`/movie/${m.id}`} class="movie-card" title={`Watch ${m.title} online`}>
               <div class="poster-box">
-                <img src={m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750'} alt={`${m.title} Poster`} loading="lazy" width="500" height="750" />
+                <img src={m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750'} alt={`${m.title} Poster`} loading="lazy" decoding="async" width="500" height="750" />
                 <span class="badge-hd">HD</span>
                 <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
               </div>
@@ -445,7 +445,7 @@ const schemaData = {
                   card.title = `Watch ${m.title} online`;
                   card.innerHTML = `
                     <div class="poster-box">
-                      <img src="${m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://via.placeholder.com/500x750'}" alt="${m.title} Poster" loading="lazy" width="500" height="750" />
+                      <img src="${m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : 'https://via.placeholder.com/500x750'}" alt="${m.title} Poster" loading="lazy" decoding="async" width="500" height="750" />
                       <span class="badge-hd">HD</span>
                       <span class="badge-rating">⭐ ${m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
                     </div>
