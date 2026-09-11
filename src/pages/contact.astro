@@ -1,0 +1,115 @@
+---
+import Navbar from '../components/Navbar.astro';
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact Us - Vix Movies</title>
+    <meta name="description" content="Get in touch with Vix Movies support team for inquiries, business proposals, and feedback." />
+    <style>
+      body {
+        background-color: #0b0f19;
+        color: #f8fafc;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0 15px 40px 15px;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .page-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 20px;
+        line-height: 1.6;
+      }
+      h1 {
+        color: #38bdf8;
+        font-size: 24px;
+        margin-top: 0;
+      }
+      p {
+        color: #cbd5e1;
+        font-size: 14px;
+      }
+      .info-box {
+        background: #0f172a;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #0284c7;
+        margin: 20px 0;
+      }
+      .info-box a {
+        color: #38bdf8;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        color: #cbd5e1;
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+      input, textarea {
+        width: 100%;
+        padding: 10px;
+        background: #0f172a;
+        border: 1px solid #334155;
+        color: white;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 14px;
+      }
+      button {
+        background: #0284c7;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <Navbar />
+
+      <main class="page-card">
+        <h1>Contact Support</h1>
+        <p>Have questions, feature suggestions, or feedback? Send us a direct email or use the form below to reach out to our administration team.</p>
+
+        <div class="info-box">
+          📧 <strong>Direct Email:</strong> <a href="mailto:brazilmarketing1@gmail.com">brazilmarketing1@gmail.com</a>
+        </div>
+
+        <form action="mailto:brazilmarketing1@gmail.com" method="post" enctype="text/plain">
+          <div class="form-group">
+            <label for="name">Your Name</label>
+            <input type="text" id="name" name="Name" placeholder="Enter your name" required />
+          </div>
+
+          <div class="form-group">
+            <label for="email">Your Email Address</label>
+            <input type="email" id="email" name="Email" placeholder="Enter your email" required />
+          </div>
+
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="Message" rows="5" placeholder="Write your message here..." required></textarea>
+          </div>
+
+          <button type="submit">Send Message</button>
+        </form>
+      </main>
+    </div>
+  </body>
+</html>
