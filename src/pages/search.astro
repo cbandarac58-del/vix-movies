@@ -1,0 +1,38 @@
+---
+import Navbar from '../components/Navbar.astro';
+
+const query = Astro.url.searchParams.get('q') || '';
+const TMDB_KEY = import.meta.env.TMDB_API_KEY;
+
+let results = [];
+if (query) {
+  const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}`);
+  const data = await res.json();
+  results = data.results || [];
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search Results for "{query}" - Vix Movies</title>
+  </head>
+  <body style="background-color: #0f172a; color: white; font-family: sans-serif; padding: 15px; max-width: 1100px; margin: 0 auto;">
+    
+    <Navbar />
+
+    <h2 style="font-size: 20px; margin-bottom: 15px;">Search Results for "{query}"</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
+      {results.map((item) => (
+        <a href={item.media_type === 'tv' ? `/tv/${item.id}` : `/movie/${item.id}`} style="text-decoration: none; color: white;">
+          <div style="border: 1px solid #334155; padding: 10px; border-radius: 8px; background: #1e293b;">
+            <img src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image'} alt={item.title || item.name} style="width: 100%; border-radius: 6px;" />
+            <h3 style="font-size: 14px; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{item.title || item.name}</h3>
+            <span style="font-size: 12px; color: #38bdf8;">{item.media_type === 'tv' ? 'TV Show' : 'Movie'}</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </body>
+</html>
