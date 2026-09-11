@@ -205,9 +205,9 @@ const similarMovies = (simData.results || []).slice(0, 6);
       <!-- Server Switcher Bar -->
       <div class="server-bar">
         <span style="font-size: 14px; font-weight: 600; color: #94a3b8;">Select Server:</span>
-        <button class="server-btn active" onclick="switchServer('autoembed')">Server 1 (AutoEmbed)</button>
-        <button class="server-btn" onclick="switchServer('vidsrc')">Server 2 (VidSrc)</button>
-        <button class="server-btn" onclick="switchServer('smashy')">Server 3 (SmashyStream)</button>
+        <button class="server-btn active" data-server="autoembed">Server 1 (AutoEmbed)</button>
+        <button class="server-btn" data-server="vidsrc">Server 2 (VidSrc)</button>
+        <button class="server-btn" data-server="smashy">Server 3 (SmashyStream)</button>
       </div>
 
       <!-- Video Player Frame -->
@@ -233,11 +233,11 @@ const similarMovies = (simData.results || []).slice(0, 6);
         <div class="comment-input-box">
           <input type="text" id="user-name" placeholder="Your Name..." class="comment-input" />
           <textarea id="user-comment" placeholder="Write a comment..." class="comment-textarea"></textarea>
-          <button onclick="addComment()" class="comment-btn">Post Comment</button>
+          <button id="post-btn" class="comment-btn">Post Comment</button>
         </div>
 
         <div id="comments-list"></div>
-        <button id="load-more-btn" onclick="showAllComments()" class="load-more-btn" style="display: none;">View More Comments</button>
+        <button id="load-more-btn" class="load-more-btn" style="display: none;">View More Comments</button>
       </div>
 
       <!-- Similar Movies Recommendations -->
@@ -259,97 +259,104 @@ const similarMovies = (simData.results || []).slice(0, 6);
     </div>
 
     <script is:inline define:vars={{ tmdbId: id }}>
-      function switchServer(server) {
+      document.addEventListener('DOMContentLoaded', () => {
+        // Server Switcher Listener
+        const serverButtons = document.querySelectorAll('.server-btn');
         const player = document.getElementById('movie-player');
-        const buttons = document.querySelectorAll('.server-btn');
-        
-        buttons.forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
 
-        if (server === 'vidsrc') {
-          player.src = `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
-        } else if (server === 'smashy') {
-          player.src = `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`;
-        } else {
-          player.src = `https://autoembed.co/movie/tmdb/${tmdbId}`;
-        }
-      }
-
-      // Local Comment Management Logic
-      const storageKey = 'vix_comments_movie_' + tmdbId;
-      let allComments = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      let showingAll = false;
-
-      function renderComments() {
-        const listDiv = document.getElementById('comments-list');
-        const loadBtn = document.getElementById('load-more-btn');
-        listDiv.innerHTML = '';
-
-        if (allComments.length === 0) {
-          listDiv.innerHTML = '<p style="color: #64748b; font-size: 13px;">No comments yet. Be the first to comment!</p>';
-          loadBtn.style.display = 'none';
-          return;
-        }
-
-        const visibleComments = showingAll ? allComments : allComments.slice(0, 5);
-
-        visibleComments.forEach(c => {
-          const card = document.createElement('div');
-          card.className = 'comment-card';
-          card.innerHTML = `
-            <div>
-              <span class="comment-author">${escapeHtml(c.name)}</span>
-              <span class="comment-date">${c.date}</span>
-            </div>
-            <div class="comment-text">${escapeHtml(c.text)}</div>
-          `;
-          listDiv.appendChild(card);
+        serverButtons.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            serverButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            const server = e.target.getAttribute('data-server');
+            if (server === 'vidsrc') {
+              player.src = `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
+            } else if (server === 'smashy') {
+              player.src = `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`;
+            } else {
+              player.src = `https://autoembed.co/movie/tmdb/${tmdbId}`;
+            }
+          });
         });
 
-        if (allComments.length > 5 && !showingAll) {
-          loadBtn.style.display = 'block';
-          loadBtn.innerText = `View More Comments (${allComments.length - 5} remaining)`;
-        } else {
-          loadBtn.style.display = 'none';
+        // Comment System Logic
+        const storageKey = 'vix_comments_movie_' + tmdbId;
+        let allComments = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        let showingAll = false;
+
+        const listDiv = document.getElementById('comments-list');
+        const loadBtn = document.getElementById('load-more-btn');
+        const postBtn = document.getElementById('post-btn');
+
+        function renderComments() {
+          listDiv.innerHTML = '';
+
+          if (allComments.length === 0) {
+            listDiv.innerHTML = '<p style="color: #64748b; font-size: 13px;">No comments yet. Be the first to comment!</p>';
+            loadBtn.style.display = 'none';
+            return;
+          }
+
+          const visibleComments = showingAll ? allComments : allComments.slice(0, 5);
+
+          visibleComments.forEach(c => {
+            const card = document.createElement('div');
+            card.className = 'comment-card';
+            card.innerHTML = `
+              <div>
+                <span class="comment-author">${escapeHtml(c.name)}</span>
+                <span class="comment-date">${c.date}</span>
+              </div>
+              <div class="comment-text">${escapeHtml(c.text)}</div>
+            `;
+            listDiv.appendChild(card);
+          });
+
+          if (allComments.length > 5 && !showingAll) {
+            loadBtn.style.display = 'block';
+            loadBtn.innerText = `View More Comments (${allComments.length - 5} remaining)`;
+          } else {
+            loadBtn.style.display = 'none';
+          }
         }
-      }
 
-      function addComment() {
-        const nameInput = document.getElementById('user-name');
-        const commentInput = document.getElementById('user-comment');
+        postBtn.addEventListener('click', () => {
+          const nameInput = document.getElementById('user-name');
+          const commentInput = document.getElementById('user-comment');
 
-        const name = nameInput.value.trim() || 'Anonymous User';
-        const text = commentInput.value.trim();
+          const name = nameInput.value.trim() || 'Anonymous User';
+          const text = commentInput.value.trim();
 
-        if (!text) {
-          alert('Please enter a comment before posting.');
-          return;
+          if (!text) {
+            alert('Please enter a comment before posting.');
+            return;
+          }
+
+          const newComment = {
+            name: name,
+            text: text,
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          };
+
+          allComments.unshift(newComment);
+          localStorage.setItem(storageKey, JSON.stringify(allComments));
+
+          commentInput.value = '';
+          renderComments();
+        });
+
+        loadBtn.addEventListener('click', () => {
+          showingAll = true;
+          renderComments();
+        });
+
+        function escapeHtml(text) {
+          return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        const newComment = {
-          name: name,
-          text: text,
-          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-        };
-
-        allComments.unshift(newComment); // Add to top
-        localStorage.setItem(storageKey, JSON.stringify(allComments));
-
-        commentInput.value = '';
         renderComments();
-      }
-
-      function showAllComments() {
-        showingAll = true;
-        renderComments();
-      }
-
-      function escapeHtml(text) {
-        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      }
-
-      // Initial Render
-      renderComments();
+      });
     </script>
   </body>
 </html>
