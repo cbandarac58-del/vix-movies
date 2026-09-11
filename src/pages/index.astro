@@ -6,14 +6,7 @@ const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 // Fetch Genres
 const genreRes = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_KEY}`);
 const genreData = await genreRes.json();
-const genres = genreData.genres || [
-  { id: 28, name: 'Action' },
-  { id: 35, name: 'Comedy' },
-  { id: 18, name: 'Drama' },
-  { id: 27, name: 'Horror' },
-  { id: 878, name: 'Sci-Fi' },
-  { id: 10749, name: 'Romance' }
-];
+const genres = genreData.genres || [];
 
 // Fetch Trending Movies
 const trendRes = await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_KEY}`);
@@ -47,73 +40,47 @@ const featured = movies[0] || {
         margin: 0 auto;
       }
 
-      /* Search Bar */
-      .search-bar {
-        display: flex;
-        gap: 8px;
-        margin: 15px 0 20px 0;
-      }
-      .search-input {
-        flex: 1;
-        background: #1e293b;
-        border: 1px solid #334155;
-        color: white;
-        padding: 10px 14px;
-        border-radius: 8px;
-        font-size: 14px;
-        outline: none;
-      }
-      .search-btn {
-        background: #0284c7;
-        color: white;
-        border: none;
-        padding: 10px 18px;
-        border-radius: 8px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-
       /* Hero Featured Banner */
       .hero-card {
         position: relative;
         border-radius: 16px;
         overflow: hidden;
-        margin-bottom: 25px;
+        margin: 10px 0 20px 0;
         background: #1e293b;
         border: 1px solid #334155;
       }
       .hero-bg {
         width: 100%;
-        height: 300px;
+        height: 260px;
         object-fit: cover;
         display: block;
-        filter: brightness(0.7);
+        filter: brightness(0.65);
       }
       .hero-overlay {
         position: absolute;
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 20px;
+        padding: 16px;
         background: linear-gradient(to top, rgba(11, 15, 25, 0.95), rgba(11, 15, 25, 0));
       }
       .badge-featured {
         color: #38bdf8;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 800;
         letter-spacing: 1px;
         text-transform: uppercase;
       }
       .hero-title {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 800;
-        margin: 4px 0 8px 0;
+        margin: 2px 0 6px 0;
       }
       .hero-desc {
         color: #cbd5e1;
-        font-size: 13px;
+        font-size: 12px;
         line-height: 1.4;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
@@ -122,43 +89,32 @@ const featured = movies[0] || {
       .btn-watch {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
         background: #0284c7;
         color: white;
         text-decoration: none;
-        padding: 10px 20px;
-        border-radius: 8px;
+        padding: 8px 16px;
+        border-radius: 6px;
         font-weight: bold;
-        font-size: 14px;
+        font-size: 13px;
       }
 
       /* Category Pills Bar */
       .category-container {
-        position: relative;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
       }
       .category-wrapper {
         display: flex;
-        gap: 10px;
+        gap: 8px;
         overflow-x: auto;
-        padding-bottom: 10px;
-        scrollbar-width: thin;
-        scrollbar-color: #38bdf8 #1e293b;
-      }
-      .category-wrapper::-webkit-scrollbar {
-        height: 4px;
-      }
-      .category-wrapper::-webkit-scrollbar-thumb {
-        background: #0284c7;
-        border-radius: 4px;
+        padding-bottom: 8px;
       }
       .cat-pill {
         background: #1e293b;
         color: #cbd5e1;
         border: 1px solid #334155;
-        padding: 8px 18px;
+        padding: 6px 14px;
         border-radius: 20px;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
         cursor: pointer;
         white-space: nowrap;
@@ -170,18 +126,19 @@ const featured = movies[0] || {
         color: white;
       }
 
-      /* Grid Styling Enforced strictly for 2 Columns on Mobile */
+      /* Fixed Grid System */
       .grid-movies {
         display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-template-columns: repeat(2, calc(50% - 6px)) !important;
         gap: 12px !important;
         width: 100% !important;
+        box-sizing: border-box !important;
       }
       @media (min-width: 640px) {
-        .grid-movies { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+        .grid-movies { grid-template-columns: repeat(3, calc(33.33% - 8px)) !important; }
       }
       @media (min-width: 900px) {
-        .grid-movies { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+        .grid-movies { grid-template-columns: repeat(4, calc(25% - 9px)) !important; }
       }
 
       .movie-card {
@@ -189,6 +146,7 @@ const featured = movies[0] || {
         color: white;
         display: block;
         width: 100%;
+        overflow: hidden;
       }
       .poster-box {
         position: relative;
@@ -210,9 +168,9 @@ const featured = movies[0] || {
         top: 6px;
         left: 6px;
         background: #0284c7;
-        font-size: 10px;
+        font-size: 9px;
         font-weight: bold;
-        padding: 2px 6px;
+        padding: 2px 5px;
         border-radius: 4px;
       }
       .badge-rating {
@@ -220,13 +178,13 @@ const featured = movies[0] || {
         top: 6px;
         right: 6px;
         background: rgba(15, 23, 42, 0.85);
-        font-size: 10px;
+        font-size: 9px;
         font-weight: bold;
-        padding: 2px 6px;
+        padding: 2px 5px;
         border-radius: 4px;
       }
       .card-title {
-        font-size: 13px;
+        font-size: 12px;
         margin: 6px 0 0 0;
         white-space: nowrap;
         overflow: hidden;
@@ -238,13 +196,7 @@ const featured = movies[0] || {
     <div class="container">
       <Navbar activePage="home" />
 
-      <!-- Search Bar -->
-      <form action="/search" method="GET" class="search-bar">
-        <input type="text" name="q" class="search-input" placeholder="Search movies, TV shows..." required />
-        <button type="submit" class="search-btn">Search</button>
-      </form>
-
-      <!-- Featured Banner -->
+      <!-- Hero Banner -->
       <div class="hero-card">
         <img class="hero-bg" src={`https://image.tmdb.org/t/p/w1280${featured.backdrop_path || featured.poster_path}`} alt={featured.title} />
         <div class="hero-overlay">
@@ -255,7 +207,7 @@ const featured = movies[0] || {
         </div>
       </div>
 
-      <!-- Categories Navigation -->
+      <!-- Category Filter Pills -->
       <div class="category-container">
         <div class="category-wrapper">
           <button class="cat-pill active" data-genre="all">🔥 All</button>
@@ -265,12 +217,11 @@ const featured = movies[0] || {
         </div>
       </div>
 
-      <!-- Heading -->
       <div style="margin-bottom: 12px;">
-        <h2 id="category-heading" style="font-size: 18px; font-weight: 800; margin: 0;">🔥 Trending Today</h2>
+        <h2 id="category-heading" style="font-size: 16px; font-weight: 800; margin: 0;">🔥 Trending Today</h2>
       </div>
 
-      <!-- Movies Grid -->
+      <!-- Movie Grid -->
       <div id="movies-container" class="grid-movies">
         {movies.map((m) => (
           <a href={`/movie/${m.id}`} class="movie-card">
@@ -300,7 +251,6 @@ const featured = movies[0] || {
             const genreName = e.target.innerText;
 
             heading.innerText = genreId === 'all' ? '🔥 Trending Today' : `🎬 ${genreName} Movies`;
-
             container.innerHTML = '<p style="color: #94a3b8; font-size: 14px; grid-column: 1 / -1;">Loading movies...</p>';
             
             try {
@@ -328,7 +278,7 @@ const featured = movies[0] || {
                   container.appendChild(card);
                 });
               } else {
-                container.innerHTML = '<p style="color: #94a3b8; grid-column: 1 / -1;">No movies found in this category.</p>';
+                container.innerHTML = '<p style="color: #94a3b8; grid-column: 1 / -1;">No movies found.</p>';
               }
             } catch (err) {
               container.innerHTML = '<p style="color: #ef4444; grid-column: 1 / -1;">Failed to load movies.</p>';
