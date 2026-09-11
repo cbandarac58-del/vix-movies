@@ -2,31 +2,228 @@
 import Navbar from '../components/Navbar.astro';
 
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
-const res = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_KEY}`);
+
+// Fetch Trending / Popular Movies & TV
+const res = await fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_KEY}`);
 const data = await res.json();
 const movies = data.results || [];
+
+// Featured Hero Movie (First item from trending)
+const hero = movies[0] || {};
+const gridMovies = movies.slice(1); // Remaining movies for grid
+
+// Quick Genres List
+const genres = [
+  { id: 28, name: 'Action' },
+  { id: 35, name: 'Comedy' },
+  { id: 18, name: 'Drama' },
+  { id: 27, name: 'Horror' },
+  { id: 878, name: 'Sci-Fi' },
+  { id: 10749, name: 'Romance' }
+];
 ---
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vix Movies - Free Movies & TV Series</title>
+    <title>Vix Movies - Stream Free Movies & TV Shows HD</title>
+    <style>
+      body {
+        background-color: #0b0f19;
+        color: #f8fafc;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0 15px 40px 15px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      /* Hero Section */
+      .hero-banner {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 30px;
+        background-size: cover;
+        background-position: center;
+        min-height: 380px;
+        display: flex;
+        align-items: flex-end;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      }
+      .hero-overlay {
+        background: linear-gradient(180deg, rgba(11,15,25,0) 0%, rgba(11,15,25,0.95) 100%);
+        width: 100%;
+        padding: 30px;
+      }
+      .hero-title {
+        font-size: 32px;
+        font-weight: 800;
+        margin: 0 0 10px 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+      }
+      .hero-desc {
+        color: #cbd5e1;
+        font-size: 14px;
+        max-width: 650px;
+        line-height: 1.5;
+        margin-bottom: 15px;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .play-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #0284c7;
+        color: white;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s;
+      }
+      .play-btn:hover {
+        background: #0369a1;
+      }
+      /* Genre Chips */
+      .genre-bar {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        margin-bottom: 25px;
+      }
+      .genre-chip {
+        background: #1e293b;
+        color: #94a3b8;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        text-decoration: none;
+        white-space: nowrap;
+        border: 1px solid #334155;
+        transition: all 0.2s;
+      }
+      .genre-chip:hover {
+        background: #0284c7;
+        color: white;
+        border-color: #0284c7;
+      }
+      /* Movie Cards Grid */
+      .movie-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 20px;
+      }
+      .movie-card {
+        background: #1e293b;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #334155;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        position: relative;
+        text-decoration: none;
+        color: white;
+        display: block;
+      }
+      .movie-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+        border-color: #38bdf8;
+      }
+      .poster-img {
+        width: 100%;
+        aspect-ratio: 2/3;
+        object-fit: cover;
+        display: block;
+      }
+      .badge-hd {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(2, 132, 199, 0.9);
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 3px 6px;
+        border-radius: 4px;
+      }
+      .badge-rating {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(15, 23, 42, 0.85);
+        color: #facc15;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 3px 6px;
+        border-radius: 4px;
+      }
+      .card-info {
+        padding: 10px;
+      }
+      .card-title {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    </style>
   </head>
-  <body style="background-color: #0f172a; color: white; font-family: sans-serif; padding: 15px; max-width: 1100px; margin: 0 auto;">
-    
-    <Navbar />
+  <body>
+    <div class="container">
+      <Navbar />
 
-    <h2 style="font-size: 20px; margin-bottom: 15px;">Trending Movies</h2>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px;">
-      {movies.map((movie) => (
-        <a href={`/movie/${movie.id}`} style="text-decoration: none; color: white;">
-          <div style="border: 1px solid #334155; padding: 10px; border-radius: 8px; background: #1e293b; transition: transform 0.2s;">
-            <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} style="width: 100%; border-radius: 6px;" />
-            <h3 style="font-size: 14px; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{movie.title}</h3>
+      <!-- Hero Featured Movie Banner -->
+      {hero.id && (
+        <div class="hero-banner" style={`background-image: url('https://image.tmdb.org/t/p/original${hero.backdrop_path}');`}>
+          <div class="hero-overlay">
+            <span style="color: #38bdf8; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Featured #1 Trending</span>
+            <h1 class="hero-title">{hero.title}</h1>
+            <p class="hero-desc">{hero.overview}</p>
+            <a href={`/movie/${hero.id}`} class="play-btn">
+              ▶ Watch Now
+            </a>
           </div>
-        </a>
-      ))}
+        </div>
+      )}
+
+      <!-- Genre Quick Filters -->
+      <div class="genre-bar">
+        {genres.map((g) => (
+          <a href={`/search?q=${g.name}`} class="genre-chip">{g.name}</a>
+        ))}
+      </div>
+
+      <!-- Trending Movies Section -->
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+        🔥 Trending Today
+      </h2>
+
+      <div class="movie-grid">
+        {gridMovies.map((movie) => (
+          <a href={`/movie/${movie.id}`} class="movie-card">
+            <span class="badge-hd">HD</span>
+            <span class="badge-rating">⭐ {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</span>
+            <img 
+              class="poster-img" 
+              src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'} 
+              alt={movie.title} 
+              loading="lazy"
+            />
+            <div class="card-info">
+              <h3 class="card-title">{movie.title}</h3>
+            </div>
+          </a>
+        ))}
+      </div>
     </div>
   </body>
 </html>
