@@ -1,24 +1,104 @@
 ---
 ---
-<nav style="background-color: #1e293b; padding: 15px 20px; border-radius: 10px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-  <div style="display: flex; align-items: center; gap: 20px;">
-    <a href="/" style="font-size: 20px; font-weight: bold; color: #38bdf8; text-decoration: none;">VIX MOVIES</a>
-    <div style="display: flex; gap: 15px;">
-      <a href="/" style="color: white; text-decoration: none; font-size: 14px;">Movies</a>
-      <a href="/tv" style="color: #94a3b8; text-decoration: none; font-size: 14px;">TV Series</a>
-      <a href="/trending" style="color: #94a3b8; text-decoration: none; font-size: 14px;">Trending</a>
-    </div>
-  </div>
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="/" class="logo">
+      <span class="logo-vix">VIX</span> <span class="logo-movies">MOVIES</span>
+    </a>
 
-  <!-- Search Input -->
-  <form action="/search" method="GET" style="display: flex; gap: 5px;">
-    <input 
-      type="text" 
-      name="q" 
-      placeholder="Search movies, TV shows..." 
-      style="padding: 8px 12px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 14px; outline: none;"
-      required
-    />
-    <button type="submit" style="background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 14px;">Search</button>
-  </form>
+    <div class="nav-links">
+      <a href="/" class="nav-item">Home</a>
+      <a href="/tv" class="nav-item">TV Series</a>
+      <a href="/search?q=Hindi" class="nav-item">Bollywood</a>
+    </div>
+
+    <form action="/search" method="GET" class="search-form">
+      <input 
+        type="text" 
+        name="q" 
+        placeholder="Search movies, TV shows..." 
+        required 
+        class="search-input"
+      />
+      <button type="submit" class="search-btn">Search</button>
+    </form>
+  </div>
 </nav>
+
+<style>
+  .navbar {
+    background: #0f172a;
+    border-bottom: 1px solid #334155;
+    padding: 12px 0;
+    margin-bottom: 25px;
+    border-radius: 0 0 12px 12px;
+  }
+  .nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  .logo {
+    text-decoration: none;
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 1px;
+  }
+  .logo-vix {
+    color: #38bdf8;
+  }
+  .logo-movies {
+    color: #ffffff;
+  }
+  .nav-links {
+    display: flex;
+    gap: 20px;
+  }
+  .nav-item {
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+  .nav-item:hover {
+    color: #38bdf8;
+  }
+  .search-form {
+    display: flex;
+    gap: 8px;
+    flex-grow: 1;
+    max-width: 350px;
+  }
+  .search-input {
+    width: 100%;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+  }
+  .search-input:focus {
+    border-color: #38bdf8;
+  }
+  .search-btn {
+    background: #0284c7;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .search-btn:hover {
+    background: #0369a1;
+  }
+</style>
