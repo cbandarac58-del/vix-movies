@@ -8,90 +8,200 @@ const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 const res = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${TMDB_KEY}`);
 const show = await res.json();
 
-const seasons = show.seasons || [];
+const seasons = show.seasons ? show.seasons.filter((s) => s.season_number > 0) : [];
 ---
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Watch {show.name || 'TV Series'} - Vix Movies</title>
-  </head>
-  <body style="background-color: #0f172a; color: white; font-family: sans-serif; padding: 15px; max-width: 900px; margin: 0 auto;">
-    
-    <Navbar />
-    
-    <h1 style="font-size: 22px; margin-top: 15px;">{show.name}</h1>
-    <p style="color: #94a3b8; font-size: 14px;">⭐ {show.vote_average ? show.vote_average.toFixed(1) : 'N/A'} / 10 | Total Seasons: {show.number_of_seasons}</p>
-
-    <!-- Controls Bar -->
-    <div style="margin: 15px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: #1e293b; padding: 12px; border-radius: 8px;">
-      
-      <div>
-        <label style="font-size: 13px; color: #94a3b8;">Server: </label>
-        <select id="server-select" style="padding: 6px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 6px; outline: none;">
-          <option value="autoembed">Server 1 (AutoEmbed)</option>
-          <option value="vidsrc">Server 2 (VidSrc)</option>
-          <option value="smashystream">Server 3 (SmashyStream)</option>
-        </select>
-      </div>
-
-      <div>
-        <label style="font-size: 13px; color: #94a3b8;">Season: </label>
-        <select id="season-select" style="padding: 6px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 6px; outline: none;">
-          {seasons.map((s) => (
-            s.season_number > 0 && <option value={s.season_number}>Season {s.season_number}</option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label style="font-size: 13px; color: #94a3b8;">Episode: </label>
-        <input id="episode-input" type="number" value="1" min="1" style="width: 50px; padding: 6px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 6px; outline: none;" />
-      </div>
-
-      <button id="update-btn" style="background: #0284c7; color: white; border: none; padding: 7px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 5px;">Play Episode</button>
-    </div>
-
-    <!-- Video Player -->
-    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #334155; background: #000;">
-      <iframe 
-        id="tv-player"
-        src={`https://autoembed.co/tv/tmdb/${id}-1-1`} 
-        style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border:0;" 
-        allowfullscreen>
-      </iframe>
-    </div>
-
-    <div style="margin-top: 20px;">
-      <h2>Overview</h2>
-      <p style="color: #cbd5e1; line-height: 1.6;">{show.overview}</p>
-    </div>
-
-    <script is:inline define:vars={{ tmdbId: id }}>
-      const serverSelect = document.getElementById('server-select');
-      const seasonSelect = document.getElementById('season-select');
-      const episodeInput = document.getElementById('episode-input');
-      const updateBtn = document.getElementById('update-btn');
-      const player = document.getElementById('tv-player');
-
-      function getEmbedUrl(server, season, episode) {
-        if (server === 'vidsrc') {
-          return `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
-        } else if (server === 'smashystream') {
-          return `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}&season=${season}&episode=${episode}`;
-        }
-        // Default: AutoEmbed
-        return `https://autoembed.co/tv/tmdb/${tmdbId}-${season}-${episode}`;
+    <title>Watch {show.name || 'TV Series'} Free HD - Vix Movies</title>
+    <style>
+      body {
+        background-color: #0b0f19;
+        color: #f8fafc;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0 15px 40px 15px;
       }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .header {
+        margin-top: 15px;
+        margin-bottom: 15px;
+      }
+      .title {
+        font-size: 26px;
+        font-weight: 800;
+        margin: 0 0 5px 0;
+      }
+      .meta {
+        color: #94a3b8;
+        font-size: 14px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+      .control-bar {
+        background: #1e293b;
+        padding: 12px;
+        border-radius: 8px;
+        margin: 15px 0;
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        border: 1px solid #334155;
+        align-items: center;
+      }
+      .select-box {
+        background: #0f172a;
+        color: white;
+        border: 1px solid #334155;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        outline: none;
+        cursor: pointer;
+      }
+      .player-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 12px;
+        border: 1px solid #334155;
+        background: #000;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      }
+      .player-iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+      .server-btn {
+        background: #0f172a;
+        color: #cbd5e1;
+        border: 1px solid #334155;
+        padding: 8px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .server-btn.active {
+        background: #0284c7;
+        color: white;
+        border-color: #0284c7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <Navbar />
 
-      updateBtn.addEventListener('click', () => {
-        const server = serverSelect.value;
-        const season = seasonSelect.value || 1;
-        const episode = episodeInput.value || 1;
-        player.src = getEmbedUrl(server, season, episode);
+      <div class="header">
+        <h1 class="title">{show.name}</h1>
+        <div class="meta">
+          <span>⭐ {show.vote_average ? show.vote_average.toFixed(1) : 'N/A'} / 10</span>
+          <span>📅 {show.first_air_date ? show.first_air_date.split('-')[0] : ''}</span>
+          <span style="color: #38bdf8; font-weight: bold;">TV Series</span>
+        </div>
+      </div>
+
+      <!-- Season & Episode Selectors -->
+      <div class="control-bar">
+        <div>
+          <label style="font-size: 13px; color: #94a3b8; font-weight: 600; margin-right: 5px;">Season:</label>
+          <select id="season-select" class="select-box">
+            {seasons.map((s) => (
+              <option value={s.season_number}>Season {s.season_number} ({s.episode_count} Episodes)</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size: 13px; color: #94a3b8; font-weight: 600; margin-right: 5px;">Episode:</label>
+          <select id="episode-select" class="select-box">
+            <!-- Dynamically Populated -->
+          </select>
+        </div>
+
+        <div style="margin-left: auto; display: flex; gap: 8px;">
+          <button class="server-btn active" data-server="autoembed">Server 1</button>
+          <button class="server-btn" data-server="vidsrc">Server 2</button>
+        </div>
+      </div>
+
+      <!-- Video Player Frame -->
+      <div class="player-container">
+        <iframe 
+          id="tv-player"
+          class="player-iframe"
+          src={`https://autoembed.co/tv/tmdb/${id}-1-1`} 
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <!-- Overview -->
+      <div style="margin-top: 25px;">
+        <h2 style="font-size: 18px;">Overview</h2>
+        <p style="color: #cbd5e1; line-height: 1.6; font-size: 14px;">{show.overview}</p>
+      </div>
+    </div>
+
+    <script is:inline define:vars={{ tmdbId: id, seasonsData: seasons }}>
+      document.addEventListener('DOMContentLoaded', () => {
+        const seasonSelect = document.getElementById('season-select');
+        const episodeSelect = document.getElementById('episode-select');
+        const player = document.getElementById('tv-player');
+        const serverBtns = document.querySelectorAll('.server-btn');
+        let currentServer = 'autoembed';
+
+        function updateEpisodes() {
+          const selectedSeasonNum = parseInt(seasonSelect.value);
+          const seasonObj = seasonsData.find(s => s.season_number === selectedSeasonNum);
+          const epCount = seasonObj ? seasonObj.episode_count : 20;
+
+          episodeSelect.innerHTML = '';
+          for (let i = 1; i <= epCount; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.innerText = `Episode ${i}`;
+            episodeSelect.appendChild(opt);
+          }
+          loadVideo();
+        }
+
+        function loadVideo() {
+          const s = seasonSelect.value || 1;
+          const e = episodeSelect.value || 1;
+
+          if (currentServer === 'vidsrc') {
+            player.src = `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${s}&episode=${e}`;
+          } else {
+            player.src = `https://autoembed.co/tv/tmdb/${tmdbId}-${s}-${e}`;
+          }
+        }
+
+        seasonSelect.addEventListener('change', updateEpisodes);
+        episodeSelect.addEventListener('change', loadVideo);
+
+        serverBtns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            serverBtns.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentServer = e.target.getAttribute('data-server');
+            loadVideo();
+          });
+        });
+
+        // Initial Load
+        updateEpisodes();
       });
     </script>
-
   </body>
 </html>
