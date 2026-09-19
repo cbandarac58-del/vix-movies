@@ -2,19 +2,90 @@
 import Navbar from '../components/Navbar.astro';
 
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
+const SITE_URL = 'https://movies.vixtube.net';
 
-// Fetch Hindi (Bollywood) Movies from TMDB
-const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&with_original_language=hi&sort_by=popularity.desc`);
-const data = await res.json();
-const bollywoodMovies = data.results || [];
+const slugify = (t = '') =>
+  t.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// Fetch Hindi (Bollywood) popular movies, 2 pages
+const pages = await Promise.all(
+  [1, 2].map(async (p) => {
+    const r = await fetch(
+      `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&with_original_language=hi&sort_by=popularity.desc&vote_count.gte=50&include_adult=false&page=${p}`
+    );
+    const d = await r.json();
+    return d.results || [];
+  })
+);
+const seen = new Set();
+const bollywoodMovies = pages
+  .flat()
+  .filter((m) => m.poster_path && !m.adult && !seen.has(m.id) && seen.add(m.id));
+
+// Fetch movie genres
+const genreRes = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_KEY}`);
+const genreData = await genreRes.json();
+const genres = genreData.genres || [];
+
+const topNames = bollywoodMovies.slice(0, 3).map((m) => m.title);
+const pageUrl = `${SITE_URL}/bollywood`;
+const pageTitle = 'Popular Bollywood Movies - Cast, Trailers & Details | Vix Movies';
+const pageDescription = `Browse popular Bollywood movies with ratings, cast and trailers.${
+  topNames.length ? ` Trending now: ${topNames.join(', ')}.` : ''
+}`.slice(0, 158);
+
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": pageUrl,
+      "url": pageUrl,
+      "name": "Popular Bollywood Movies",
+      "description": pageDescription
+    },
+    {
+      "@type": "ItemList",
+      "itemListElement": bollywoodMovies.slice(0, 20).map((m, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "url": `${SITE_URL}/movie/${m.id}`,
+        "name": m.title
+      }))
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
+        { "@type": "ListItem", "position": 2, "name": "Bollywood Movies", "item": pageUrl }
+      ]
+    }
+  ]
+};
 ---
 
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bollywood Movies - Vix Movies</title>
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href={pageUrl} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
     <style>
+      * { box-sizing: border-box; }
       body {
         background-color: #0b0f19;
         color: #f8fafc;
@@ -29,8 +100,14 @@ const bollywoodMovies = data.results || [];
       .page-title {
         font-size: 20px;
         font-weight: 800;
-        margin: 20px 0 15px 0;
+        margin: 20px 0 8px 0;
         color: #38bdf8;
+      }
+      .intro {
+        color: #cbd5e1;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0 0 18px 0;
       }
       .grid-movies {
         display: grid;
@@ -46,6 +123,10 @@ const bollywoodMovies = data.results || [];
       .movie-card {
         text-decoration: none;
         color: white;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        overflow: hidden;
       }
       .poster-box {
         position: relative;
@@ -59,6 +140,7 @@ const bollywoodMovies = data.results || [];
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
       }
       .badge-hd {
         position: absolute;
@@ -87,26 +169,114 @@ const bollywoodMovies = data.results || [];
         overflow: hidden;
         text-overflow: ellipsis;
       }
+
+      /* Browse by Genre Links */
+      .genre-browse {
+        margin-top: 35px;
+      }
+      .genre-browse h2 {
+        font-size: 16px;
+        font-weight: 800;
+        margin: 0 0 12px 0;
+      }
+      .genre-browse-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .genre-browse-list a {
+        background: #1e293b;
+        color: #cbd5e1;
+        border: 1px solid #334155;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .genre-browse-list a:hover {
+        background: #0284c7;
+        border-color: #0284c7;
+        color: white;
+      }
+
+      /* Footer */
+      .site-footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #334155;
+        text-align: center;
+      }
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 12px;
+      }
+      .footer-links a {
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 13px;
+      }
+      .copyright-text {
+        color: #64748b;
+        font-size: 12px;
+        margin: 0;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <Navbar activePage="bollywood" />
 
-      <h1 class="page-title">🍿 Bollywood Movies</h1>
+      <main>
+        <h1 class="page-title">🍿 Popular Bollywood Movies</h1>
+        <p class="intro">
+          Explore {bollywoodMovies.length} popular Hindi-language movies, sorted by popularity.
+          {topNames.length > 0 && ` Right now the most popular titles include ${topNames.join(', ')}.`}
+          Open any movie to see its rating, cast, trailer and full details.
+        </p>
 
-      <div class="grid-movies">
-        {bollywoodMovies.map((m) => (
-          <a href={`/movie/${m.id}`} class="movie-card">
-            <div class="poster-box">
-              <img src={m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750'} alt={m.title} loading="lazy" />
-              <span class="badge-hd">HD</span>
-              <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
-            </div>
-            <h3 class="card-title">{m.title}</h3>
-          </a>
-        ))}
-      </div>
+        <section class="grid-movies" aria-label="Popular Bollywood movies">
+          {bollywoodMovies.map((m) => (
+            <a href={`/movie/${m.id}`} class="movie-card" title={`Watch ${m.title} online`}>
+              <div class="poster-box">
+                <img
+                  src={`https://image.tmdb.org/t/p/w500${m.poster_path}`}
+                  onerror="this.onerror=null;this.src='/no-poster.svg'"
+                  alt={`${m.title} Poster`}
+                  loading="lazy"
+                  decoding="async"
+                  width="500"
+                  height="750"
+                />
+                <span class="badge-hd">HD</span>
+                <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
+              </div>
+              <h2 class="card-title">{m.title}</h2>
+            </a>
+          ))}
+        </section>
+
+        <!-- Browse Movies by Genre (real links for search engines) -->
+        <section class="genre-browse" aria-label="Browse movies by genre">
+          <h2>Browse Movies by Genre</h2>
+          <div class="genre-browse-list">
+            {genres.map((g) => (
+              <a href={`/genre/${slugify(g.name)}`} title={`${g.name} movies`}>{g.name}</a>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-links">
+          <a href="/about">About Us</a>
+          <a href="/contact">Contact Us</a>
+          <a href="/privacy-policy">Privacy Policy</a>
+        </div>
+        <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
+      </footer>
     </div>
   </body>
 </html>
