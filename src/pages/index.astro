@@ -3,6 +3,9 @@ import Navbar from '../components/Navbar.astro';
 
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 
+const slugify = (t = '') =>
+  t.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
 // Fetch Genres
 const genreRes = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_KEY}`);
 const genreData = await genreRes.json();
@@ -302,6 +305,36 @@ const schemaData = {
         width: 100%;
       }
 
+      /* Browse by Genre Links */
+      .genre-browse {
+        margin-top: 35px;
+      }
+      .genre-browse h2 {
+        font-size: 16px;
+        font-weight: 800;
+        margin: 0 0 12px 0;
+      }
+      .genre-browse-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .genre-browse-list a {
+        background: #1e293b;
+        color: #cbd5e1;
+        border: 1px solid #334155;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .genre-browse-list a:hover {
+        background: #0284c7;
+        border-color: #0284c7;
+        color: white;
+      }
+
       /* AEO / GEO Content Section */
       .aeo-section {
         margin-top: 40px;
@@ -394,6 +427,16 @@ const schemaData = {
           ))}
         </section>
 
+        <!-- Browse Movies by Genre (real links for search engines) -->
+        <section class="genre-browse" aria-label="Browse movies by genre">
+          <h2>Browse Movies by Genre</h2>
+          <div class="genre-browse-list">
+            {genres.map((g) => (
+              <a href={`/genre/${slugify(g.name)}`} title={`${g.name} movies`}>{g.name} Movies</a>
+            ))}
+          </div>
+        </section>
+
         <!-- AEO & GEO Direct Information Box (Helps Perplexity, ChatGPT & Gemini Indexing) -->
         <section class="aeo-section">
           <h2>About Vix Movies Free Streaming</h2>
@@ -417,11 +460,19 @@ const schemaData = {
       </footer>
     </div>
 
-    <script is:inline define:vars={{ tmdbKey: TMDB_KEY }}>
+    <script is:inline>
       document.addEventListener('DOMContentLoaded', () => {
         const pills = document.querySelectorAll('.cat-pill');
         const heading = document.getElementById('category-heading');
         const container = document.getElementById('movies-container');
+
+        function esc(s) {
+          return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        }
 
         pills.forEach(pill => {
           pill.addEventListener('click', async (e) => {
@@ -435,11 +486,7 @@ const schemaData = {
             container.innerHTML = '<p style="color: #94a3b8; font-size: 14px; grid-column: 1 / -1; padding: 20px 0;">Loading movies...</p>';
             
             try {
-              const url = genreId === 'all' 
-                ? `https://api.themoviedb.org/3/trending/movie/day?api_key=${tmdbKey}`
-                : `https://api.themoviedb.org/3/discover/movie?api_key=${tmdbKey}&with_genres=${genreId}`;
-
-              const res = await fetch(url);
+              const res = await fetch(`/api/movies?genre=${encodeURIComponent(genreId)}`);
               const data = await res.json();
               
               container.innerHTML = '';
@@ -451,11 +498,11 @@ const schemaData = {
                   card.title = `Watch ${m.title} online`;
                   card.innerHTML = `
                     <div class="poster-box">
-                      <img src="${m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : '/no-poster.svg'}" onerror="this.onerror=null;this.src='/no-poster.svg'" alt="${m.title} Poster" loading="lazy" decoding="async" width="500" height="750" />
+                      <img src="${m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : '/no-poster.svg'}" onerror="this.onerror=null;this.src='/no-poster.svg'" alt="${esc(m.title)} Poster" loading="lazy" decoding="async" width="500" height="750" />
                       <span class="badge-hd">HD</span>
                       <span class="badge-rating">⭐ ${m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
                     </div>
-                    <h3 class="card-title">${m.title}</h3>
+                    <h3 class="card-title">${esc(m.title)}</h3>
                   `;
                   container.appendChild(card);
                 });
