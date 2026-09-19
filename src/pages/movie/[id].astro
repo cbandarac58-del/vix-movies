@@ -4,26 +4,45 @@ import Navbar from '../../components/Navbar.astro';
 const { id } = Astro.params;
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 
-// Fetch Movie Details
-const res = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_KEY}`);
+// Fetch Movie Details (+ cast & trailer)
+const res = await fetch(
+  `https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_KEY}&append_to_response=credits,videos`
+);
 const movie = await res.json();
+if (!movie.id) {
+  return new Response('Not found', { status: 404 });
+}
 
 // Fetch Similar Movies
 const simRes = await fetch(`https://api.themoviedb.org/3/movie/${id}/similar?api_key=${TMDB_KEY}`);
 const simData = await simRes.json();
 const similarMovies = (simData.results || []).slice(0, 6);
 
-// Configuration & SEO Variables
-const SITE_URL = 'https://vixmovies.com';
+// SEO Variables
+const SITE_URL = 'https://movies.vixtube.net';
 const movieTitle = movie.title || 'Movie Details';
 const releaseYear = movie.release_date ? movie.release_date.split('-')[0] : '';
-const pageTitle = `Watch ${movieTitle} (${releaseYear}) Free HD Online - Vix Movies`;
-const pageDescription = `Stream ${movieTitle} (${releaseYear}) full movie online in HD for free. ${movie.overview ? movie.overview.slice(0, 150) + '...' : 'Watch trending movies and TV series on Vix Movies.'}`;
+const cast = (movie.credits?.cast || []).slice(0, 6);
+const director = (movie.credits?.crew || []).find((c) => c.job === 'Director')?.name;
+const trailer = (movie.videos?.results || []).find(
+  (v) => v.site === 'YouTube' && v.type === 'Trailer'
+);
+const genreNames = (movie.genres || []).map((g) => g.name);
+const summary = `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''} is a ${
+  genreNames.join(', ').toLowerCase() || 'feature'
+} film${movie.runtime ? ` with a runtime of ${movie.runtime} minutes` : ''}${
+  director ? `, directed by ${director}` : ''
+}${cast.length ? `, starring ${cast.slice(0, 3).map((c) => c.name).join(', ')}` : ''}. It holds a ${
+  movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'
+}/10 rating on TMDB${movie.vote_count ? ` from ${movie.vote_count} votes` : ''}.`;
+
+const pageTitle = `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''} - Cast, Trailer & Details | Vix Movies`;
+const pageDescription = summary.length > 158 ? summary.slice(0, 155) + '...' : summary;
 const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/500x750';
 const backdropUrl = movie.backdrop_path ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}` : posterUrl;
 const pageUrl = `${SITE_URL}/movie/${id}`;
 
-// Schema.org Structured Data (SEO, AEO & GEO Strategy)
+// Schema.org Structured Data
 const movieSchema = {
   "@context": "https://schema.org",
   "@graph": [
@@ -36,14 +55,16 @@ const movieSchema = {
       "description": movie.overview || pageDescription,
       "datePublished": movie.release_date || releaseYear,
       "duration": movie.runtime ? `PT${movie.runtime}M` : undefined,
-      "aggregateRating": movie.vote_average ? {
+      "aggregateRating": movie.vote_count ? {
         "@type": "AggregateRating",
         "ratingValue": movie.vote_average.toFixed(1),
         "bestRating": "10",
         "worstRating": "1",
-        "ratingCount": movie.vote_count || 100
+        "ratingCount": movie.vote_count
       } : undefined,
-      "genre": movie.genres ? movie.genres.map((g: any) => g.name) : []
+      "genre": genreNames,
+      "director": director ? { "@type": "Person", "name": director } : undefined,
+      "actor": cast.map((c) => ({ "@type": "Person", "name": c.name }))
     },
     {
       "@type": "BreadcrumbList",
@@ -77,8 +98,8 @@ const movieSchema = {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- Dynamic Primary Meta Tags (SEO) -->
+
+    <!-- Primary Meta Tags -->
     <title>{pageTitle}</title>
     <meta name="title" content={pageTitle} />
     <meta name="description" content={pageDescription} />
@@ -86,21 +107,21 @@ const movieSchema = {
     <meta name="author" content="Vix Movies" />
     <link rel="canonical" href={pageUrl} />
 
-    <!-- Open Graph / Facebook / WhatsApp (Social Media Optimization) -->
+    <!-- Open Graph -->
     <meta property="og:type" content="video.movie" />
     <meta property="og:url" content={pageUrl} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDescription} />
     <meta property="og:image" content={backdropUrl} />
 
-    <!-- Twitter / X Meta Tags -->
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:url" content={pageUrl} />
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={pageDescription} />
     <meta name="twitter:image" content={backdropUrl} />
 
-    <!-- Structured Data (JSON-LD for Google, Perplexity & AI Search Crawlers) -->
+    <!-- Structured Data -->
     <script type="application/ld+json" set:html={JSON.stringify(movieSchema)} />
 
     <style>
@@ -245,7 +266,7 @@ const movieSchema = {
       .share-btn.tg { background: #229ED9; }
       .share-btn.copy { background: #475569; }
 
-      /* AEO / GEO Dynamic Movie Information Block */
+      /* Movie Information Block */
       .movie-info-block {
         margin-top: 25px;
         background: #1e293b;
@@ -258,10 +279,19 @@ const movieSchema = {
         color: #38bdf8;
         margin-top: 0;
       }
+      .movie-info-block h2:not(:first-child) {
+        margin-top: 22px;
+      }
       .movie-info-block p {
         color: #cbd5e1;
         line-height: 1.6;
         font-size: 14px;
+      }
+      .details-list {
+        color: #cbd5e1;
+        font-size: 14px;
+        line-height: 1.8;
+        padding-left: 18px;
       }
 
       /* Comment System Styling */
@@ -401,8 +431,8 @@ const movieSchema = {
             <span>⭐ {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'} / 10 Rating</span>
             <span>⏱️ {movie.runtime ? `${movie.runtime} mins` : 'N/A'}</span>
             <span style="color: #38bdf8; font-weight: bold;">HD Quality</span>
-            {movie.genres && (
-              <span>🎭 {movie.genres.map((g: any) => g.name).join(', ')}</span>
+            {genreNames.length > 0 && (
+              <span>🎭 {genreNames.join(', ')}</span>
             )}
           </div>
         </header>
@@ -417,10 +447,10 @@ const movieSchema = {
 
         <!-- Video Player Frame -->
         <section class="player-container" aria-label="Movie Player">
-          <iframe 
+          <iframe
             id="movie-player"
             class="player-iframe"
-            src={`https://autoembed.co/movie/tmdb/${id}`} 
+            src={`https://autoembed.co/movie/tmdb/${id}`}
             title={`Watch ${movieTitle}`}
             allowfullscreen>
           </iframe>
@@ -446,16 +476,44 @@ const movieSchema = {
           </div>
         </div>
 
-        <!-- Semantic Overview & AEO/GEO Box -->
+        <!-- Overview, Details & Trailer -->
         <article class="movie-info-block">
           <h2>Storyline & Overview</h2>
           <p>{movie.overview || 'No storyline overview available for this title.'}</p>
+          <p>{summary}</p>
+
+          <h2>Details</h2>
+          <ul class="details-list">
+            {movie.tagline && <li><b>Tagline:</b> {movie.tagline}</li>}
+            {movie.release_date && <li><b>Release date:</b> {movie.release_date}</li>}
+            {director && <li><b>Director:</b> {director}</li>}
+            {cast.length > 0 && <li><b>Cast:</b> {cast.map((c) => c.name).join(', ')}</li>}
+            {movie.original_language && <li><b>Language:</b> {movie.original_language.toUpperCase()}</li>}
+            {movie.production_companies?.length > 0 && (
+              <li><b>Production:</b> {movie.production_companies.slice(0, 3).map((c) => c.name).join(', ')}</li>
+            )}
+          </ul>
+
+          {trailer && (
+            <>
+              <h2>Trailer</h2>
+              <div class="player-container">
+                <iframe
+                  class="player-iframe"
+                  src={`https://www.youtube.com/embed/${trailer.key}`}
+                  title={`${movieTitle} trailer`}
+                  loading="lazy"
+                  allowfullscreen>
+                </iframe>
+              </div>
+            </>
+          )}
         </article>
 
         <!-- Native Comment Section -->
         <section class="comments-section" aria-label="User Reviews and Comments">
           <h2 style="font-size: 18px; margin-top: 0; margin-bottom: 15px;">💬 User Comments & Reviews</h2>
-          
+
           <div class="comment-input-box">
             <input type="text" id="user-name" placeholder="Your Name..." class="comment-input" />
             <textarea id="user-comment" placeholder="Write your review or comment..." class="comment-textarea"></textarea>
@@ -484,7 +542,7 @@ const movieSchema = {
         )}
       </main>
 
-      <!-- Footer Structure -->
+      <!-- Footer -->
       <footer class="site-footer">
         <div class="footer-links">
           <a href="/about">About Us</a>
@@ -505,7 +563,7 @@ const movieSchema = {
           btn.addEventListener('click', (e) => {
             serverButtons.forEach(b => b.classList.remove('active'));
             e.target.classList.add('active');
-            
+
             const server = e.target.getAttribute('data-server');
             if (server === 'vidsrc') {
               player.src = `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
@@ -527,8 +585,8 @@ const movieSchema = {
         const likeCountEl = document.getElementById('like-count');
         const dislikeCountEl = document.getElementById('dislike-count');
 
-        let likes = parseInt(localStorage.getItem(likeKey) || '15');
-        let dislikes = parseInt(localStorage.getItem(dislikeKey) || '1');
+        let likes = parseInt(localStorage.getItem(likeKey) || '0');
+        let dislikes = parseInt(localStorage.getItem(dislikeKey) || '0');
         let userVote = localStorage.getItem(userVoteKey);
 
         function renderVotes() {
