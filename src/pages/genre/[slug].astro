@@ -18,23 +18,26 @@ if (!genre) {
   return new Response('Not found', { status: 404 });
 }
 
-// Fetch popular movies of this genre (2 pages = up to 40 movies)
+// "TV Movie" -> "TV Movies", "Action" -> "Action Movies"
+const genreLabel = /movie$/i.test(genre.name) ? `${genre.name}s` : `${genre.name} Movies`;
+
+// Fetch popular movies of this genre (2 pages, only well-known titles, no adult flag)
 const pages = await Promise.all(
   [1, 2].map(async (p) => {
     const r = await fetch(
-      `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&with_genres=${genre.id}&sort_by=popularity.desc&vote_count.gte=50&page=${p}`
+      `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&with_genres=${genre.id}&sort_by=popularity.desc&vote_count.gte=300&include_adult=false&page=${p}`
     );
     const d = await r.json();
     return d.results || [];
   })
 );
-const movies = pages.flat().filter((m) => m.poster_path);
+const movies = pages.flat().filter((m) => m.poster_path && !m.adult);
 
 const year = new Date().getFullYear();
 const topNames = movies.slice(0, 3).map((m) => m.title);
 const pageUrl = `${SITE_URL}/genre/${slug}`;
-const pageTitle = `Best ${genre.name} Movies ${year} - Popular ${genre.name} Movies | Vix Movies`;
-const pageDescription = `Browse popular ${genre.name.toLowerCase()} movies with ratings, cast and trailers.${
+const pageTitle = `Best ${genreLabel} ${year} - Popular ${genreLabel} | Vix Movies`;
+const pageDescription = `Browse popular ${genreLabel.toLowerCase()} with ratings, cast and trailers.${
   topNames.length ? ` Top picks include ${topNames.join(', ')}.` : ''
 }`.slice(0, 158);
 
@@ -45,7 +48,7 @@ const schema = {
       "@type": "CollectionPage",
       "@id": pageUrl,
       "url": pageUrl,
-      "name": `${genre.name} Movies`,
+      "name": genreLabel,
       "description": pageDescription
     },
     {
@@ -61,7 +64,7 @@ const schema = {
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
-        { "@type": "ListItem", "position": 2, "name": `${genre.name} Movies`, "item": pageUrl }
+        { "@type": "ListItem", "position": 2, "name": genreLabel, "item": pageUrl }
       ]
     }
   ]
@@ -164,14 +167,14 @@ const schema = {
       <Navbar />
 
       <main>
-        <h1 class="page-title">Best {genre.name} Movies {year}</h1>
+        <h1 class="page-title">Best {genreLabel} {year}</h1>
         <p class="intro">
-          Explore {movies.length} popular {genre.name.toLowerCase()} movies, sorted by popularity.
+          Explore {movies.length} popular {genreLabel.toLowerCase()}, sorted by popularity.
           {topNames.length > 0 && ` Right now the most popular titles include ${topNames.join(', ')}.`}
           Open any movie to see its rating, cast, trailer and full details.
         </p>
 
-        <section class="grid-movies" aria-label={`${genre.name} movies`}>
+        <section class="grid-movies" aria-label={genreLabel}>
           {movies.map((m) => (
             <a href={`/movie/${m.id}`} class="movie-card" title={`Watch ${m.title} online`}>
               <div class="poster-box">
