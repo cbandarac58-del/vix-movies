@@ -12,15 +12,20 @@ export const GET = async ({ locals }) => {
     '/trending', '/about', '/contact', '/privacy-policy',
   ];
 
-  // Genre pages
-  let genrePaths = [];
-  try {
-    const gr = await fetch(`${base}/genre/movie/list?api_key=${key}`);
-    const gd = await gr.json();
-    genrePaths = (gd.genres || []).map((g) => `/genre/${slugify(g.name)}`);
-  } catch {
-    genrePaths = [];
-  }
+  // Movie genre pages and TV genre pages
+  const getGenres = async (type, prefix) => {
+    try {
+      const r = await fetch(`${base}/genre/${type}/list?api_key=${key}`);
+      const d = await r.json();
+      return (d.genres || []).map((g) => `${prefix}/${slugify(g.name)}`);
+    } catch {
+      return [];
+    }
+  };
+  const [movieGenrePaths, tvGenrePaths] = await Promise.all([
+    getGenres('movie', '/genre'),
+    getGenres('tv', '/tv/genre'),
+  ]);
 
   // Movie and TV pages
   const endpoints = [];
@@ -45,7 +50,9 @@ export const GET = async ({ locals }) => {
     })
   );
 
-  const all = [...new Set([...pages, ...genrePaths, ...results.flat()])];
+  const all = [
+    ...new Set([...pages, ...movieGenrePaths, ...tvGenrePaths, ...results.flat()]),
+  ];
   const urls = all
     .map((p) => `  <url>\n    <loc>${site}${p}</loc>\n  </url>`)
     .join('\n');
