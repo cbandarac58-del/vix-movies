@@ -533,7 +533,7 @@ const movieSchema = {
             <div class="grid-recommendations">
               {similarMovies.map((sim) => (
                 <a href={`/movie/${sim.id}`} class="rec-card" title={`Watch ${sim.title}`}>
-                  <img src={sim.poster_path ? `https://image.tmdb.org/t/p/w500${sim.poster_path}` : 'https://via.placeholder.com/500x750'} alt={`${sim.title} Poster`} style="width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block;" loading="lazy" decoding="async" width="500" height="750" />
+                  <img src={sim.poster_path ? `https://image.tmdb.org/t/p/w500${sim.poster_path}` : 'https://via.placeholder.com/500x750'} alt={`${sim.title} Poster`} style="width: 100%; height: auto; aspect-ratio: 2/3; object-fit: cover; display: block;" loading="lazy" decoding="async" width="500" height="750" />
                   <div style="padding: 8px;">
                     <h3 style="font-size: 12px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{sim.title}</h3>
                   </div>
