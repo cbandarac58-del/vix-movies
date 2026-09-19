@@ -2,13 +2,27 @@ export const GET = async ({ locals }) => {
   const site = 'https://movies.vixtube.net';
   const key =
     locals?.runtime?.env?.TMDB_API_KEY || import.meta.env.TMDB_API_KEY;
+  const base = 'https://api.themoviedb.org/3';
+
+  const slugify = (t = '') =>
+    t.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
   const pages = [
     '/', '/hollywood', '/bollywood', '/tv',
     '/trending', '/about', '/contact', '/privacy-policy',
   ];
 
-  const base = 'https://api.themoviedb.org/3';
+  // Genre pages
+  let genrePaths = [];
+  try {
+    const gr = await fetch(`${base}/genre/movie/list?api_key=${key}`);
+    const gd = await gr.json();
+    genrePaths = (gd.genres || []).map((g) => `/genre/${slugify(g.name)}`);
+  } catch {
+    genrePaths = [];
+  }
+
+  // Movie and TV pages
   const endpoints = [];
   for (let p = 1; p <= 5; p++) {
     endpoints.push({ type: 'movie', url: `${base}/movie/popular?api_key=${key}&page=${p}` });
@@ -31,7 +45,7 @@ export const GET = async ({ locals }) => {
     })
   );
 
-  const all = [...new Set([...pages, ...results.flat()])];
+  const all = [...new Set([...pages, ...genrePaths, ...results.flat()])];
   const urls = all
     .map((p) => `  <url>\n    <loc>${site}${p}</loc>\n  </url>`)
     .join('\n');
