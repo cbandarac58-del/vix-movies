@@ -28,13 +28,15 @@ const trailer = (movie.videos?.results || []).find(
   (v) => v.site === 'YouTube' && v.type === 'Trailer'
 );
 const genreNames = (movie.genres || []).map((g) => g.name);
-const summary = `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''} is a ${
-  genreNames.join(', ').toLowerCase() || 'feature'
-} film${movie.runtime ? ` with a runtime of ${movie.runtime} minutes` : ''}${
-  director ? `, directed by ${director}` : ''
-}${cast.length ? `, starring ${cast.slice(0, 3).map((c) => c.name).join(', ')}` : ''}. It holds a ${
-  movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'
-}/10 rating on TMDB${movie.vote_count ? ` from ${movie.vote_count} votes` : ''}.`;
+const genreText = genreNames.join(', ').toLowerCase() || 'feature';
+const article = /^[aeiou]/.test(genreText) ? 'an' : 'a';
+const summary = `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''} is ${article} ${genreText} film${
+  movie.runtime ? ` with a runtime of ${movie.runtime} minutes` : ''
+}${director ? `, directed by ${director}` : ''}${
+  cast.length ? `, starring ${cast.slice(0, 3).map((c) => c.name).join(', ')}` : ''
+}. It holds a ${movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}/10 rating on TMDB${
+  movie.vote_count ? ` from ${movie.vote_count} votes` : ''
+}.`;
 
 const pageTitle = `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''} - Cast, Trailer & Details | Vix Movies`;
 const pageDescription = summary.length > 158 ? summary.slice(0, 155) + '...' : summary;
