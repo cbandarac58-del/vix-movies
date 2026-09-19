@@ -1,0 +1,217 @@
+---
+import Navbar from '../../components/Navbar.astro';
+
+const { slug } = Astro.params;
+const TMDB_KEY = import.meta.env.TMDB_API_KEY;
+const SITE_URL = 'https://movies.vixtube.net';
+
+const slugify = (t = '') =>
+  t.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// Find the genre that matches the URL slug
+const genreRes = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_KEY}`);
+const genreData = await genreRes.json();
+const allGenres = genreData.genres || [];
+const genre = allGenres.find((g) => slugify(g.name) === slug);
+
+if (!genre) {
+  return new Response('Not found', { status: 404 });
+}
+
+// Fetch popular movies of this genre (2 pages = up to 40 movies)
+const pages = await Promise.all(
+  [1, 2].map(async (p) => {
+    const r = await fetch(
+      `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&with_genres=${genre.id}&sort_by=popularity.desc&vote_count.gte=50&page=${p}`
+    );
+    const d = await r.json();
+    return d.results || [];
+  })
+);
+const movies = pages.flat().filter((m) => m.poster_path);
+
+const year = new Date().getFullYear();
+const topNames = movies.slice(0, 3).map((m) => m.title);
+const pageUrl = `${SITE_URL}/genre/${slug}`;
+const pageTitle = `Best ${genre.name} Movies ${year} - Popular ${genre.name} Movies | Vix Movies`;
+const pageDescription = `Browse popular ${genre.name.toLowerCase()} movies with ratings, cast and trailers.${
+  topNames.length ? ` Top picks include ${topNames.join(', ')}.` : ''
+}`.slice(0, 158);
+
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": pageUrl,
+      "url": pageUrl,
+      "name": `${genre.name} Movies`,
+      "description": pageDescription
+    },
+    {
+      "@type": "ItemList",
+      "itemListElement": movies.slice(0, 20).map((m, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "url": `${SITE_URL}/movie/${m.id}`,
+        "name": m.title
+      }))
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
+        { "@type": "ListItem", "position": 2, "name": `${genre.name} Movies`, "item": pageUrl }
+      ]
+    }
+  ]
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href={pageUrl} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        background-color: #0b0f19;
+        color: #f8fafc;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0 12px 40px 12px;
+      }
+      .container { max-width: 1100px; margin: 0 auto; }
+      .page-title { font-size: 22px; font-weight: 800; margin: 18px 0 8px 0; }
+      .intro { color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0 0 18px 0; }
+      .grid-movies {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      @media (min-width: 640px) {
+        .grid-movies { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+      }
+      @media (min-width: 900px) {
+        .grid-movies { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+      }
+      .movie-card {
+        text-decoration: none;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        overflow: hidden;
+      }
+      .poster-box {
+        position: relative;
+        width: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 2 / 3;
+        background: #1e293b;
+        border: 1px solid #334155;
+      }
+      .poster-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .badge-hd {
+        position: absolute; top: 6px; left: 6px; background: #0284c7;
+        font-size: 9px; font-weight: bold; padding: 2px 5px; border-radius: 4px;
+      }
+      .badge-rating {
+        position: absolute; top: 6px; right: 6px; background: rgba(15, 23, 42, 0.85);
+        font-size: 9px; font-weight: bold; padding: 2px 5px; border-radius: 4px;
+      }
+      .card-title {
+        font-size: 12px; font-weight: 600; margin: 6px 0 0 0;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;
+      }
+      .genre-links { margin-top: 35px; }
+      .genre-links h2 { font-size: 16px; margin-bottom: 12px; }
+      .genre-list { display: flex; flex-wrap: wrap; gap: 8px; }
+      .genre-list a {
+        background: #1e293b; color: #cbd5e1; border: 1px solid #334155;
+        padding: 6px 14px; border-radius: 20px; font-size: 12px;
+        font-weight: 600; text-decoration: none;
+      }
+      .genre-list a.current { background: #0284c7; border-color: #0284c7; color: white; }
+      .site-footer {
+        margin-top: 40px; padding-top: 20px;
+        border-top: 1px solid #334155; text-align: center;
+      }
+      .footer-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 12px; }
+      .footer-links a { color: #94a3b8; text-decoration: none; font-size: 13px; }
+      .copyright-text { color: #64748b; font-size: 12px; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <Navbar />
+
+      <main>
+        <h1 class="page-title">Best {genre.name} Movies {year}</h1>
+        <p class="intro">
+          Explore {movies.length} popular {genre.name.toLowerCase()} movies, sorted by popularity.
+          {topNames.length > 0 && ` Right now the most popular titles include ${topNames.join(', ')}.`}
+          Open any movie to see its rating, cast, trailer and full details.
+        </p>
+
+        <section class="grid-movies" aria-label={`${genre.name} movies`}>
+          {movies.map((m) => (
+            <a href={`/movie/${m.id}`} class="movie-card" title={`Watch ${m.title} online`}>
+              <div class="poster-box">
+                <img
+                  src={`https://image.tmdb.org/t/p/w500${m.poster_path}`}
+                  onerror="this.onerror=null;this.src='/no-poster.svg'"
+                  alt={`${m.title} Poster`}
+                  loading="lazy"
+                  decoding="async"
+                  width="500"
+                  height="750"
+                />
+                <span class="badge-hd">HD</span>
+                <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
+              </div>
+              <h2 class="card-title">{m.title}</h2>
+            </a>
+          ))}
+        </section>
+
+        <section class="genre-links">
+          <h2>Browse Movies by Genre</h2>
+          <div class="genre-list">
+            {allGenres.map((g) => (
+              <a href={`/genre/${slugify(g.name)}`} class={g.id === genre.id ? 'current' : ''}>
+                {g.name}
+              </a>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-links">
+          <a href="/about">About Us</a>
+          <a href="/contact">Contact Us</a>
+          <a href="/privacy-policy">Privacy Policy</a>
+        </div>
+        <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
+      </footer>
+    </div>
+  </body>
+</html>
