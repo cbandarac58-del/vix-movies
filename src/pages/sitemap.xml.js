@@ -3,7 +3,7 @@ import { MOVIE_SITEMAPS, TV_SITEMAPS } from '../utils/sitemap-config.js';
 export const GET = () => {
   const site = 'https://movies.vixtube.net';
 
-  const files = ['pages'];
+  const files = ['pages', 'sports'];
   for (let i = 1; i <= MOVIE_SITEMAPS; i++) files.push(`movies-${i}`);
   for (let i = 1; i <= TV_SITEMAPS; i++) files.push(`tv-${i}`);
 
