@@ -3,6 +3,7 @@ import {
   TV_SITEMAPS,
   PAGES_PER_SITEMAP,
 } from '../../utils/sitemap-config.js';
+import { SPORTS } from '../../utils/sports-config.js';
 
 const SITE = 'https://movies.vixtube.net';
 const BASE = 'https://api.themoviedb.org/3';
@@ -37,7 +38,7 @@ export const GET = async ({ params, locals }) => {
   const key = locals?.runtime?.env?.TMDB_API_KEY || import.meta.env.TMDB_API_KEY;
   const name = params.name || '';
 
-  // Static pages + movie genre pages + TV genre pages
+  // Static pages + sports pages + movie genre pages + TV genre pages
   if (name === 'pages') {
     const [movieGenres, tvGenres] = await Promise.all([
       getGenres(key, 'movie', '/genre'),
@@ -47,7 +48,8 @@ export const GET = async ({ params, locals }) => {
       '/', '/hollywood', '/bollywood', '/tv',
       '/trending', '/about', '/contact', '/privacy-policy',
     ];
-    return xmlResponse([...pages, ...movieGenres, ...tvGenres]);
+    const sports = ['/sports', ...SPORTS.map((s) => `/sports/${s.slug}`)];
+    return xmlResponse([...pages, ...sports, ...movieGenres, ...tvGenres]);
   }
 
   // Movie / TV files: movies-1, movies-2, tv-1 ...
