@@ -40,10 +40,20 @@ const pageUrl = `${SITE_URL}/sports/watch/${id}`;
 const embedUrl = `https://www.youtube.com/embed/${id}`;
 const watchUrl = `https://www.youtube.com/watch?v=${id}`;
 
-// Clean description: remove links and hashtags, keep readable text
+// Clean description: drop channel promo lines (subscribe, social links...), links, hashtags, @mentions
+const PROMO =
+  /(subscribe|follow us|follow @|website|facebook|instagram|twitter|tiktok|whatsapp|threads|snapchat|telegram|youtube\.com|download the|official app|copyright|all rights reserved|business enquir|for more)/i;
 const cleanDesc = video.description
-  .replace(/https?:\/\/\S+/g, '')
-  .replace(/#\w+/g, '')
+  .split(/\r?\n/)
+  .map((l) =>
+    l
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/#\w+/g, '')
+      .replace(/@\w+/g, '')
+      .trim()
+  )
+  .filter((l) => /[A-Za-z]{3,}/.test(l) && !PROMO.test(l))
+  .join(' ')
   .replace(/\s+/g, ' ')
   .trim()
   .slice(0, 500);
@@ -59,17 +69,26 @@ const fmtShort = (d) =>
 
 const published = fmtLong(video.published);
 const durText = durationText(video.duration);
+const sportWord = sport ? sport.name.toLowerCase() : 'sports';
+
+// A sentence built from real data, so every video page has its own text
+const aboutText = `${video.title} is a ${sportWord} video published by ${video.channelTitle}${
+  published ? ` on ${published}` : ''
+}${durText ? `, with a length of ${durText}` : ''}. It plays through the official YouTube player.`;
+
 const shortTitle = video.title.length > 60 ? `${video.title.slice(0, 57)}...` : video.title;
 const pageTitle = `${shortTitle} | ${sport ? sport.name : 'Sports'} | Vix Movies`;
 const pageDescription = (
-  cleanDesc.length > 30 ? cleanDesc : `Watch ${video.title} from the official ${video.channelTitle} channel.`
+  cleanDesc.length > 30
+    ? cleanDesc
+    : `${video.title}. Official ${sportWord} video from ${video.channelTitle}${published ? `, published ${published}` : ''}.`
 ).slice(0, 158);
 
 // Structured data
 const videoObject = {
   "@type": "VideoObject",
   "name": video.title,
-  "description": cleanDesc || video.title,
+  "description": cleanDesc.length > 30 ? cleanDesc : aboutText,
   "thumbnailUrl": [video.thumb],
   "uploadDate": video.published,
   "duration": video.duration && video.duration !== 'P0D' ? video.duration : undefined,
@@ -162,7 +181,7 @@ const schema = {
       }
       .info-block h2 { font-size: 16px; color: #38bdf8; margin: 0 0 10px 0; }
       .info-block h2:not(:first-child) { margin-top: 20px; }
-      .info-block p { color: #cbd5e1; line-height: 1.6; font-size: 14px; margin: 0; }
+      .info-block p { color: #cbd5e1; line-height: 1.6; font-size: 14px; margin: 0 0 8px 0; }
       .details-list { color: #cbd5e1; font-size: 14px; line-height: 1.8; padding-left: 18px; margin: 0; }
       .details-list a { color: #38bdf8; }
       .section-title { font-size: 16px; font-weight: 800; margin: 28px 0 12px 0; }
@@ -235,6 +254,10 @@ const schema = {
         <a class="yt-link" href={watchUrl} target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a>
 
         <article class="info-block">
+          <h2>About this video</h2>
+          <p>{aboutText}</p>
+          {cleanDesc.length > 30 && <p>{cleanDesc}</p>}
+
           <h2>Video Details</h2>
           <ul class="details-list">
             <li><b>Channel:</b> {video.channelTitle}</li>
@@ -246,13 +269,6 @@ const schema = {
             {video.live === 'live' && <li><b>Status:</b> Live now</li>}
             {video.live === 'upcoming' && <li><b>Status:</b> Scheduled</li>}
           </ul>
-
-          {cleanDesc.length > 20 && (
-            <>
-              <h2>About this video</h2>
-              <p>{cleanDesc}</p>
-            </>
-          )}
         </article>
 
         {related.length > 0 && (
@@ -302,6 +318,9 @@ const schema = {
           done = true;
           const f = document.createElement('iframe');
           f.className = 'player-iframe';
+          // Inline style: page styles do not reach elements created by JavaScript
+          f.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
+          f.setAttribute('frameborder', '0');
           f.src = el.dataset.embed;
           f.title = el.dataset.title || 'Video player';
           f.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen';
