@@ -1,7 +1,10 @@
 ---
 import Navbar from '../components/Navbar.astro';
+import { SPORTS } from '../utils/sports-config.js';
+import { getSportVideos } from '../utils/youtube.js';
 
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
+const YT_KEY = Astro.locals?.runtime?.env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY;
 
 const slugify = (t = '') =>
   t.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -26,6 +29,37 @@ const featured = movies[0] || {
   overview: 'Teenage Moana answers the Ocean\'s call and voyages beyond the reef of her island...',
   backdrop_path: '/3V4kSt8AL9A38y3VE8A3L.jpg'
 };
+
+// Latest sports videos (a problem here never breaks the homepage, the section just hides)
+let sportsVideos = [];
+if (YT_KEY) {
+  try {
+    const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 3000));
+    const results = await Promise.race([
+      Promise.all(SPORTS.map((s) => getSportVideos(s.channels, YT_KEY))),
+      timeout,
+    ]);
+    if (results) {
+      const seen = new Set();
+      const picks = results.flatMap((r, i) =>
+        r.videos
+          .filter((v) => v.live !== 'upcoming')
+          .slice(0, 2)
+          .map((v) => ({ ...v, sport: SPORTS[i] }))
+      );
+      sportsVideos = picks
+        .filter((v) => !seen.has(v.id) && seen.add(v.id))
+        .sort(
+          (a, b) =>
+            (b.live === 'live') - (a.live === 'live') ||
+            new Date(b.published) - new Date(a.published)
+        )
+        .slice(0, 8);
+    }
+  } catch {
+    sportsVideos = [];
+  }
+}
 
 // Website Canonical & Base URL Configuration
 const SITE_URL = 'https://movies.vixtube.net';
@@ -318,6 +352,93 @@ const schemaData = {
         width: 100%;
       }
 
+      /* Latest Sports Videos (one scrollable row on mobile, grid on desktop) */
+      .sports-home {
+        margin-top: 35px;
+      }
+      .sports-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .sports-head h2 {
+        font-size: 16px;
+        font-weight: 800;
+        margin: 0;
+      }
+      .see-all {
+        color: #38bdf8;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .sports-row {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .sv-card {
+        flex: 0 0 210px;
+        text-decoration: none;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .sv-thumb {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+        background: #1e293b;
+        border: 1px solid #334155;
+      }
+      .sv-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .sv-badge {
+        position: absolute;
+        left: 6px;
+        bottom: 6px;
+        background: rgba(15, 23, 42, 0.88);
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .sv-badge.live {
+        background: #dc2626;
+      }
+      .sv-title {
+        font-size: 12px;
+        font-weight: 600;
+        margin: 6px 0 0 0;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .sports-pills {
+        margin-top: 10px;
+      }
+      @media (min-width: 900px) {
+        .sports-row {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          overflow-x: visible;
+        }
+        .sv-card {
+          flex: initial;
+        }
+      }
+
       /* AEO / GEO Content Section */
       .aeo-section {
         margin-top: 40px;
@@ -409,6 +530,34 @@ const schemaData = {
             </a>
           ))}
         </section>
+
+        <!-- Latest Sports Videos (official YouTube channels), below the movies -->
+        {sportsVideos.length > 0 && (
+          <section class="sports-home" aria-label="Latest sports videos">
+            <div class="sports-head">
+              <h2>🏆 Latest Sports Videos</h2>
+              <a href="/sports" class="see-all">All sports →</a>
+            </div>
+            <div class="sports-row">
+              {sportsVideos.map((v) => (
+                <a href={`/sports/watch/${v.id}`} class="sv-card" title={v.title}>
+                  <div class="sv-thumb">
+                    <img src={v.thumb} alt={v.title} loading="lazy" decoding="async" width="480" height="270" />
+                    <span class={v.live === 'live' ? 'sv-badge live' : 'sv-badge'}>
+                      {v.live === 'live' ? 'LIVE' : `${v.sport.emoji} ${v.sport.name}`}
+                    </span>
+                  </div>
+                  <h3 class="sv-title">{v.title}</h3>
+                </a>
+              ))}
+            </div>
+            <div class="genre-browse-list sports-pills">
+              {SPORTS.map((s) => (
+                <a href={`/sports/${s.slug}`} title={`${s.name} highlights and live streams`}>{s.emoji} {s.name}</a>
+              ))}
+            </div>
+          </section>
+        )}
 
         <!-- AEO & GEO Direct Information Box (Helps Perplexity, ChatGPT & Gemini Indexing) -->
         <section class="aeo-section">
