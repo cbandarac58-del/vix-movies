@@ -1,27 +1,41 @@
 ---
 import Navbar from '../components/Navbar.astro';
 
-const query = Astro.url.searchParams.get('q') || '';
+const query = (Astro.url.searchParams.get('q') || '').trim().slice(0, 100);
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 
-let movies = [];
+let results = [];
 
 if (query) {
-  // Fetch Movies only (Excludes Person profiles)
-  const res = await fetch(
-    `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}`
-  );
-  const data = await res.json();
-  movies = data.results || [];
+  try {
+    // Search movies and TV shows (multi), then drop people and adult titles
+    const res = await fetch(
+      `https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}&include_adult=false`
+    );
+    const data = await res.json();
+    results = (data.results || []).filter(
+      (i) => (i.media_type === 'movie' || i.media_type === 'tv') && !i.adult
+    );
+  } catch {
+    results = [];
+  }
 }
+
+const pageTitle = query
+  ? `Search Results for "${query}" | Vix Movies`
+  : 'Search Movies & TV Series | Vix Movies';
 ---
 
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Search Results for "{query}" - Vix Movies</title>
+    <title>{pageTitle}</title>
+    <!-- Search result pages should not be indexed (thin, endless URLs) -->
+    <meta name="robots" content="noindex, follow" />
     <style>
+      * { box-sizing: border-box; }
       body {
         background-color: #0b0f19;
         color: #f8fafc;
@@ -66,20 +80,6 @@ if (query) {
         display: block;
         background-color: #0f172a;
       }
-      .poster-placeholder {
-        width: 100%;
-        aspect-ratio: 2/3;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #0f172a;
-        color: #64748b;
-        font-size: 12px;
-        font-weight: 600;
-        text-align: center;
-        padding: 10px;
-        box-sizing: border-box;
-      }
       .card-info {
         padding: 10px;
         display: flex;
@@ -104,41 +104,80 @@ if (query) {
         font-size: 15px;
         margin-top: 30px;
       }
+
+      /* Footer */
+      .site-footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #334155;
+        text-align: center;
+      }
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 12px;
+      }
+      .footer-links a {
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 13px;
+      }
+      .copyright-text {
+        color: #64748b;
+        font-size: 12px;
+        margin: 0;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <Navbar />
 
-      <h1 class="search-title">
-        {query ? `Search Results for "${query}"` : 'Please enter a search query'}
-      </h1>
+      <main>
+        <h1 class="search-title">
+          {query ? `Search Results for "${query}"` : 'Please enter a search query'}
+        </h1>
 
-      {movies.length > 0 ? (
-        <div class="grid-container">
-          {movies.map((movie) => (
-            <a href={`/movie/${movie.id}`} class="movie-card">
-              {movie.poster_path ? (
-                <img 
-                  src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
-                  alt={movie.title} 
-                  class="poster-img"
-                />
-              ) : (
-                <div class="poster-placeholder">
-                  No Poster Available
-                </div>
-              )}
-              <div class="card-info">
-                <h2 class="card-title">{movie.title}</h2>
-                <span class="card-badge">Movie • {movie.release_date ? movie.release_date.split('-')[0] : 'N/A'}</span>
-              </div>
-            </a>
-          ))}
+        {results.length > 0 ? (
+          <div class="grid-container">
+            {results.map((item) => {
+              const title = item.title || item.name;
+              const date = item.release_date || item.first_air_date;
+              const year = date ? date.split('-')[0] : 'N/A';
+              return (
+                <a href={`/${item.media_type}/${item.id}`} class="movie-card">
+                  <img
+                    src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : '/no-poster.svg'}
+                    onerror="this.onerror=null;this.src='/no-poster.svg'"
+                    alt={`${title} Poster`}
+                    class="poster-img"
+                    loading="lazy"
+                    decoding="async"
+                    width="500"
+                    height="750"
+                  />
+                  <div class="card-info">
+                    <h2 class="card-title">{title}</h2>
+                    <span class="card-badge">{item.media_type === 'tv' ? 'TV Series' : 'Movie'} • {year}</span>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        ) : (
+          query && <p class="no-results">No movies or TV series found matching "{query}". Try searching for another name.</p>
+        )}
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-links">
+          <a href="/about">About Us</a>
+          <a href="/contact">Contact Us</a>
+          <a href="/privacy-policy">Privacy Policy</a>
         </div>
-      ) : (
-        query && <p class="no-results">No movies found matching "{query}". Try searching for another movie name.</p>
-      )}
+        <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
+      </footer>
     </div>
   </body>
 </html>
