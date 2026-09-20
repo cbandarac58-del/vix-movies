@@ -465,9 +465,10 @@ const tvSchema = {
             </select>
           </div>
 
+          <!-- Server 2 (VidSrc) is the default -->
           <div style="margin-left: auto; display: flex; gap: 8px;">
-            <button class="server-btn active" data-server="autoembed">Server 1</button>
-            <button class="server-btn" data-server="vidsrc">Server 2</button>
+            <button class="server-btn" data-server="autoembed">Server 1</button>
+            <button class="server-btn active" data-server="vidsrc">Server 2</button>
           </div>
         </div>
 
@@ -476,7 +477,7 @@ const tvSchema = {
           <iframe
             id="tv-player"
             class="player-iframe"
-            src={`https://autoembed.co/tv/tmdb/${id}-1-1`}
+            src={`https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1`}
             title={`Watch ${showName}`}
             allowfullscreen>
           </iframe>
@@ -586,7 +587,7 @@ const tvSchema = {
         const episodeSelect = document.getElementById('episode-select');
         const player = document.getElementById('tv-player');
         const serverBtns = document.querySelectorAll('.server-btn');
-        let currentServer = 'autoembed';
+        let currentServer = 'vidsrc';
 
         function updateEpisodes() {
           const selectedSeasonNum = parseInt(seasonSelect.value);
