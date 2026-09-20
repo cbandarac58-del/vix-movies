@@ -158,6 +158,8 @@ const pageTitle = `${titleYear} - Cast, Trailer & Details | Vix Movies`;
 const pageDescription = summary.length > 158 ? summary.slice(0, 155) + '...' : summary;
 const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : `${SITE_URL}/no-poster.svg`;
 const backdropUrl = movie.backdrop_path ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}` : posterUrl;
+// Smaller image for the click-to-load player thumbnail
+const facadeUrl = movie.backdrop_path ? `https://image.tmdb.org/t/p/w780${movie.backdrop_path}` : posterUrl;
 const pageUrl = `${SITE_URL}/movie/${id}`;
 
 // Breadcrumb points to the first genre page (a real page)
@@ -315,6 +317,45 @@ const movieSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
         width: 100%;
         height: 100%;
         border: 0;
+      }
+
+      /* Click-to-load player thumbnail */
+      .facade {
+        cursor: pointer;
+      }
+      .facade-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.7);
+      }
+      .facade-play {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 72px;
+        height: 72px;
+        background: rgba(2, 132, 199, 0.95);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: #fff;
+        padding-left: 4px;
+      }
+      .facade-label {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 14px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #e2e8f0;
       }
 
       /* Action Bar (Like & Share) */
@@ -587,15 +628,16 @@ const movieSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
           <button class="server-btn" data-server="smashy">Server 3 (SmashyStream)</button>
         </nav>
 
-        <!-- Video Player Frame -->
-        <section class="player-container" aria-label="Movie Player">
-          <iframe
-            id="movie-player"
-            class="player-iframe"
-            src={`https://vidsrc.me/embed/movie?tmdb=${id}`}
-            title={`Watch ${movieTitle}`}
-            allowfullscreen>
-          </iframe>
+        <!-- Click-to-load player: the player loads only after the visitor clicks -->
+        <section
+          id="player-box"
+          class="player-container facade"
+          role="button"
+          tabindex="0"
+          aria-label={`Play ${movieTitle}`}>
+          <img class="facade-img" src={facadeUrl} alt={`Watch ${movieTitle}`} width="780" height="439" decoding="async" fetchpriority="high" />
+          <span class="facade-play">▶</span>
+          <span class="facade-label">Click to play</span>
         </section>
 
         <!-- Action Bar (Like & Share) -->
@@ -753,23 +795,53 @@ const movieSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
 
     <script is:inline define:vars={{ tmdbId: id, movieTitle: movieTitle }}>
       document.addEventListener('DOMContentLoaded', () => {
-        // Server Switcher Listener
+        // Click-to-load player + server switcher
         const serverButtons = document.querySelectorAll('.server-btn');
-        const player = document.getElementById('movie-player');
+        const box = document.getElementById('player-box');
+        let currentServer = 'vidsrc';
+        let iframe = null;
+
+        function srcFor(server) {
+          if (server === 'vidsrc') return `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
+          if (server === 'smashy') return `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`;
+          return `https://autoembed.co/movie/tmdb/${tmdbId}`;
+        }
+
+        function loadPlayer() {
+          const src = srcFor(currentServer);
+          if (!iframe) {
+            iframe = document.createElement('iframe');
+            // Inline style: page styles do not reach elements created by JavaScript
+            iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
+            iframe.setAttribute('frameborder', '0');
+            iframe.title = 'Watch ' + movieTitle;
+            iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+            iframe.allowFullscreen = true;
+            iframe.src = src;
+            box.replaceChildren(iframe);
+            box.classList.remove('facade');
+            box.removeAttribute('role');
+            box.removeAttribute('tabindex');
+            box.removeAttribute('aria-label');
+          } else if (iframe.getAttribute('src') !== src) {
+            iframe.src = src;
+          }
+        }
+
+        box.addEventListener('click', loadPlayer);
+        box.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            loadPlayer();
+          }
+        });
 
         serverButtons.forEach(btn => {
           btn.addEventListener('click', (e) => {
             serverButtons.forEach(b => b.classList.remove('active'));
             e.target.classList.add('active');
-
-            const server = e.target.getAttribute('data-server');
-            if (server === 'vidsrc') {
-              player.src = `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
-            } else if (server === 'smashy') {
-              player.src = `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`;
-            } else {
-              player.src = `https://autoembed.co/movie/tmdb/${tmdbId}`;
-            }
+            currentServer = e.target.getAttribute('data-server');
+            loadPlayer();
           });
         });
 
