@@ -14,12 +14,36 @@ const detect = () => {
   return '';
 };
 const current = activePage || detect();
-const cls = (name) => (current === name ? 'nav-item active' : 'nav-item');
+
+const items = [
+  { key: 'home', href: '/', label: 'Home', icon: '🏠' },
+  { key: 'hollywood', href: '/hollywood', label: 'Hollywood', icon: '🎬' },
+  { key: 'bollywood', href: '/bollywood', label: 'Bollywood', icon: '🍿' },
+  { key: 'tv', href: '/tv', label: 'TV Series', icon: '📺' },
+  { key: 'trending', href: '/trending', label: 'Trending', icon: '🔥' },
+  { key: 'sports', href: '/sports', label: 'Sports', icon: '🏆' },
+];
 ---
 
 <header class="navbar-container">
   <div class="nav-top">
     <a href="/" class="logo"><span class="blue">VIX</span> MOVIES</a>
+
+    <!-- Mobile menu button (works without JavaScript, links stay crawlable) -->
+    <details class="menu" id="site-menu">
+      <summary class="menu-btn" aria-label="Open menu">
+        <span class="bars">☰</span>
+        <span>Menu</span>
+      </summary>
+      <nav class="menu-panel" aria-label="Main menu">
+        {items.map((i) => (
+          <a href={i.href} class={current === i.key ? 'menu-item active' : 'menu-item'}>
+            <span class="menu-icon">{i.icon}</span>
+            {i.label}
+          </a>
+        ))}
+      </nav>
+    </details>
   </div>
 
   <!-- Search Bar for All Pages -->
@@ -28,15 +52,23 @@ const cls = (name) => (current === name ? 'nav-item active' : 'nav-item');
     <button type="submit" class="search-btn">🔍</button>
   </form>
 
-  <nav class="nav-links">
-    <a href="/" class={cls('home')}>Home</a>
-    <a href="/hollywood" class={cls('hollywood')}>Hollywood</a>
-    <a href="/bollywood" class={cls('bollywood')}>Bollywood</a>
-    <a href="/tv" class={cls('tv')}>TV Series</a>
-    <a href="/trending" class={cls('trending')}>Trending</a>
-    <a href="/sports" class={cls('sports')}>Sports</a>
+  <!-- Tabs for bigger screens -->
+  <nav class="nav-links" aria-label="Main navigation">
+    {items.map((i) => (
+      <a href={i.href} class={current === i.key ? 'nav-item active' : 'nav-item'}>{i.label}</a>
+    ))}
   </nav>
 </header>
+
+<script>
+  // Close the menu when tapping outside of it
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('site-menu');
+    if (menu && menu.hasAttribute('open') && !menu.contains(e.target as Node)) {
+      menu.removeAttribute('open');
+    }
+  });
+</script>
 
 <style>
   .navbar-container {
@@ -60,7 +92,75 @@ const cls = (name) => (current === name ? 'nav-item active' : 'nav-item');
   .blue {
     color: #38bdf8;
   }
-  
+
+  /* Menu button + dropdown (mobile) */
+  .menu {
+    position: relative;
+  }
+  .menu-btn {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #f8fafc;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+  }
+  .menu-btn::-webkit-details-marker {
+    display: none;
+  }
+  .menu[open] .menu-btn {
+    border-color: #38bdf8;
+    color: #38bdf8;
+  }
+  .bars {
+    font-size: 16px;
+    line-height: 1;
+  }
+  .menu-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 210px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 6px;
+    z-index: 100;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+  }
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 11px 12px;
+    border-radius: 8px;
+  }
+  .menu-item:hover {
+    background: #0f172a;
+    color: #f8fafc;
+  }
+  .menu-item.active {
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+  }
+  .menu-icon {
+    width: 22px;
+    text-align: center;
+  }
+
   /* Global Search Bar */
   .search-bar {
     display: flex;
@@ -87,8 +187,9 @@ const cls = (name) => (current === name ? 'nav-item active' : 'nav-item');
     cursor: pointer;
   }
 
+  /* Tabs: hidden on mobile (the menu button is used), shown on bigger screens */
   .nav-links {
-    display: flex;
+    display: none;
     gap: 16px;
     overflow-x: auto;
     padding-bottom: 4px;
@@ -109,5 +210,14 @@ const cls = (name) => (current === name ? 'nav-item active' : 'nav-item');
     color: #38bdf8;
     border-bottom: 2px solid #38bdf8;
     padding-bottom: 2px;
+  }
+
+  @media (min-width: 700px) {
+    .menu {
+      display: none;
+    }
+    .nav-links {
+      display: flex;
+    }
   }
 </style>
