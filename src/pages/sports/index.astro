@@ -1,0 +1,123 @@
+---
+import Navbar from '../../components/Navbar.astro';
+import { SPORTS } from '../../utils/sports-config.js';
+
+const SITE_URL = 'https://movies.vixtube.net';
+const pageUrl = `${SITE_URL}/sports`;
+const pageTitle = 'Sports Highlights & Live Streams from Official Channels | Vix Movies';
+const pageDescription =
+  'Watch official sports highlights and live streams: cricket, football, basketball, Formula 1 and tennis, from the official YouTube channels.';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "CollectionPage", "@id": pageUrl, "url": pageUrl, "name": "Sports", "description": pageDescription },
+    {
+      "@type": "ItemList",
+      "itemListElement": SPORTS.map((s, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "url": `${SITE_URL}/sports/${s.slug}`,
+        "name": s.name
+      }))
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
+        { "@type": "ListItem", "position": 2, "name": "Sports", "item": pageUrl }
+      ]
+    }
+  ]
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href={pageUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta name="twitter:card" content="summary" />
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        background-color: #0b0f19;
+        color: #f8fafc;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0 15px 40px 15px;
+      }
+      .container { max-width: 1100px; margin: 0 auto; }
+      .page-title { font-size: 22px; font-weight: 800; margin: 20px 0 8px 0; color: #38bdf8; }
+      .intro { color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0; }
+      .sport-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      @media (min-width: 700px) {
+        .sport-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      }
+      .sport-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 18px 14px;
+        text-decoration: none;
+        color: white;
+        text-align: center;
+      }
+      .sport-card:hover { border-color: #38bdf8; }
+      .sport-emoji { font-size: 34px; display: block; margin-bottom: 8px; }
+      .sport-name { font-size: 15px; font-weight: 700; margin: 0 0 6px 0; }
+      .sport-desc { font-size: 11px; color: #94a3b8; line-height: 1.4; margin: 0; }
+      .site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #334155; text-align: center; }
+      .footer-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 12px; }
+      .footer-links a { color: #94a3b8; text-decoration: none; font-size: 13px; }
+      .copyright-text { color: #64748b; font-size: 12px; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <Navbar />
+
+      <main>
+        <h1 class="page-title">🏆 Sports Highlights & Live Streams</h1>
+        <p class="intro">
+          Official highlights, match recaps and live streams from the leagues and governing bodies
+          themselves. Pick a sport to see the latest videos. Everything plays through the official
+          YouTube player.
+        </p>
+
+        <section class="sport-grid" aria-label="Sports">
+          {SPORTS.map((s) => (
+            <a href={`/sports/${s.slug}`} class="sport-card" title={`${s.name} highlights and live streams`}>
+              <span class="sport-emoji">{s.emoji}</span>
+              <h2 class="sport-name">{s.name}</h2>
+              <p class="sport-desc">{s.intro}</p>
+            </a>
+          ))}
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-links">
+          <a href="/about">About Us</a>
+          <a href="/contact">Contact Us</a>
+          <a href="/privacy-policy">Privacy Policy</a>
+        </div>
+        <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
+      </footer>
+    </div>
+  </body>
+</html>
