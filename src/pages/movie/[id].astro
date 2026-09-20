@@ -439,11 +439,11 @@ const movieSchema = {
           </div>
         </header>
 
-        <!-- Server Switcher Bar -->
+        <!-- Server Switcher Bar (Server 2 is the default) -->
         <nav class="server-bar" aria-label="Streaming Server Selection">
           <span style="font-size: 14px; font-weight: 600; color: #94a3b8;">Select Server:</span>
-          <button class="server-btn active" data-server="autoembed">Server 1 (AutoEmbed)</button>
-          <button class="server-btn" data-server="vidsrc">Server 2 (VidSrc)</button>
+          <button class="server-btn" data-server="autoembed">Server 1 (AutoEmbed)</button>
+          <button class="server-btn active" data-server="vidsrc">Server 2 (VidSrc)</button>
           <button class="server-btn" data-server="smashy">Server 3 (SmashyStream)</button>
         </nav>
 
@@ -452,7 +452,7 @@ const movieSchema = {
           <iframe
             id="movie-player"
             class="player-iframe"
-            src={`https://autoembed.co/movie/tmdb/${id}`}
+            src={`https://vidsrc.me/embed/movie?tmdb=${id}`}
             title={`Watch ${movieTitle}`}
             allowfullscreen>
           </iframe>
