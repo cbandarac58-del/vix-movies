@@ -4,9 +4,12 @@ import Navbar from '../../components/Navbar.astro';
 const { id } = Astro.params;
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 
-// Fetch Movie Details (+ cast & trailer)
+const slugify = (t = '') =>
+  t.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// Fetch Movie Details (+ cast, crew, trailer, streaming availability)
 const res = await fetch(
-  `https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_KEY}&append_to_response=credits,videos`
+  `https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_KEY}&append_to_response=credits,videos,watch/providers`
 );
 const movie = await res.json();
 if (!movie.id) {
@@ -18,19 +21,73 @@ const simRes = await fetch(`https://api.themoviedb.org/3/movie/${id}/similar?api
 const simData = await simRes.json();
 const similarMovies = (simData.results || []).filter((m) => m.poster_path).slice(0, 6);
 
-// SEO Variables
+// Basic data
 const SITE_URL = 'https://movies.vixtube.net';
 const movieTitle = movie.title || 'Movie Details';
 const releaseYear = movie.release_date ? movie.release_date.split('-')[0] : '';
-const cast = (movie.credits?.cast || []).slice(0, 6);
-const director = (movie.credits?.crew || []).find((c) => c.job === 'Director')?.name;
+const titleYear = `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''}`;
+const crew = movie.credits?.crew || [];
+const castAll = movie.credits?.cast || [];
+const cast = castAll.slice(0, 6);
+const castRoles = castAll.slice(0, 10);
+const director = crew.find((c) => c.job === 'Director')?.name;
+const writers = [
+  ...new Set(
+    crew
+      .filter((c) => ['Screenplay', 'Writer', 'Story'].includes(c.job))
+      .map((c) => c.name)
+  ),
+].slice(0, 3);
 const trailer = (movie.videos?.results || []).find(
   (v) => v.site === 'YouTube' && v.type === 'Trailer'
 );
-const genreNames = (movie.genres || []).map((g) => g.name);
+const genres = movie.genres || [];
+const genreNames = genres.map((g) => g.name);
 const genreText = genreNames.join(', ').toLowerCase() || 'feature';
 const article = /^[aeiou]/.test(genreText) ? 'an' : 'a';
-const summary = `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''} is ${article} ${genreText} film${
+
+// Helpers
+const money = (n) =>
+  n > 0
+    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
+    : '';
+const runtimeText = movie.runtime
+  ? `${movie.runtime} minutes (${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m)`
+  : '';
+const releaseDateText = movie.release_date
+  ? new Date(movie.release_date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'UTC',
+    })
+  : '';
+
+// Streaming availability (data by JustWatch via TMDB)
+const COUNTRIES = {
+  US: 'United States',
+  GB: 'United Kingdom',
+  IN: 'India',
+  CA: 'Canada',
+  AU: 'Australia',
+  LK: 'Sri Lanka',
+};
+const provData = movie['watch/providers']?.results || {};
+const names = (arr) => (arr || []).map((x) => x.provider_name).slice(0, 6).join(', ');
+const providerRows = Object.entries(COUNTRIES)
+  .map(([code, name]) => {
+    const p = provData[code];
+    if (!p) return null;
+    const stream = names(p.flatrate);
+    const rent = names(p.rent);
+    const buy = names(p.buy);
+    if (!stream && !rent && !buy) return null;
+    return { code, name, stream, rent, buy };
+  })
+  .filter(Boolean);
+
+// Summary paragraph (built from real data)
+const summary = `${titleYear} is ${article} ${genreText} film${
   movie.runtime ? ` with a runtime of ${movie.runtime} minutes` : ''
 }${director ? `, directed by ${director}` : ''}${
   cast.length ? `, starring ${cast.slice(0, 3).map((c) => c.name).join(', ')}` : ''
@@ -38,61 +95,114 @@ const summary = `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''} is ${art
   movie.vote_count ? ` from ${movie.vote_count} votes` : ''
 }.`;
 
-const pageTitle = `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''} - Cast, Trailer & Details | Vix Movies`;
+// FAQ (every answer comes from real data, and is shown on the page)
+const faqs = [];
+if (director) {
+  faqs.push({ q: `Who directed ${titleYear}?`, a: `${movieTitle} was directed by ${director}.` });
+}
+if (castRoles.length) {
+  const list = castRoles
+    .slice(0, 5)
+    .map((c) => (c.character ? `${c.name} (as ${c.character})` : c.name))
+    .join(', ');
+  faqs.push({ q: `Who stars in ${movieTitle}?`, a: `The main cast of ${movieTitle} includes ${list}.` });
+}
+if (runtimeText) {
+  faqs.push({ q: `How long is ${movieTitle}?`, a: `${movieTitle} has a runtime of ${runtimeText}.` });
+}
+if (releaseDateText) {
+  faqs.push({ q: `When was ${movieTitle} released?`, a: `${movieTitle} was released on ${releaseDateText}.` });
+}
+if (genreNames.length) {
+  faqs.push({ q: `What genre is ${movieTitle}?`, a: `${movieTitle} is ${article} ${genreText} film.` });
+}
+if (movie.vote_count > 0 && movie.vote_average) {
+  faqs.push({
+    q: `What is the rating of ${movieTitle}?`,
+    a: `${movieTitle} has a rating of ${movie.vote_average.toFixed(1)}/10 on TMDB, based on ${movie.vote_count} votes.`,
+  });
+}
+if (providerRows.length) {
+  const parts = providerRows.map((r) => {
+    const bits = [];
+    if (r.stream) bits.push(`streaming on ${r.stream}`);
+    if (r.rent) bits.push(`rent on ${r.rent}`);
+    if (r.buy) bits.push(`buy on ${r.buy}`);
+    return `${r.name}: ${bits.join('; ')}`;
+  });
+  faqs.push({
+    q: `Where can I watch ${movieTitle} legally?`,
+    a: `According to JustWatch data provided by TMDB, ${movieTitle} is available in these places. ${parts.join('. ')}.`,
+  });
+}
+if (movie.belongs_to_collection?.name) {
+  faqs.push({
+    q: `Is ${movieTitle} part of a series?`,
+    a: `Yes, ${movieTitle} is part of the ${movie.belongs_to_collection.name}.`,
+  });
+}
+if (money(movie.budget)) {
+  faqs.push({ q: `What was the budget of ${movieTitle}?`, a: `The reported budget of ${movieTitle} was ${money(movie.budget)}.` });
+}
+if (money(movie.revenue)) {
+  faqs.push({ q: `How much did ${movieTitle} earn?`, a: `${movieTitle} earned a reported ${money(movie.revenue)} worldwide.` });
+}
+
+// Thin pages (no overview or almost no votes) should not be indexed
+const isThin = !movie.overview || (movie.vote_count || 0) < 5;
+const robotsContent = isThin
+  ? 'noindex, follow'
+  : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+
+const pageTitle = `${titleYear} - Cast, Trailer & Details | Vix Movies`;
 const pageDescription = summary.length > 158 ? summary.slice(0, 155) + '...' : summary;
 const posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : `${SITE_URL}/no-poster.svg`;
 const backdropUrl = movie.backdrop_path ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}` : posterUrl;
 const pageUrl = `${SITE_URL}/movie/${id}`;
 
+// Breadcrumb points to the first genre page (a real page)
+const firstGenre = genres[0];
+const breadcrumb = [
+  { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
+  ...(firstGenre
+    ? [{
+        "@type": "ListItem",
+        "position": 2,
+        "name": `${firstGenre.name} Movies`,
+        "item": `${SITE_URL}/genre/${slugify(firstGenre.name)}`,
+      }]
+    : []),
+  { "@type": "ListItem", "position": firstGenre ? 3 : 2, "name": movieTitle, "item": pageUrl },
+];
+
 // Schema.org Structured Data
-const movieSchema = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Movie",
-      "@id": pageUrl,
-      "url": pageUrl,
-      "name": movieTitle,
-      "image": posterUrl,
-      "description": movie.overview || pageDescription,
-      "datePublished": movie.release_date || releaseYear,
-      "duration": movie.runtime ? `PT${movie.runtime}M` : undefined,
-      "aggregateRating": movie.vote_count ? {
-        "@type": "AggregateRating",
-        "ratingValue": movie.vote_average.toFixed(1),
-        "bestRating": "10",
-        "worstRating": "1",
-        "ratingCount": movie.vote_count
-      } : undefined,
-      "genre": genreNames,
-      "director": director ? { "@type": "Person", "name": director } : undefined,
-      "actor": cast.map((c) => ({ "@type": "Person", "name": c.name }))
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": "Home",
-          "item": SITE_URL
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": "Movies",
-          "item": `${SITE_URL}/#movies`
-        },
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "name": movieTitle,
-          "item": pageUrl
-        }
-      ]
-    }
-  ]
-};
+const schemaGraph = [
+  {
+    "@type": "Movie",
+    "@id": pageUrl,
+    "url": pageUrl,
+    "name": movieTitle,
+    "image": posterUrl,
+    "description": movie.overview || pageDescription,
+    "datePublished": movie.release_date || releaseYear,
+    "duration": movie.runtime ? `PT${movie.runtime}M` : undefined,
+    "genre": genreNames,
+    "director": director ? { "@type": "Person", "name": director } : undefined,
+    "actor": cast.map((c) => ({ "@type": "Person", "name": c.name }))
+  },
+  { "@type": "BreadcrumbList", "itemListElement": breadcrumb },
+];
+if (faqs.length) {
+  schemaGraph.push({
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((f) => ({
+      "@type": "Question",
+      "name": f.q,
+      "acceptedAnswer": { "@type": "Answer", "text": f.a },
+    })),
+  });
+}
+const movieSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
 ---
 
 <!DOCTYPE html>
@@ -105,7 +215,7 @@ const movieSchema = {
     <title>{pageTitle}</title>
     <meta name="title" content={pageTitle} />
     <meta name="description" content={pageDescription} />
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="robots" content={robotsContent} />
     <meta name="author" content="Vix Movies" />
     <link rel="canonical" href={pageUrl} />
 
@@ -157,6 +267,10 @@ const movieSchema = {
         gap: 15px;
         align-items: center;
         flex-wrap: wrap;
+      }
+      .movie-meta a {
+        color: inherit;
+        text-decoration: underline;
       }
       .server-bar {
         background: #1e293b;
@@ -282,18 +396,32 @@ const movieSchema = {
         margin-top: 0;
       }
       .movie-info-block h2:not(:first-child) {
-        margin-top: 22px;
+        margin-top: 24px;
       }
       .movie-info-block p {
         color: #cbd5e1;
         line-height: 1.6;
         font-size: 14px;
       }
-      .details-list {
+      .details-list, .cast-list, .provider-list {
         color: #cbd5e1;
         font-size: 14px;
         line-height: 1.8;
         padding-left: 18px;
+        margin: 0;
+      }
+      .faq-item h3 {
+        font-size: 15px;
+        color: #f8fafc;
+        margin: 14px 0 4px 0;
+      }
+      .faq-item p {
+        margin: 0;
+      }
+      .attribution {
+        font-size: 11px;
+        color: #64748b;
+        margin-top: 8px;
       }
 
       /* Comment System Styling */
@@ -417,6 +545,11 @@ const movieSchema = {
       .copyright-text {
         color: #64748b;
         font-size: 12px;
+        margin: 0 0 8px 0;
+      }
+      .tmdb-note {
+        color: #64748b;
+        font-size: 11px;
         margin: 0;
       }
     </style>
@@ -428,13 +561,20 @@ const movieSchema = {
       <main>
         <!-- Header Title Section -->
         <header class="movie-header">
-          <h1 class="movie-title">{movieTitle} {releaseYear ? `(${releaseYear})` : ''}</h1>
+          <h1 class="movie-title">{titleYear}</h1>
           <div class="movie-meta">
             <span>⭐ {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'} / 10 Rating</span>
             <span>⏱️ {movie.runtime ? `${movie.runtime} mins` : 'N/A'}</span>
             <span style="color: #38bdf8; font-weight: bold;">HD Quality</span>
-            {genreNames.length > 0 && (
-              <span>🎭 {genreNames.join(', ')}</span>
+            {genres.length > 0 && (
+              <span>
+                🎭{' '}
+                {genres.map((g, i) => (
+                  <>
+                    <a href={`/genre/${slugify(g.name)}`}>{g.name}</a>{i < genres.length - 1 ? ', ' : ''}
+                  </>
+                ))}
+              </span>
             )}
           </div>
         </header>
@@ -478,7 +618,7 @@ const movieSchema = {
           </div>
         </div>
 
-        <!-- Overview, Details & Trailer -->
+        <!-- Overview, Details, Cast, Where to Watch, FAQ & Trailer -->
         <article class="movie-info-block">
           <h2>Storyline & Overview</h2>
           <p>{movie.overview || 'No storyline overview available for this title.'}</p>
@@ -487,14 +627,69 @@ const movieSchema = {
           <h2>Details</h2>
           <ul class="details-list">
             {movie.tagline && <li><b>Tagline:</b> {movie.tagline}</li>}
-            {movie.release_date && <li><b>Release date:</b> {movie.release_date}</li>}
+            {movie.original_title && movie.original_title !== movie.title && (
+              <li><b>Original title:</b> {movie.original_title}</li>
+            )}
+            {releaseDateText && <li><b>Release date:</b> {releaseDateText}</li>}
+            {runtimeText && <li><b>Runtime:</b> {runtimeText}</li>}
+            {movie.status && <li><b>Status:</b> {movie.status}</li>}
             {director && <li><b>Director:</b> {director}</li>}
-            {cast.length > 0 && <li><b>Cast:</b> {cast.map((c) => c.name).join(', ')}</li>}
-            {movie.original_language && <li><b>Language:</b> {movie.original_language.toUpperCase()}</li>}
+            {writers.length > 0 && <li><b>Writers:</b> {writers.join(', ')}</li>}
+            {movie.spoken_languages?.length > 0 && (
+              <li><b>Languages:</b> {movie.spoken_languages.map((l) => l.english_name).join(', ')}</li>
+            )}
+            {movie.production_countries?.length > 0 && (
+              <li><b>Countries:</b> {movie.production_countries.map((c) => c.name).join(', ')}</li>
+            )}
             {movie.production_companies?.length > 0 && (
               <li><b>Production:</b> {movie.production_companies.slice(0, 3).map((c) => c.name).join(', ')}</li>
             )}
+            {movie.belongs_to_collection?.name && (
+              <li><b>Collection:</b> {movie.belongs_to_collection.name}</li>
+            )}
+            {money(movie.budget) && <li><b>Budget:</b> {money(movie.budget)}</li>}
+            {money(movie.revenue) && <li><b>Box office:</b> {money(movie.revenue)}</li>}
           </ul>
+
+          {castRoles.length > 0 && (
+            <>
+              <h2>Cast & Characters</h2>
+              <ul class="cast-list">
+                {castRoles.map((c) => (
+                  <li><b>{c.name}</b>{c.character ? ` as ${c.character}` : ''}</li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {providerRows.length > 0 && (
+            <>
+              <h2>Where to Watch {movieTitle} Legally</h2>
+              <ul class="provider-list">
+                {providerRows.map((r) => (
+                  <li>
+                    <b>{r.name}:</b>
+                    {r.stream && ` Stream on ${r.stream}.`}
+                    {r.rent && ` Rent on ${r.rent}.`}
+                    {r.buy && ` Buy on ${r.buy}.`}
+                  </li>
+                ))}
+              </ul>
+              <p class="attribution">Streaming availability data provided by JustWatch via TMDB.</p>
+            </>
+          )}
+
+          {faqs.length > 0 && (
+            <>
+              <h2>Frequently Asked Questions about {movieTitle}</h2>
+              {faqs.map((f) => (
+                <div class="faq-item">
+                  <h3>{f.q}</h3>
+                  <p>{f.a}</p>
+                </div>
+              ))}
+            </>
+          )}
 
           {trailer && (
             <>
@@ -552,6 +747,7 @@ const movieSchema = {
           <a href="/privacy-policy">Privacy Policy</a>
         </div>
         <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
+        <p class="tmdb-note">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
       </footer>
     </div>
 
