@@ -163,6 +163,8 @@ const pageTitle = `${titleYear} - Cast, Trailer & Episodes | Vix Movies`;
 const pageDescription = summary.length > 158 ? summary.slice(0, 155) + '...' : summary;
 const posterUrl = show.poster_path ? `https://image.tmdb.org/t/p/w500${show.poster_path}` : `${SITE_URL}/no-poster.svg`;
 const backdropUrl = show.backdrop_path ? `https://image.tmdb.org/t/p/w1280${show.backdrop_path}` : posterUrl;
+// Smaller image for the click-to-load player thumbnail
+const facadeUrl = show.backdrop_path ? `https://image.tmdb.org/t/p/w780${show.backdrop_path}` : posterUrl;
 const pageUrl = `${SITE_URL}/tv/${id}`;
 
 // Breadcrumb: Home > TV Series > (first genre) > show
@@ -319,6 +321,46 @@ const tvSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
         height: 100%;
         border: 0;
       }
+
+      /* Click-to-load player thumbnail */
+      .facade {
+        cursor: pointer;
+      }
+      .facade-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.7);
+      }
+      .facade-play {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 72px;
+        height: 72px;
+        background: rgba(2, 132, 199, 0.95);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: #fff;
+        padding-left: 4px;
+      }
+      .facade-label {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 14px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #e2e8f0;
+      }
+
       .server-btn {
         background: #0f172a;
         color: #cbd5e1;
@@ -613,15 +655,16 @@ const tvSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
           </div>
         </div>
 
-        <!-- Video Player Frame -->
-        <div class="player-container">
-          <iframe
-            id="tv-player"
-            class="player-iframe"
-            src={`https://vidsrc.me/embed/tv?tmdb=${id}&season=1&episode=1`}
-            title={`Watch ${showName}`}
-            allowfullscreen>
-          </iframe>
+        <!-- Click-to-load player: the player loads only after the visitor clicks -->
+        <div
+          id="player-box"
+          class="player-container facade"
+          role="button"
+          tabindex="0"
+          aria-label={`Play ${showName}`}>
+          <img class="facade-img" src={facadeUrl} alt={`Watch ${showName}`} width="780" height="439" decoding="async" fetchpriority="high" />
+          <span class="facade-play">▶</span>
+          <span class="facade-label">Click to play</span>
         </div>
 
         <!-- Action Bar (Like & Share) -->
@@ -793,9 +836,46 @@ const tvSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
       document.addEventListener('DOMContentLoaded', () => {
         const seasonSelect = document.getElementById('season-select');
         const episodeSelect = document.getElementById('episode-select');
-        const player = document.getElementById('tv-player');
+        const box = document.getElementById('player-box');
         const serverBtns = document.querySelectorAll('.server-btn');
         let currentServer = 'vidsrc';
+        let iframe = null;
+
+        function srcFor() {
+          const s = seasonSelect.value || 1;
+          const e = episodeSelect.value || 1;
+          if (currentServer === 'vidsrc') {
+            return `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${s}&episode=${e}`;
+          }
+          return `https://autoembed.co/tv/tmdb/${tmdbId}-${s}-${e}`;
+        }
+
+        // Click-to-load: create the player on the first click, later just update its source
+        function loadPlayer() {
+          const src = srcFor();
+          if (!iframe) {
+            iframe = document.createElement('iframe');
+            // Inline style: page styles do not reach elements created by JavaScript
+            iframe.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
+            iframe.setAttribute('frameborder', '0');
+            iframe.title = 'Watch ' + showName;
+            iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+            iframe.allowFullscreen = true;
+            iframe.src = src;
+            box.replaceChildren(iframe);
+            box.classList.remove('facade');
+            box.removeAttribute('role');
+            box.removeAttribute('tabindex');
+            box.removeAttribute('aria-label');
+          } else if (iframe.getAttribute('src') !== src) {
+            iframe.src = src;
+          }
+        }
+
+        // When season/episode changes, only update the player if it is already loaded
+        function refreshPlayer() {
+          if (iframe) loadPlayer();
+        }
 
         function updateEpisodes() {
           const selectedSeasonNum = parseInt(seasonSelect.value);
@@ -809,35 +889,26 @@ const tvSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
             opt.innerText = `Episode ${i}`;
             episodeSelect.appendChild(opt);
           }
-          loadVideo();
+          refreshPlayer();
         }
 
-        function loadVideo() {
-          const s = seasonSelect.value || 1;
-          const e = episodeSelect.value || 1;
-
-          let newSrc;
-          if (currentServer === 'vidsrc') {
-            newSrc = `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${s}&episode=${e}`;
-          } else {
-            newSrc = `https://autoembed.co/tv/tmdb/${tmdbId}-${s}-${e}`;
+        box.addEventListener('click', loadPlayer);
+        box.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            loadPlayer();
           }
-
-          // Only reload the player if the source actually changed
-          if (player.getAttribute('src') !== newSrc) {
-            player.src = newSrc;
-          }
-        }
+        });
 
         seasonSelect.addEventListener('change', updateEpisodes);
-        episodeSelect.addEventListener('change', loadVideo);
+        episodeSelect.addEventListener('change', refreshPlayer);
 
         serverBtns.forEach(btn => {
           btn.addEventListener('click', (e) => {
             serverBtns.forEach(b => b.classList.remove('active'));
             e.target.classList.add('active');
             currentServer = e.target.getAttribute('data-server');
-            loadVideo();
+            loadPlayer();
           });
         });
 
@@ -970,7 +1041,7 @@ const tvSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
           return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        // Initial Loads
+        // Initial Loads (the player itself loads only after a click)
         updateEpisodes();
         loadComments();
       });
