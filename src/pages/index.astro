@@ -6,6 +6,9 @@ const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 const slugify = (t = '') =>
   t.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
+// "TV Movie" -> "TV Movies", "Action" -> "Action Movies"
+const genreLabel = (name) => (/movie$/i.test(name) ? `${name}s` : `${name} Movies`);
+
 // Fetch Genres
 const genreRes = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_KEY}`);
 const genreData = await genreRes.json();
@@ -198,20 +201,21 @@ const schemaData = {
         font-size: 12px;
       }
 
-      /* Category Pills Bar */
-      .category-container {
-        margin-bottom: 15px;
-        width: 100%;
-        overflow: hidden;
+      /* Browse by Genre Links */
+      .genre-browse {
+        margin-bottom: 25px;
       }
-      .category-wrapper {
+      .genre-browse h2 {
+        font-size: 16px;
+        font-weight: 800;
+        margin: 0 0 12px 0;
+      }
+      .genre-browse-list {
         display: flex;
+        flex-wrap: wrap;
         gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 8px;
-        -webkit-overflow-scrolling: touch;
       }
-      .cat-pill {
+      .genre-browse-list a {
         background: #1e293b;
         color: #cbd5e1;
         border: 1px solid #334155;
@@ -219,11 +223,9 @@ const schemaData = {
         border-radius: 20px;
         font-size: 12px;
         font-weight: 600;
-        cursor: pointer;
-        white-space: nowrap;
-        flex-shrink: 0;
+        text-decoration: none;
       }
-      .cat-pill.active {
+      .genre-browse-list a:hover {
         background: #0284c7;
         border-color: #0284c7;
         color: white;
@@ -305,36 +307,6 @@ const schemaData = {
         width: 100%;
       }
 
-      /* Browse by Genre Links */
-      .genre-browse {
-        margin-top: 35px;
-      }
-      .genre-browse h2 {
-        font-size: 16px;
-        font-weight: 800;
-        margin: 0 0 12px 0;
-      }
-      .genre-browse-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      .genre-browse-list a {
-        background: #1e293b;
-        color: #cbd5e1;
-        border: 1px solid #334155;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        text-decoration: none;
-      }
-      .genre-browse-list a:hover {
-        background: #0284c7;
-        border-color: #0284c7;
-        color: white;
-      }
-
       /* AEO / GEO Content Section */
       .aeo-section {
         margin-top: 40px;
@@ -399,22 +371,22 @@ const schemaData = {
           </div>
         </article>
 
-        <!-- Category Filter Pills -->
-        <nav class="category-container" aria-label="Movie Genre Filters">
-          <div class="category-wrapper">
-            <button class="cat-pill active" data-genre="all">🔥 All</button>
+        <!-- Browse Movies by Genre (real links for search engines) -->
+        <section class="genre-browse" aria-label="Browse movies by genre">
+          <h2>Browse Movies by Genre</h2>
+          <div class="genre-browse-list">
             {genres.map((g) => (
-              <button class="cat-pill" data-genre={g.id}>{g.name}</button>
+              <a href={`/genre/${slugify(g.name)}`} title={genreLabel(g.name)}>{genreLabel(g.name)}</a>
             ))}
           </div>
-        </nav>
+        </section>
 
         <div style="margin-bottom: 12px;">
-          <h2 id="category-heading" style="font-size: 16px; font-weight: 800; margin: 0;">🔥 Trending Today</h2>
+          <h2 style="font-size: 16px; font-weight: 800; margin: 0;">🔥 Trending Today</h2>
         </div>
 
         <!-- Movie Grid -->
-        <section id="movies-container" class="grid-movies" aria-label="Trending Movies List">
+        <section class="grid-movies" aria-label="Trending Movies List">
           {movies.map((m) => (
             <a href={`/movie/${m.id}`} class="movie-card" title={`Watch ${m.title} online`}>
               <div class="poster-box">
@@ -425,16 +397,6 @@ const schemaData = {
               <h3 class="card-title">{m.title}</h3>
             </a>
           ))}
-        </section>
-
-        <!-- Browse Movies by Genre (real links for search engines) -->
-        <section class="genre-browse" aria-label="Browse movies by genre">
-          <h2>Browse Movies by Genre</h2>
-          <div class="genre-browse-list">
-            {genres.map((g) => (
-              <a href={`/genre/${slugify(g.name)}`} title={`${g.name} movies`}>{g.name} Movies</a>
-            ))}
-          </div>
         </section>
 
         <!-- AEO & GEO Direct Information Box (Helps Perplexity, ChatGPT & Gemini Indexing) -->
@@ -459,62 +421,5 @@ const schemaData = {
         <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
       </footer>
     </div>
-
-    <script is:inline>
-      document.addEventListener('DOMContentLoaded', () => {
-        const pills = document.querySelectorAll('.cat-pill');
-        const heading = document.getElementById('category-heading');
-        const container = document.getElementById('movies-container');
-
-        function esc(s) {
-          return String(s == null ? '' : s)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-        }
-
-        pills.forEach(pill => {
-          pill.addEventListener('click', async (e) => {
-            pills.forEach(p => p.classList.remove('active'));
-            e.target.classList.add('active');
-
-            const genreId = e.target.getAttribute('data-genre');
-            const genreName = e.target.innerText;
-
-            heading.innerText = genreId === 'all' ? '🔥 Trending Today' : `🎬 ${genreName} Movies`;
-            container.innerHTML = '<p style="color: #94a3b8; font-size: 14px; grid-column: 1 / -1; padding: 20px 0;">Loading movies...</p>';
-            
-            try {
-              const res = await fetch(`/api/movies?genre=${encodeURIComponent(genreId)}`);
-              const data = await res.json();
-              
-              container.innerHTML = '';
-              if (data.results && data.results.length > 0) {
-                data.results.forEach(m => {
-                  const card = document.createElement('a');
-                  card.href = `/movie/${m.id}`;
-                  card.className = 'movie-card';
-                  card.title = `Watch ${m.title} online`;
-                  card.innerHTML = `
-                    <div class="poster-box">
-                      <img src="${m.poster_path ? 'https://image.tmdb.org/t/p/w500' + m.poster_path : '/no-poster.svg'}" onerror="this.onerror=null;this.src='/no-poster.svg'" alt="${esc(m.title)} Poster" loading="lazy" decoding="async" width="500" height="750" />
-                      <span class="badge-hd">HD</span>
-                      <span class="badge-rating">⭐ ${m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
-                    </div>
-                    <h3 class="card-title">${esc(m.title)}</h3>
-                  `;
-                  container.appendChild(card);
-                });
-              } else {
-                container.innerHTML = '<p style="color: #94a3b8; grid-column: 1 / -1; padding: 20px 0;">No movies found.</p>';
-              }
-            } catch (err) {
-              container.innerHTML = '<p style="color: #ef4444; grid-column: 1 / -1; padding: 20px 0;">Failed to load movies.</p>';
-            }
-          });
-        });
-      });
-    </script>
   </body>
 </html>
