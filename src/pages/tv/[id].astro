@@ -607,10 +607,16 @@ const tvSchema = {
           const s = seasonSelect.value || 1;
           const e = episodeSelect.value || 1;
 
+          let newSrc;
           if (currentServer === 'vidsrc') {
-            player.src = `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${s}&episode=${e}`;
+            newSrc = `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${s}&episode=${e}`;
           } else {
-            player.src = `https://autoembed.co/tv/tmdb/${tmdbId}-${s}-${e}`;
+            newSrc = `https://autoembed.co/tv/tmdb/${tmdbId}-${s}-${e}`;
+          }
+
+          // Only reload the player if the source actually changed
+          if (player.getAttribute('src') !== newSrc) {
+            player.src = newSrc;
           }
         }
 
