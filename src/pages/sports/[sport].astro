@@ -1,0 +1,245 @@
+---
+import Navbar from '../../components/Navbar.astro';
+import { SPORTS, getSport } from '../../utils/sports-config.js';
+import { getSportVideos } from '../../utils/youtube.js';
+
+const { sport: slug } = Astro.params;
+const sport = getSport(slug);
+if (!sport) {
+  return new Response('Not found', { status: 404 });
+}
+
+const key = Astro.locals?.runtime?.env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY;
+const videos = key ? await getSportVideos(sport.channels, key) : [];
+
+const liveNow = videos.filter((v) => v.live === 'live');
+const upcoming = videos.filter((v) => v.live === 'upcoming');
+const highlights = videos.filter((v) => v.live === 'none').slice(0, 24);
+
+const fmtDate = (d) =>
+  d
+    ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })
+    : '';
+
+const SITE_URL = 'https://movies.vixtube.net';
+const pageUrl = `${SITE_URL}/sports/${sport.slug}`;
+const year = new Date().getFullYear();
+const pageTitle = `${sport.name} Highlights & Live Streams ${year} | Vix Movies`;
+const topTitles = highlights.slice(0, 2).map((v) => v.title);
+const pageDescription = `${sport.intro}${topTitles.length ? ` Latest: ${topTitles.join(' | ')}` : ''}`.slice(0, 158);
+
+// Pages with no videos should not be indexed
+const robots =
+  highlights.length + liveNow.length > 0
+    ? 'index, follow, max-image-preview:large'
+    : 'noindex, follow';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "CollectionPage", "@id": pageUrl, "url": pageUrl, "name": `${sport.name} Highlights`, "description": pageDescription },
+    {
+      "@type": "ItemList",
+      "itemListElement": highlights.slice(0, 12).map((v, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "url": `${SITE_URL}/sports/watch/${v.id}`,
+        "name": v.title
+      }))
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
+        { "@type": "ListItem", "position": 2, "name": "Sports", "item": `${SITE_URL}/sports` },
+        { "@type": "ListItem", "position": 3, "name": sport.name, "item": pageUrl }
+      ]
+    }
+  ]
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={pageUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    {highlights[0] && <meta property="og:image" content={highlights[0].thumb} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        background-color: #0b0f19;
+        color: #f8fafc;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        margin: 0;
+        padding: 0 15px 40px 15px;
+      }
+      .container { max-width: 1100px; margin: 0 auto; }
+      .page-title { font-size: 22px; font-weight: 800; margin: 20px 0 8px 0; color: #38bdf8; }
+      .intro { color: #cbd5e1; font-size: 14px; line-height: 1.6; margin: 0 0 18px 0; }
+      .section-title { font-size: 16px; font-weight: 800; margin: 28px 0 12px 0; }
+      .live-badge {
+        display: inline-block; background: #dc2626; color: white; font-size: 11px;
+        font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-right: 6px;
+      }
+      .player-container {
+        position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
+        border-radius: 12px; border: 1px solid #334155; background: #000;
+      }
+      .player-iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+      .live-caption { color: #cbd5e1; font-size: 14px; margin: 10px 0 0 0; }
+      .vid-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      @media (min-width: 700px) {
+        .vid-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      }
+      @media (min-width: 950px) {
+        .vid-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      }
+      .vid-card { text-decoration: none; color: white; display: flex; flex-direction: column; overflow: hidden; }
+      .thumb-box {
+        position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 16 / 9;
+        background: #1e293b; border: 1px solid #334155;
+      }
+      .thumb-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .play-icon {
+        position: absolute; right: 8px; bottom: 8px; background: rgba(2, 132, 199, 0.9);
+        font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 4px;
+      }
+      .vid-title {
+        font-size: 13px; font-weight: 600; margin: 7px 0 3px 0; line-height: 1.35;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      }
+      .vid-meta { font-size: 11px; color: #94a3b8; margin: 0; }
+      .empty { color: #94a3b8; font-size: 14px; padding: 20px 0; }
+      .pill-list { display: flex; flex-wrap: wrap; gap: 8px; }
+      .pill-list a {
+        background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px;
+        border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none;
+      }
+      .pill-list a.current { background: #0284c7; border-color: #0284c7; color: white; }
+      .site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #334155; text-align: center; }
+      .footer-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 12px; }
+      .footer-links a { color: #94a3b8; text-decoration: none; font-size: 13px; }
+      .copyright-text { color: #64748b; font-size: 12px; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <Navbar />
+
+      <main>
+        <h1 class="page-title">{sport.emoji} {sport.name} Highlights & Live Streams</h1>
+        <p class="intro">
+          {sport.intro} All videos come from the official channels and play through the official
+          YouTube player.
+        </p>
+
+        {liveNow.length > 0 && (
+          <section>
+            <h2 class="section-title"><span class="live-badge">LIVE</span> Live Now</h2>
+            <div class="player-container">
+              <iframe
+                class="player-iframe"
+                src={`https://www.youtube.com/embed/${liveNow[0].id}`}
+                title={liveNow[0].title}
+                allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowfullscreen
+                loading="lazy">
+              </iframe>
+            </div>
+            <p class="live-caption">{liveNow[0].title} ({liveNow[0].channelTitle})</p>
+            {liveNow.length > 1 && (
+              <div class="vid-grid" style="margin-top: 14px;">
+                {liveNow.slice(1).map((v) => (
+                  <a href={`/sports/watch/${v.id}`} class="vid-card">
+                    <div class="thumb-box">
+                      <img src={v.thumb} alt={v.title} loading="lazy" decoding="async" width="480" height="270" />
+                      <span class="play-icon">LIVE</span>
+                    </div>
+                    <h3 class="vid-title">{v.title}</h3>
+                    <p class="vid-meta">{v.channelTitle}</p>
+                  </a>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {upcoming.length > 0 && (
+          <section>
+            <h2 class="section-title">🗓️ Upcoming Streams</h2>
+            <div class="vid-grid">
+              {upcoming.slice(0, 8).map((v) => (
+                <a href={`/sports/watch/${v.id}`} class="vid-card">
+                  <div class="thumb-box">
+                    <img src={v.thumb} alt={v.title} loading="lazy" decoding="async" width="480" height="270" />
+                    <span class="play-icon">SOON</span>
+                  </div>
+                  <h3 class="vid-title">{v.title}</h3>
+                  <p class="vid-meta">{v.channelTitle}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section>
+          <h2 class="section-title">▶️ Latest {sport.name} Highlights</h2>
+          {highlights.length > 0 ? (
+            <div class="vid-grid">
+              {highlights.map((v) => (
+                <a href={`/sports/watch/${v.id}`} class="vid-card" title={v.title}>
+                  <div class="thumb-box">
+                    <img src={v.thumb} alt={v.title} loading="lazy" decoding="async" width="480" height="270" />
+                    <span class="play-icon">▶ Play</span>
+                  </div>
+                  <h3 class="vid-title">{v.title}</h3>
+                  <p class="vid-meta">{v.channelTitle} • {fmtDate(v.published)}</p>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p class="empty">New {sport.name.toLowerCase()} videos will appear here soon.</p>
+          )}
+        </section>
+
+        <section>
+          <h2 class="section-title">More Sports</h2>
+          <div class="pill-list">
+            {SPORTS.map((s) => (
+              <a href={`/sports/${s.slug}`} class={s.slug === sport.slug ? 'current' : ''}>
+                {s.emoji} {s.name}
+              </a>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-links">
+          <a href="/about">About Us</a>
+          <a href="/contact">Contact Us</a>
+          <a href="/privacy-policy">Privacy Policy</a>
+        </div>
+        <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
+      </footer>
+    </div>
+  </body>
+</html>
