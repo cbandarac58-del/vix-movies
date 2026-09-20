@@ -1,51 +1,110 @@
 ---
 import Navbar from '../../../components/Navbar.astro';
 import { SPORTS } from '../../../utils/sports-config.js';
-import { getVideo } from '../../../utils/youtube.js';
+import {
+  getVideo,
+  getSportVideos,
+  findSportForChannel,
+  durationText,
+} from '../../../utils/youtube.js';
 
 const { id } = Astro.params;
 if (!/^[A-Za-z0-9_-]{11}$/.test(id || '')) {
   return new Response('Not found', { status: 404 });
 }
 
+// API problems are temporary (503), not "page not found" (404)
+const unavailable = () =>
+  new Response('This video is temporarily unavailable. Please try again in a few minutes.', {
+    status: 503,
+    headers: { 'Retry-After': '900', 'Content-Type': 'text/plain; charset=utf-8' },
+  });
+
 const key = Astro.locals?.runtime?.env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY;
-const video = key ? await getVideo(id, key) : null;
-if (!video) {
-  return new Response('Not found', { status: 404 });
+if (!key) return unavailable();
+
+const { video, error } = await getVideo(id, key);
+if (error) return unavailable();
+if (!video) return new Response('Not found', { status: 404 });
+
+// Sport of this video + related videos from the same sport
+const sport = await findSportForChannel(video.channelId, key);
+let related = [];
+if (sport) {
+  const res = await getSportVideos(sport.channels, key);
+  related = res.videos.filter((v) => v.id !== id && v.live !== 'upcoming').slice(0, 8);
 }
 
 const SITE_URL = 'https://movies.vixtube.net';
 const pageUrl = `${SITE_URL}/sports/watch/${id}`;
 const embedUrl = `https://www.youtube.com/embed/${id}`;
 const watchUrl = `https://www.youtube.com/watch?v=${id}`;
-const desc = video.description.replace(/\s+/g, ' ').trim().slice(0, 500);
-const published = video.published
-  ? new Date(video.published).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
-  : '';
-const pageTitle = `${video.title.slice(0, 80)} | Vix Movies Sports`;
-const pageDescription = (desc || `Watch ${video.title} on the official ${video.channelTitle} channel.`).slice(0, 158);
 
+// Clean description: remove links and hashtags, keep readable text
+const cleanDesc = video.description
+  .replace(/https?:\/\/\S+/g, '')
+  .replace(/#\w+/g, '')
+  .replace(/\s+/g, ' ')
+  .trim()
+  .slice(0, 500);
+
+const fmtLong = (d) =>
+  d
+    ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
+    : '';
+const fmtShort = (d) =>
+  d
+    ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })
+    : '';
+
+const published = fmtLong(video.published);
+const durText = durationText(video.duration);
+const shortTitle = video.title.length > 60 ? `${video.title.slice(0, 57)}...` : video.title;
+const pageTitle = `${shortTitle} | ${sport ? sport.name : 'Sports'} | Vix Movies`;
+const pageDescription = (
+  cleanDesc.length > 30 ? cleanDesc : `Watch ${video.title} from the official ${video.channelTitle} channel.`
+).slice(0, 158);
+
+// Structured data
+const videoObject = {
+  "@type": "VideoObject",
+  "name": video.title,
+  "description": cleanDesc || video.title,
+  "thumbnailUrl": [video.thumb],
+  "uploadDate": video.published,
+  "duration": video.duration && video.duration !== 'P0D' ? video.duration : undefined,
+  "embedUrl": embedUrl,
+  "url": pageUrl,
+};
+if (video.liveStart) {
+  videoObject.publication = {
+    "@type": "BroadcastEvent",
+    "isLiveBroadcast": true,
+    "startDate": video.liveStart,
+    "endDate": video.liveEnd || undefined,
+  };
+}
+
+const crumbs = [
+  { name: 'Home', item: SITE_URL },
+  { name: 'Sports', item: `${SITE_URL}/sports` },
+  ...(sport ? [{ name: sport.name, item: `${SITE_URL}/sports/${sport.slug}` }] : []),
+  { name: video.title, item: pageUrl },
+];
 const schema = {
   "@context": "https://schema.org",
   "@graph": [
-    {
-      "@type": "VideoObject",
-      "name": video.title,
-      "description": desc || video.title,
-      "thumbnailUrl": [video.thumb],
-      "uploadDate": video.published,
-      "embedUrl": embedUrl,
-      "url": pageUrl
-    },
+    videoObject,
     {
       "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
-        { "@type": "ListItem", "position": 2, "name": "Sports", "item": `${SITE_URL}/sports` },
-        { "@type": "ListItem", "position": 3, "name": video.title, "item": pageUrl }
-      ]
-    }
-  ]
+      "itemListElement": crumbs.map((c, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": c.name,
+        "item": c.item,
+      })),
+    },
+  ],
 };
 ---
 
@@ -90,18 +149,55 @@ const schema = {
         border-radius: 12px; border: 1px solid #334155; background: #000;
       }
       .player-iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+      .yt-facade { cursor: pointer; }
+      .facade-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .facade-play {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        width: 68px; height: 48px; background: rgba(2, 132, 199, 0.92); border-radius: 12px;
+        display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff;
+      }
       .yt-link { display: inline-block; margin-top: 10px; color: #38bdf8; font-size: 13px; }
       .info-block {
         margin-top: 22px; background: #1e293b; padding: 18px; border-radius: 12px; border: 1px solid #334155;
       }
       .info-block h2 { font-size: 16px; color: #38bdf8; margin: 0 0 10px 0; }
+      .info-block h2:not(:first-child) { margin-top: 20px; }
       .info-block p { color: #cbd5e1; line-height: 1.6; font-size: 14px; margin: 0; }
+      .details-list { color: #cbd5e1; font-size: 14px; line-height: 1.8; padding-left: 18px; margin: 0; }
+      .details-list a { color: #38bdf8; }
       .section-title { font-size: 16px; font-weight: 800; margin: 28px 0 12px 0; }
+      .vid-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      @media (min-width: 700px) {
+        .vid-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      }
+      @media (min-width: 950px) {
+        .vid-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      }
+      .vid-card { text-decoration: none; color: white; display: flex; flex-direction: column; overflow: hidden; }
+      .thumb-box {
+        position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 16 / 9;
+        background: #1e293b; border: 1px solid #334155;
+      }
+      .thumb-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .play-icon {
+        position: absolute; right: 8px; bottom: 8px; background: rgba(2, 132, 199, 0.9);
+        font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 4px;
+      }
+      .vid-title {
+        font-size: 13px; font-weight: 600; margin: 7px 0 3px 0; line-height: 1.35;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      }
+      .vid-meta { font-size: 11px; color: #94a3b8; margin: 0; }
       .pill-list { display: flex; flex-wrap: wrap; gap: 8px; }
       .pill-list a {
         background: #1e293b; color: #cbd5e1; border: 1px solid #334155; padding: 6px 14px;
         border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none;
       }
+      .pill-list a.current { background: #0284c7; border-color: #0284c7; color: white; }
       .site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #334155; text-align: center; }
       .footer-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 12px; }
       .footer-links a { color: #94a3b8; text-decoration: none; font-size: 13px; }
@@ -123,28 +219,66 @@ const schema = {
           <div class="notice">🔴 This stream is live right now.</div>
         )}
 
-        <div class="player-container">
-          <iframe
-            class="player-iframe"
-            src={embedUrl}
-            title={video.title}
-            allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen"
-            allowfullscreen>
-          </iframe>
+        <div
+          class="player-container yt-facade"
+          data-embed={`${embedUrl}?autoplay=1&rel=0`}
+          data-title={video.title}
+          role="button"
+          tabindex="0"
+          aria-label={`Play ${video.title}`}>
+          <img class="facade-img" src={video.thumb} alt={video.title} decoding="async" width="480" height="270" />
+          <span class="facade-play">▶</span>
+          <noscript>
+            <iframe class="player-iframe" src={embedUrl} title={video.title} allowfullscreen></iframe>
+          </noscript>
         </div>
         <a class="yt-link" href={watchUrl} target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a>
 
-        {desc && (
-          <article class="info-block">
-            <h2>About this video</h2>
-            <p>{desc}</p>
-          </article>
+        <article class="info-block">
+          <h2>Video Details</h2>
+          <ul class="details-list">
+            <li><b>Channel:</b> {video.channelTitle}</li>
+            {published && <li><b>Published:</b> {published}</li>}
+            {durText && <li><b>Length:</b> {durText}</li>}
+            {sport && (
+              <li><b>Sport:</b> <a href={`/sports/${sport.slug}`}>{sport.name}</a></li>
+            )}
+            {video.live === 'live' && <li><b>Status:</b> Live now</li>}
+            {video.live === 'upcoming' && <li><b>Status:</b> Scheduled</li>}
+          </ul>
+
+          {cleanDesc.length > 20 && (
+            <>
+              <h2>About this video</h2>
+              <p>{cleanDesc}</p>
+            </>
+          )}
+        </article>
+
+        {related.length > 0 && (
+          <section>
+            <h2 class="section-title">More {sport.name} Videos</h2>
+            <div class="vid-grid">
+              {related.map((v) => (
+                <a href={`/sports/watch/${v.id}`} class="vid-card" title={v.title}>
+                  <div class="thumb-box">
+                    <img src={v.thumb} alt={v.title} loading="lazy" decoding="async" width="480" height="270" />
+                    <span class="play-icon">{v.live === 'live' ? 'LIVE' : '▶ Play'}</span>
+                  </div>
+                  <h3 class="vid-title">{v.title}</h3>
+                  <p class="vid-meta">{v.channelTitle} • {fmtShort(v.published)}</p>
+                </a>
+              ))}
+            </div>
+          </section>
         )}
 
         <h2 class="section-title">Browse Sports</h2>
         <div class="pill-list">
           {SPORTS.map((s) => (
-            <a href={`/sports/${s.slug}`}>{s.emoji} {s.name}</a>
+            <a href={`/sports/${s.slug}`} class={sport && s.slug === sport.slug ? 'current' : ''}>
+              {s.emoji} {s.name}
+            </a>
           ))}
         </div>
       </main>
@@ -158,5 +292,33 @@ const schema = {
         <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
       </footer>
     </div>
+
+    <script is:inline>
+      // Click-to-load: the YouTube player loads only when the visitor taps the thumbnail
+      document.querySelectorAll('.yt-facade').forEach((el) => {
+        let done = false;
+        const load = () => {
+          if (done) return;
+          done = true;
+          const f = document.createElement('iframe');
+          f.className = 'player-iframe';
+          f.src = el.dataset.embed;
+          f.title = el.dataset.title || 'Video player';
+          f.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen';
+          f.allowFullscreen = true;
+          el.replaceChildren(f);
+          el.classList.remove('yt-facade');
+          el.removeAttribute('role');
+          el.removeAttribute('tabindex');
+        };
+        el.addEventListener('click', load);
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            load();
+          }
+        });
+      });
+    </script>
   </body>
 </html>
