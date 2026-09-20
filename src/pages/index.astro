@@ -201,7 +201,7 @@ const schemaData = {
         font-size: 12px;
       }
 
-      /* Browse by Genre Links */
+      /* Browse by Genre Links (one scrollable row on mobile) */
       .genre-browse {
         margin-bottom: 25px;
       }
@@ -212,10 +212,15 @@ const schemaData = {
       }
       .genre-browse-list {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
       }
       .genre-browse-list a {
+        flex-shrink: 0;
+        white-space: nowrap;
         background: #1e293b;
         color: #cbd5e1;
         border: 1px solid #334155;
@@ -229,6 +234,12 @@ const schemaData = {
         background: #0284c7;
         border-color: #0284c7;
         color: white;
+      }
+      @media (min-width: 900px) {
+        .genre-browse-list {
+          flex-wrap: wrap;
+          overflow-x: visible;
+        }
       }
 
       /* Grid Layout */
