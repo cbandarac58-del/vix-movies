@@ -1,5 +1,20 @@
 ---
-const { activePage = 'home' } = Astro.props;
+const { activePage } = Astro.props;
+
+// Work out the active tab from the URL, so pages don't need to pass it
+const path = Astro.url.pathname;
+const detect = () => {
+  if (path === '/') return 'home';
+  if (path.startsWith('/hollywood')) return 'hollywood';
+  if (path.startsWith('/bollywood')) return 'bollywood';
+  if (path.startsWith('/tv')) return 'tv';
+  if (path.startsWith('/trending')) return 'trending';
+  if (path.startsWith('/sports')) return 'sports';
+  if (path.startsWith('/movie') || path.startsWith('/genre')) return 'home';
+  return '';
+};
+const current = activePage || detect();
+const cls = (name) => (current === name ? 'nav-item active' : 'nav-item');
 ---
 
 <header class="navbar-container">
@@ -14,10 +29,12 @@ const { activePage = 'home' } = Astro.props;
   </form>
 
   <nav class="nav-links">
-    <a href="/" class={activePage === 'home' ? 'nav-item active' : 'nav-item'}>Home</a>
-    <a href="/hollywood" class={activePage === 'hollywood' ? 'nav-item active' : 'nav-item'}>Hollywood</a>
-    <a href="/bollywood" class={activePage === 'bollywood' ? 'nav-item active' : 'nav-item'}>Bollywood</a>
-    <a href="/tv" class={activePage === 'tv' ? 'nav-item active' : 'nav-item'}>TV Series</a>
+    <a href="/" class={cls('home')}>Home</a>
+    <a href="/hollywood" class={cls('hollywood')}>Hollywood</a>
+    <a href="/bollywood" class={cls('bollywood')}>Bollywood</a>
+    <a href="/tv" class={cls('tv')}>TV Series</a>
+    <a href="/trending" class={cls('trending')}>Trending</a>
+    <a href="/sports" class={cls('sports')}>Sports</a>
   </nav>
 </header>
 
@@ -82,6 +99,7 @@ const { activePage = 'home' } = Astro.props;
     font-size: 14px;
     font-weight: 600;
     white-space: nowrap;
+    flex-shrink: 0;
     transition: color 0.2s;
   }
   .nav-item:hover {
