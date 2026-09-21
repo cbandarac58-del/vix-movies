@@ -31,7 +31,8 @@ const titleYear = `${showName}${firstYear ? ` (${firstYear})` : ''}`;
 const castAll = show.credits?.cast || [];
 const cast = castAll.slice(0, 6);
 const castRoles = castAll.slice(0, 10);
-const creators = (show.created_by || []).map((c) => c.name);
+const creatorObjs = show.created_by || [];
+const creators = creatorObjs.map((c) => c.name);
 const networks = (show.networks || []).slice(0, 3).map((n) => n.name);
 const trailer = (show.videos?.results || []).find(
   (v) => v.site === 'YouTube' && v.type === 'Trailer'
@@ -197,8 +198,10 @@ const schemaGraph = [
     "numberOfSeasons": seasonCount,
     "numberOfEpisodes": episodeCount,
     "genre": genreNames,
-    "creator": creators.length ? creators.map((n) => ({ "@type": "Person", "name": n })) : undefined,
-    "actor": cast.map((c) => ({ "@type": "Person", "name": c.name }))
+    "creator": creatorObjs.length
+      ? creatorObjs.map((c) => ({ "@type": "Person", "name": c.name, "url": `${SITE_URL}/person/${c.id}` }))
+      : undefined,
+    "actor": cast.map((c) => ({ "@type": "Person", "name": c.name, "url": `${SITE_URL}/person/${c.id}` }))
   },
   { "@type": "BreadcrumbList", "itemListElement": breadcrumb },
 ];
@@ -469,6 +472,13 @@ const tvSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
         padding-left: 18px;
         margin: 0;
       }
+      .details-list a, .cast-list a {
+        color: #38bdf8;
+        text-decoration: none;
+      }
+      .details-list a:hover, .cast-list a:hover {
+        text-decoration: underline;
+      }
       .faq-item h3 {
         font-size: 15px;
         color: #f8fafc;
@@ -706,7 +716,16 @@ const tvSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
             {show.type && <li><b>Type:</b> {show.type}</li>}
             {seasonCount && <li><b>Seasons:</b> {seasonCount}{episodeCount ? ` (${episodeCount} episodes)` : ''}</li>}
             {episodeRuntime && <li><b>Episode runtime:</b> about {episodeRuntime} minutes</li>}
-            {creators.length > 0 && <li><b>Created by:</b> {creators.join(', ')}</li>}
+            {creatorObjs.length > 0 && (
+              <li>
+                <b>Created by:</b>{' '}
+                {creatorObjs.map((c, i) => (
+                  <>
+                    <a href={`/person/${c.id}`}>{c.name}</a>{i < creatorObjs.length - 1 ? ', ' : ''}
+                  </>
+                ))}
+              </li>
+            )}
             {networks.length > 0 && <li><b>Network:</b> {networks.join(', ')}</li>}
             {show.production_companies?.length > 0 && (
               <li><b>Production:</b> {show.production_companies.slice(0, 3).map((c) => c.name).join(', ')}</li>
@@ -736,7 +755,9 @@ const tvSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
               <h2>Cast & Characters</h2>
               <ul class="cast-list">
                 {castRoles.map((c) => (
-                  <li><b>{c.name}</b>{c.character ? ` as ${c.character}` : ''}</li>
+                  <li>
+                    <a href={`/person/${c.id}`}><b>{c.name}</b></a>{c.character ? ` as ${c.character}` : ''}
+                  </li>
                 ))}
               </ul>
             </>
