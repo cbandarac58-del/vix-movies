@@ -1,4 +1,4 @@
-import { MOVIE_SITEMAPS, TV_SITEMAPS } from '../utils/sitemap-config.js';
+import { MOVIE_SITEMAPS, TV_SITEMAPS, PEOPLE_SITEMAPS } from '../utils/sitemap-config.js';
 
 export const GET = () => {
   const site = 'https://movies.vixtube.net';
@@ -6,6 +6,7 @@ export const GET = () => {
   const files = ['pages', 'sports'];
   for (let i = 1; i <= MOVIE_SITEMAPS; i++) files.push(`movies-${i}`);
   for (let i = 1; i <= TV_SITEMAPS; i++) files.push(`tv-${i}`);
+  for (let i = 1; i <= PEOPLE_SITEMAPS; i++) files.push(`people-${i}`);
 
   const entries = files
     .map((f) => `  <sitemap>\n    <loc>${site}/sitemaps/${f}.xml</loc>\n  </sitemap>`)
