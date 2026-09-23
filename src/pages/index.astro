@@ -352,9 +352,17 @@ const schemaData = {
         width: 100%;
       }
 
+      /* Ad slot */
+      .ad-slot {
+        margin: 28px 0;
+        text-align: center;
+        min-height: 90px;
+      }
+
       /* Latest Sports Videos (one scrollable row on mobile, grid on desktop) */
       .sports-home {
-        margin-top: 35px;
+        margin-top: 10px;
+        margin-bottom: 25px;
       }
       .sports-head {
         display: flex;
@@ -530,6 +538,12 @@ const schemaData = {
             </a>
           ))}
         </section>
+
+        <!-- Ad slot: Native Banner (Adsterra) -->
+        <div class="ad-slot">
+          <script async data-cfasync="false" src="https://toleranceteaminadequate.com/e9a7ebb5b4ccad1a0f4057850ab50885/invoke.js"></script>
+          <div id="container-e9a7ebb5b4ccad1a0f4057850ab50885"></div>
+        </div>
 
         <!-- Latest Sports Videos (official YouTube channels), below the movies -->
         {sportsVideos.length > 0 && (
