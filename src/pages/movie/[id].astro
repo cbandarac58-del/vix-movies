@@ -477,7 +477,7 @@ const movieSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
       .ad-slot {
         margin: 24px 0;
         text-align: center;
-        min-height: 90px;
+        min-height: 60px;
       }
 
       /* Comment System Styling */
@@ -708,10 +708,18 @@ const movieSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
             {money(movie.revenue) && <li><b>Box office:</b> {money(movie.revenue)}</li>}
           </ul>
 
-          <!-- Ad slot: Native Banner (Adsterra) -->
+          <!-- Ad slot 1: Native Banner 300x250 (Adsterra) -->
           <div class="ad-slot">
-            <script async data-cfasync="false" src="https://toleranceteaminadequate.com/e9a7ebb5b4ccad1a0f4057850ab50885/invoke.js"></script>
-            <div id="container-e9a7ebb5b4ccad1a0f4057850ab50885"></div>
+            <script>
+              atOptions = {
+                'key' : '2800610326ebafc17c30013f7a1096e5',
+                'format' : 'iframe',
+                'height' : 250,
+                'width' : 300,
+                'params' : {}
+              };
+            </script>
+            <script src="https://toleranceteaminadequate.com/2800610326ebafc17c30013f7a1096e5/invoke.js"></script>
           </div>
 
           {castRoles.length > 0 && (
@@ -771,6 +779,20 @@ const movieSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
             </>
           )}
         </article>
+
+        <!-- Ad slot 2: Mobile Banner 320x50 (Adsterra) -->
+        <div class="ad-slot">
+          <script>
+            atOptions = {
+              'key' : '09d84e44afaa5e3c051baecc7e938408',
+              'format' : 'iframe',
+              'height' : 50,
+              'width' : 320,
+              'params' : {}
+            };
+          </script>
+          <script src="https://toleranceteaminadequate.com/09d84e44afaa5e3c051baecc7e938408/invoke.js"></script>
+        </div>
 
         <!-- Native Comment Section -->
         <section class="comments-section" aria-label="User Reviews and Comments">
