@@ -708,18 +708,10 @@ const movieSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
             {money(movie.revenue) && <li><b>Box office:</b> {money(movie.revenue)}</li>}
           </ul>
 
-          <!-- Ad slot 1: Native Banner 300x250 (Adsterra) -->
+          <!-- Ad slot 1: Native Banner (Adsterra) -->
           <div class="ad-slot">
-            <script>
-              atOptions = {
-                'key' : '2800610326ebafc17c30013f7a1096e5',
-                'format' : 'iframe',
-                'height' : 250,
-                'width' : 300,
-                'params' : {}
-              };
-            </script>
-            <script src="https://toleranceteaminadequate.com/2800610326ebafc17c30013f7a1096e5/invoke.js"></script>
+            <script async data-cfasync="false" src="https://toleranceteaminadequate.com/e9a7ebb5b4ccad1a0f4057850ab50885/invoke.js"></script>
+            <div id="container-e9a7ebb5b4ccad1a0f4057850ab50885"></div>
           </div>
 
           {castRoles.length > 0 && (
@@ -734,6 +726,20 @@ const movieSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
               </ul>
             </>
           )}
+
+          <!-- Ad slot 2: Banner 300x250 (Adsterra) -->
+          <div class="ad-slot">
+            <script>
+              atOptions = {
+                'key' : '2800610326ebafc17c30013f7a1096e5',
+                'format' : 'iframe',
+                'height' : 250,
+                'width' : 300,
+                'params' : {}
+              };
+            </script>
+            <script src="https://toleranceteaminadequate.com/2800610326ebafc17c30013f7a1096e5/invoke.js"></script>
+          </div>
 
           {providerRows.length > 0 && (
             <>
@@ -780,7 +786,7 @@ const movieSchema = { "@context": "https://schema.org", "@graph": schemaGraph };
           )}
         </article>
 
-        <!-- Ad slot 2: Mobile Banner 320x50 (Adsterra) -->
+        <!-- Ad slot 3: Mobile Banner 320x50 (Adsterra) -->
         <div class="ad-slot">
           <script>
             atOptions = {
