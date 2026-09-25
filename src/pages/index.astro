@@ -43,7 +43,6 @@ const featured = movies[0] || {
 };
 
 // Latest sports videos
-// A problem here never breaks the homepage.
 let sportsVideos = [];
 
 if (YT_KEY) {
@@ -351,6 +350,15 @@ const schemaData = {
       }
 
       /* =========================
+         TOP 320x50 AD
+         ========================= */
+
+      .top-banner-ad {
+        margin: 8px 0 14px 0;
+        min-height: 50px;
+      }
+
+      /* =========================
          GENRE BROWSE
          ========================= */
 
@@ -508,10 +516,6 @@ const schemaData = {
 
       .ad-slot.ad-300x250 {
         min-height: 250px;
-      }
-
-      .ad-slot.ad-320x50 {
-        min-height: 50px;
       }
 
       .ad-host {
@@ -705,7 +709,7 @@ const schemaData = {
       }
 
       /* =========================
-         MOBILE AD SAFETY
+         SMALL SCREEN
          ========================= */
 
       @media (max-width: 340px) {
@@ -721,6 +725,17 @@ const schemaData = {
     <div class="container">
 
       <Navbar activePage="home" />
+
+      <!-- =========================
+           TOP 320x50 MOBILE BANNER
+           ========================= -->
+
+      <div class="ad-slot top-banner-ad">
+        <div
+          id="ad-320-top-host"
+          class="ad-host ad-host-320"
+        ></div>
+      </div>
 
       <!-- =========================
            MAIN
@@ -740,6 +755,7 @@ const schemaData = {
           />
 
           <div class="hero-overlay">
+
             <span class="badge-featured">
               FEATURED #1 TRENDING
             </span>
@@ -759,6 +775,7 @@ const schemaData = {
             >
               ► Watch Now
             </a>
+
           </div>
         </article>
 
@@ -770,11 +787,13 @@ const schemaData = {
           class="genre-browse"
           aria-label="Browse movies by genre"
         >
+
           <h2>
             Browse Movies by Genre
           </h2>
 
           <div class="genre-browse-list">
+
             {genres.map((g) => (
               <a
                 href={`/genre/${slugify(g.name)}`}
@@ -783,11 +802,13 @@ const schemaData = {
                 {genreLabel(g.name)}
               </a>
             ))}
+
           </div>
+
         </section>
 
         <!-- =========================
-             TRENDING TITLE
+             TRENDING
              ========================= -->
 
         <div style="margin-bottom: 12px;">
@@ -810,12 +831,14 @@ const schemaData = {
           class="grid-movies"
           aria-label="Trending Movies List"
         >
+
           {movies.map((m) => (
             <a
               href={`/movie/${m.id}`}
               class="movie-card"
               title={`Watch ${m.title} online`}
             >
+
               <div class="poster-box">
 
                 <img
@@ -847,12 +870,14 @@ const schemaData = {
               <h3 class="card-title">
                 {m.title}
               </h3>
+
             </a>
           ))}
+
         </section>
 
         <!-- =========================
-             AD 1 - NATIVE BANNER
+             NATIVE BANNER
              ========================= -->
 
         <div class="ad-slot native-ad">
@@ -863,7 +888,7 @@ const schemaData = {
         </div>
 
         <!-- =========================
-             AD 2 - 300x250
+             300x250 BANNER
              ========================= -->
 
         <div class="ad-slot ad-300x250">
@@ -874,18 +899,7 @@ const schemaData = {
         </div>
 
         <!-- =========================
-             AD 3 - 320x50
-             ========================= -->
-
-        <div class="ad-slot ad-320x50">
-          <div
-            id="ad-320-host"
-            class="ad-host ad-host-320"
-          ></div>
-        </div>
-
-        <!-- =========================
-             LATEST SPORTS VIDEOS
+             SPORTS
              ========================= -->
 
         {sportsVideos.length > 0 && (
@@ -893,6 +907,7 @@ const schemaData = {
             class="sports-home"
             aria-label="Latest sports videos"
           >
+
             <div class="sports-head">
 
               <h2>
@@ -916,6 +931,7 @@ const schemaData = {
                   class="sv-card"
                   title={v.title}
                 >
+
                   <div class="sv-thumb">
 
                     <img
@@ -944,12 +960,14 @@ const schemaData = {
                   <h3 class="sv-title">
                     {v.title}
                   </h3>
+
                 </a>
               ))}
 
             </div>
 
             <!-- Sports category pills -->
+
             <div class="genre-browse-list sports-pills">
 
               {SPORTS.map((s) => (
@@ -962,11 +980,12 @@ const schemaData = {
               ))}
 
             </div>
+
           </section>
         )}
 
         <!-- =========================
-             AEO / GEO CONTENT
+             AEO / GEO
              ========================= -->
 
         <section class="aeo-section">
@@ -1043,22 +1062,76 @@ const schemaData = {
          ========================= -->
 
     <script is:inline>
-      function loadNativeAd(hostId, containerId, key) {
+      function loadBannerAd(
+        hostId,
+        key,
+        width,
+        height
+      ) {
         return new Promise((resolve) => {
-          const host = document.getElementById(hostId);
+          const host =
+            document.getElementById(hostId);
 
           if (!host) {
             resolve();
             return;
           }
 
-          const container = document.createElement('div');
+          /*
+           * Adsterra uses the global atOptions
+           * object, so banners are loaded
+           * sequentially.
+           */
+
+          window.atOptions = {
+            key: key,
+            format: 'iframe',
+            height: height,
+            width: width,
+            params: {}
+          };
+
+          const script =
+            document.createElement('script');
+
+          script.type = 'text/javascript';
+
+          script.src =
+            `https://toleranceteaminadequate.com/${key}/invoke.js`;
+
+          script.async = false;
+
+          script.onload = resolve;
+          script.onerror = resolve;
+
+          host.appendChild(script);
+        });
+      }
+
+
+      function loadNativeAd(
+        hostId,
+        containerId,
+        key
+      ) {
+        return new Promise((resolve) => {
+          const host =
+            document.getElementById(hostId);
+
+          if (!host) {
+            resolve();
+            return;
+          }
+
+          const container =
+            document.createElement('div');
 
           container.id = containerId;
 
           host.appendChild(container);
 
-          const script = document.createElement('script');
+          const script =
+            document.createElement('script');
 
           script.async = true;
 
@@ -1078,54 +1151,24 @@ const schemaData = {
       }
 
 
-      function loadBannerAd(
-        hostId,
-        key,
-        width,
-        height
-      ) {
-        return new Promise((resolve) => {
-          const host = document.getElementById(hostId);
-
-          if (!host) {
-            resolve();
-            return;
-          }
-
-          /*
-           * Adsterra uses the global atOptions object.
-           * Each ad is therefore loaded sequentially.
-           */
-
-          window.atOptions = {
-            key: key,
-            format: 'iframe',
-            height: height,
-            width: width,
-            params: {}
-          };
-
-          const script = document.createElement('script');
-
-          script.type = 'text/javascript';
-
-          script.src =
-            `https://toleranceteaminadequate.com/${key}/invoke.js`;
-
-          script.async = false;
-
-          script.onload = resolve;
-          script.onerror = resolve;
-
-          host.appendChild(script);
-        });
-      }
-
-
       async function loadAds() {
 
         /*
          * AD 1
+         * 320 x 50
+         * TOP OF PAGE
+         */
+
+        await loadBannerAd(
+          'ad-320-top-host',
+          '09d84e44afaa5e3c051baecc7e938408',
+          320,
+          50
+        );
+
+
+        /*
+         * AD 2
          * Native Banner
          */
 
@@ -1137,8 +1180,8 @@ const schemaData = {
 
 
         /*
-         * AD 2
-         * 300 x 250 Banner
+         * AD 3
+         * 300 x 250
          */
 
         await loadBannerAd(
@@ -1147,24 +1190,11 @@ const schemaData = {
           300,
           250
         );
-
-
-        /*
-         * AD 3
-         * 320 x 50 Mobile Banner
-         */
-
-        await loadBannerAd(
-          'ad-320-host',
-          '09d84e44afaa5e3c051baecc7e938408',
-          320,
-          50
-        );
       }
 
 
       /*
-       * Start loading after DOM is ready.
+       * Start ads after DOM is ready.
        */
 
       if (
