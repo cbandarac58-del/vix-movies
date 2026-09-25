@@ -4,21 +4,32 @@ import { SPORTS } from '../utils/sports-config.js';
 import { getSportVideos } from '../utils/youtube.js';
 
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
-const YT_KEY = Astro.locals?.runtime?.env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY;
+const YT_KEY =
+  Astro.locals?.runtime?.env?.YOUTUBE_API_KEY ||
+  import.meta.env.YOUTUBE_API_KEY;
 
 const slugify = (t = '') =>
-  t.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  t
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 // "TV Movie" -> "TV Movies", "Action" -> "Action Movies"
-const genreLabel = (name) => (/movie$/i.test(name) ? `${name}s` : `${name} Movies`);
+const genreLabel = (name) =>
+  /movie$/i.test(name) ? `${name}s` : `${name} Movies`;
 
 // Fetch Genres
-const genreRes = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_KEY}`);
+const genreRes = await fetch(
+  `https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_KEY}`
+);
 const genreData = await genreRes.json();
 const genres = genreData.genres || [];
 
 // Fetch Trending Movies
-const trendRes = await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_KEY}`);
+const trendRes = await fetch(
+  `https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_KEY}`
+);
 const trendData = await trendRes.json();
 const movies = trendData.results || [];
 
@@ -26,27 +37,41 @@ const movies = trendData.results || [];
 const featured = movies[0] || {
   id: 1241982,
   title: 'Moana 2',
-  overview: 'Teenage Moana answers the Ocean\'s call and voyages beyond the reef of her island...',
+  overview:
+    "Teenage Moana answers the Ocean's call and voyages beyond the reef of her island...",
   backdrop_path: '/3V4kSt8AL9A38y3VE8A3L.jpg'
 };
 
-// Latest sports videos (a problem here never breaks the homepage, the section just hides)
+// Latest sports videos
+// A problem here never breaks the homepage.
 let sportsVideos = [];
+
 if (YT_KEY) {
   try {
-    const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 3000));
+    const timeout = new Promise((resolve) =>
+      setTimeout(() => resolve(null), 3000)
+    );
+
     const results = await Promise.race([
-      Promise.all(SPORTS.map((s) => getSportVideos(s.channels, YT_KEY))),
-      timeout,
+      Promise.all(
+        SPORTS.map((s) => getSportVideos(s.channels, YT_KEY))
+      ),
+      timeout
     ]);
+
     if (results) {
       const seen = new Set();
+
       const picks = results.flatMap((r, i) =>
         r.videos
           .filter((v) => v.live !== 'upcoming')
           .slice(0, 2)
-          .map((v) => ({ ...v, sport: SPORTS[i] }))
+          .map((v) => ({
+            ...v,
+            sport: SPORTS[i]
+          }))
       );
+
       sportsVideos = picks
         .filter((v) => !seen.has(v.id) && seen.add(v.id))
         .sort(
@@ -61,61 +86,66 @@ if (YT_KEY) {
   }
 }
 
-// Website Canonical & Base URL Configuration
+// Website Canonical & Base URL
 const SITE_URL = 'https://movies.vixtube.net';
 
-// Schema.org Structured Data (SEO, AEO & GEO Engine Optimization)
+// Schema.org Structured Data
 const schemaData = {
-  "@context": "https://schema.org",
-  "@graph": [
+  '@context': 'https://schema.org',
+  '@graph': [
     {
-      "@type": "WebSite",
-      "@id": `${SITE_URL}/#website`,
-      "url": SITE_URL,
-      "name": "Vix Movies",
-      "description": "Watch high-definition movies, trending TV series, and cinema releases online for free.",
-      "publisher": {
-        "@type": "Organization",
-        "name": "Vix Movies",
-        "url": SITE_URL
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: 'Vix Movies',
+      description:
+        'Watch high-definition movies, trending TV series, and cinema releases online for free.',
+      publisher: {
+        '@type': 'Organization',
+        name: 'Vix Movies',
+        url: SITE_URL
       },
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": `${SITE_URL}/search?q={search_term_string}`,
-        "query-input": "required name=search_term_string"
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${SITE_URL}/search?q={search_term_string}`,
+        'query-input': 'required name=search_term_string'
       }
     },
     {
-      "@type": "ItemList",
-      "name": "Trending Movies Today",
-      "itemListElement": movies.slice(0, 10).map((m, index) => ({
-        "@type": "ListItem",
-        "position": index + 1,
-        "item": {
-          "@type": "Movie",
-          "name": m.title,
-          "url": `${SITE_URL}/movie/${m.id}`,
-          "image": m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : ''
+      '@type': 'ItemList',
+      name: 'Trending Movies Today',
+      itemListElement: movies.slice(0, 10).map((m, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'Movie',
+          name: m.title,
+          url: `${SITE_URL}/movie/${m.id}`,
+          image: m.poster_path
+            ? `https://image.tmdb.org/t/p/w500${m.poster_path}`
+            : ''
         }
       }))
     },
     {
-      "@type": "FAQPage",
-      "mainEntity": [
+      '@type': 'FAQPage',
+      mainEntity: [
         {
-          "@type": "Question",
-          "name": "What is Vix Movies?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Vix Movies is a free online streaming platform providing access to trending HD movies, TV shows, Hollywood, and global release information."
+          '@type': 'Question',
+          name: 'What is Vix Movies?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text:
+              'Vix Movies is a free online streaming platform providing access to trending HD movies, TV shows, Hollywood, and global release information.'
           }
         },
         {
-          "@type": "Question",
-          "name": "Is Vix Movies free to watch?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes, Vix Movies allows user access to trending movie details, trailers, and streaming options without subscription fees."
+          '@type': 'Question',
+          name: 'Is Vix Movies free to watch?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text:
+              'Yes, Vix Movies allows user access to trending movie details, trailers, and streaming options without subscription fees.'
           }
         }
       ]
@@ -128,56 +158,130 @@ const schemaData = {
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+
     <!-- Google Search Console Verification -->
-    <meta name="google-site-verification" content="E-DT_XvMRPKJ7vYwBh-B4E92iWXB7TDDNXwZl1E01es" />
+    <meta
+      name="google-site-verification"
+      content="E-DT_XvMRPKJ7vYwBh-B4E92iWXB7TDDNXwZl1E01es"
+    />
 
     <!-- Yandex Webmaster Verification -->
-    <meta name="yandex-verification" content="530e8dd1e6d12b87" />
+    <meta
+      name="yandex-verification"
+      content="530e8dd1e6d12b87"
+    />
 
-    <!-- Primary Meta Tags (SEO) -->
-    <title>Vix Movies - Watch Free HD Movies & TV Series Online</title>
-    <meta name="title" content="Vix Movies - Watch Free HD Movies & TV Series Online" />
-    <meta name="description" content="Watch high-definition movies, trending TV series, Hollywood, and global cinema releases online for free on Vix Movies. Stream trending titles in 1080p." />
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <!-- Primary Meta Tags -->
+    <title>
+      Vix Movies - Watch Free HD Movies & TV Series Online
+    </title>
+
+    <meta
+      name="title"
+      content="Vix Movies - Watch Free HD Movies & TV Series Online"
+    />
+
+    <meta
+      name="description"
+      content="Watch high-definition movies, trending TV series, Hollywood, and global cinema releases online for free on Vix Movies. Stream trending titles in 1080p."
+    />
+
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
     <meta name="author" content="Vix Movies" />
+
     <link rel="canonical" href={SITE_URL} />
 
-    <!-- Open Graph / Facebook / WhatsApp (Social SEO) -->
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={SITE_URL} />
-    <meta property="og:title" content="Vix Movies - Watch Free HD Movies & TV Series Online" />
-    <meta property="og:description" content="Stream high-definition movies and trending TV shows for free on Vix Movies." />
-    <meta property="og:image" content={`https://image.tmdb.org/t/p/w1280${featured.backdrop_path || featured.poster_path}`} />
 
-    <!-- Twitter / X Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content={SITE_URL} />
-    <meta name="twitter:title" content="Vix Movies - Watch Free HD Movies & TV Series Online" />
-    <meta name="twitter:description" content="Stream high-definition movies and trending TV shows for free on Vix Movies." />
-    <meta name="twitter:image" content={`https://image.tmdb.org/t/p/w1280${featured.backdrop_path || featured.poster_path}`} />
+    <meta
+      property="og:title"
+      content="Vix Movies - Watch Free HD Movies & TV Series Online"
+    />
 
-    <!-- Structured Data (JSON-LD for Google, Perplexity & AI Search Crawlers) -->
-    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+    <meta
+      property="og:description"
+      content="Stream high-definition movies and trending TV shows for free on Vix Movies."
+    />
+
+    <meta
+      property="og:image"
+      content={`https://image.tmdb.org/t/p/w1280${
+        featured.backdrop_path || featured.poster_path
+      }`}
+    />
+
+    <!-- Twitter / X -->
+    <meta
+      name="twitter:card"
+      content="summary_large_image"
+    />
+
+    <meta
+      name="twitter:url"
+      content={SITE_URL}
+    />
+
+    <meta
+      name="twitter:title"
+      content="Vix Movies - Watch Free HD Movies & TV Series Online"
+    />
+
+    <meta
+      name="twitter:description"
+      content="Stream high-definition movies and trending TV shows for free on Vix Movies."
+    />
+
+    <meta
+      name="twitter:image"
+      content={`https://image.tmdb.org/t/p/w1280${
+        featured.backdrop_path || featured.poster_path
+      }`}
+    />
+
+    <!-- Structured Data -->
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(schemaData)}
+    />
 
     <style is:global>
       * {
         box-sizing: border-box;
       }
+
       body {
         background-color: #0b0f19;
         color: #f8fafc;
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          'Segoe UI',
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
         margin: 0;
         padding: 0 12px 40px 12px;
       }
+
       .container {
         max-width: 1100px;
         margin: 0 auto;
       }
 
-      /* Hero Featured Banner */
+      /* =========================
+         HERO FEATURED BANNER
+         ========================= */
+
       .hero-card {
         position: relative;
         border-radius: 14px;
@@ -186,6 +290,7 @@ const schemaData = {
         background: #1e293b;
         border: 1px solid #334155;
       }
+
       .hero-bg {
         width: 100%;
         height: 220px;
@@ -193,14 +298,21 @@ const schemaData = {
         display: block;
         filter: brightness(0.65);
       }
+
       .hero-overlay {
         position: absolute;
         bottom: 0;
         left: 0;
         right: 0;
         padding: 14px;
-        background: linear-gradient(to top, rgba(11, 15, 25, 0.95), rgba(11, 15, 25, 0));
+        background:
+          linear-gradient(
+            to top,
+            rgba(11, 15, 25, 0.95),
+            rgba(11, 15, 25, 0)
+          );
       }
+
       .badge-featured {
         color: #38bdf8;
         font-size: 10px;
@@ -208,11 +320,13 @@ const schemaData = {
         letter-spacing: 1px;
         text-transform: uppercase;
       }
+
       .hero-title {
         font-size: 20px;
         font-weight: 800;
         margin: 2px 0 6px 0;
       }
+
       .hero-desc {
         color: #cbd5e1;
         font-size: 11px;
@@ -223,6 +337,7 @@ const schemaData = {
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
+
       .btn-watch {
         display: inline-flex;
         align-items: center;
@@ -235,15 +350,20 @@ const schemaData = {
         font-size: 12px;
       }
 
-      /* Browse by Genre Links (one scrollable row on mobile) */
+      /* =========================
+         GENRE BROWSE
+         ========================= */
+
       .genre-browse {
         margin-bottom: 25px;
       }
+
       .genre-browse h2 {
         font-size: 16px;
         font-weight: 800;
         margin: 0 0 12px 0;
       }
+
       .genre-browse-list {
         display: flex;
         flex-wrap: nowrap;
@@ -252,6 +372,7 @@ const schemaData = {
         padding-bottom: 8px;
         -webkit-overflow-scrolling: touch;
       }
+
       .genre-browse-list a {
         flex-shrink: 0;
         white-space: nowrap;
@@ -264,11 +385,13 @@ const schemaData = {
         font-weight: 600;
         text-decoration: none;
       }
+
       .genre-browse-list a:hover {
         background: #0284c7;
         border-color: #0284c7;
         color: white;
       }
+
       @media (min-width: 900px) {
         .genre-browse-list {
           flex-wrap: wrap;
@@ -276,22 +399,30 @@ const schemaData = {
         }
       }
 
-      /* Grid Layout */
+      /* =========================
+         MOVIE GRID
+         ========================= */
+
       .grid-movies {
         display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr)) !important;
         gap: 10px !important;
         width: 100% !important;
       }
+
       @media (min-width: 640px) {
         .grid-movies {
-          grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          grid-template-columns:
+            repeat(3, minmax(0, 1fr)) !important;
           gap: 14px !important;
         }
       }
+
       @media (min-width: 900px) {
         .grid-movies {
-          grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+          grid-template-columns:
+            repeat(4, minmax(0, 1fr)) !important;
           gap: 16px !important;
         }
       }
@@ -305,6 +436,7 @@ const schemaData = {
         max-width: 100%;
         overflow: hidden;
       }
+
       .poster-box {
         position: relative;
         width: 100%;
@@ -314,12 +446,14 @@ const schemaData = {
         background: #1e293b;
         border: 1px solid #334155;
       }
+
       .poster-box img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
       }
+
       .badge-hd {
         position: absolute;
         top: 6px;
@@ -331,6 +465,7 @@ const schemaData = {
         border-radius: 4px;
         z-index: 2;
       }
+
       .badge-rating {
         position: absolute;
         top: 6px;
@@ -342,6 +477,7 @@ const schemaData = {
         border-radius: 4px;
         z-index: 2;
       }
+
       .card-title {
         font-size: 12px;
         font-weight: 600;
@@ -352,35 +488,86 @@ const schemaData = {
         width: 100%;
       }
 
-      /* Ad slot */
+      /* =========================
+         ADSTERra AD SLOTS
+         ========================= */
+
       .ad-slot {
+        width: 100%;
         margin: 28px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         text-align: center;
+        overflow: hidden;
+      }
+
+      .ad-slot.native-ad {
         min-height: 90px;
       }
 
-      /* Latest Sports Videos (one scrollable row on mobile, grid on desktop) */
+      .ad-slot.ad-300x250 {
+        min-height: 250px;
+      }
+
+      .ad-slot.ad-320x50 {
+        min-height: 50px;
+      }
+
+      .ad-host {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        overflow: hidden;
+      }
+
+      .ad-host-native {
+        width: 100%;
+        min-height: 90px;
+      }
+
+      .ad-host-300 {
+        width: 300px;
+        min-height: 250px;
+        max-width: 100%;
+      }
+
+      .ad-host-320 {
+        width: 320px;
+        min-height: 50px;
+        max-width: 100%;
+      }
+
+      /* =========================
+         SPORTS
+         ========================= */
+
       .sports-home {
         margin-top: 10px;
         margin-bottom: 25px;
       }
+
       .sports-head {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 12px;
       }
+
       .sports-head h2 {
         font-size: 16px;
         font-weight: 800;
         margin: 0;
       }
+
       .see-all {
         color: #38bdf8;
         font-size: 12px;
         font-weight: 700;
         text-decoration: none;
       }
+
       .sports-row {
         display: flex;
         gap: 12px;
@@ -388,6 +575,7 @@ const schemaData = {
         padding-bottom: 8px;
         -webkit-overflow-scrolling: touch;
       }
+
       .sv-card {
         flex: 0 0 210px;
         text-decoration: none;
@@ -396,6 +584,7 @@ const schemaData = {
         flex-direction: column;
         overflow: hidden;
       }
+
       .sv-thumb {
         position: relative;
         border-radius: 10px;
@@ -404,12 +593,14 @@ const schemaData = {
         background: #1e293b;
         border: 1px solid #334155;
       }
+
       .sv-thumb img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
       }
+
       .sv-badge {
         position: absolute;
         left: 6px;
@@ -420,9 +611,11 @@ const schemaData = {
         padding: 2px 6px;
         border-radius: 4px;
       }
+
       .sv-badge.live {
         background: #dc2626;
       }
+
       .sv-title {
         font-size: 12px;
         font-weight: 600;
@@ -433,21 +626,28 @@ const schemaData = {
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
+
       .sports-pills {
         margin-top: 10px;
       }
+
       @media (min-width: 900px) {
         .sports-row {
           display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
+          grid-template-columns:
+            repeat(4, minmax(0, 1fr));
           overflow-x: visible;
         }
+
         .sv-card {
           flex: initial;
         }
       }
 
-      /* AEO / GEO Content Section */
+      /* =========================
+         AEO / GEO
+         ========================= */
+
       .aeo-section {
         margin-top: 40px;
         padding: 20px;
@@ -455,145 +655,529 @@ const schemaData = {
         border-radius: 12px;
         border: 1px solid #334155;
       }
+
       .aeo-section h2 {
         font-size: 16px;
         color: #38bdf8;
         margin-top: 0;
       }
-      .aeo-section p, .aeo-section li {
+
+      .aeo-section p,
+      .aeo-section li {
         font-size: 13px;
         color: #cbd5e1;
         line-height: 1.6;
       }
 
-      /* Footer Styles */
+      /* =========================
+         FOOTER
+         ========================= */
+
       .site-footer {
         margin-top: 30px;
         padding-top: 20px;
         border-top: 1px solid #334155;
         text-align: center;
       }
+
       .footer-links {
         display: flex;
         justify-content: center;
         gap: 20px;
         margin-bottom: 12px;
       }
+
       .footer-links a {
         color: #94a3b8;
         text-decoration: none;
         font-size: 13px;
         font-weight: 500;
       }
+
       .footer-links a:hover {
         color: #38bdf8;
       }
+
       .copyright-text {
         color: #64748b;
         font-size: 12px;
         margin: 0;
       }
+
+      /* =========================
+         MOBILE AD SAFETY
+         ========================= */
+
+      @media (max-width: 340px) {
+        .ad-host-320 {
+          transform: scale(0.95);
+          transform-origin: center;
+        }
+      }
     </style>
   </head>
+
   <body>
     <div class="container">
+
       <Navbar activePage="home" />
 
-      <!-- Main Semantic Hero Section -->
+      <!-- =========================
+           MAIN
+           ========================= -->
+
       <main>
+
+        <!-- HERO -->
         <article class="hero-card">
-          <img class="hero-bg" src={`https://image.tmdb.org/t/p/w1280${featured.backdrop_path || featured.poster_path}`} alt={`Watch ${featured.title} on Vix Movies`} decoding="async" />
+          <img
+            class="hero-bg"
+            src={`https://image.tmdb.org/t/p/w1280${
+              featured.backdrop_path || featured.poster_path
+            }`}
+            alt={`Watch ${featured.title} on Vix Movies`}
+            decoding="async"
+          />
+
           <div class="hero-overlay">
-            <span class="badge-featured">FEATURED #1 TRENDING</span>
-            <h1 class="hero-title">{featured.title}</h1>
-            <p class="hero-desc">{featured.overview}</p>
-            <a href={`/movie/${featured.id}`} class="btn-watch" aria-label={`Watch ${featured.title} now`}>► Watch Now</a>
+            <span class="badge-featured">
+              FEATURED #1 TRENDING
+            </span>
+
+            <h1 class="hero-title">
+              {featured.title}
+            </h1>
+
+            <p class="hero-desc">
+              {featured.overview}
+            </p>
+
+            <a
+              href={`/movie/${featured.id}`}
+              class="btn-watch"
+              aria-label={`Watch ${featured.title} now`}
+            >
+              ► Watch Now
+            </a>
           </div>
         </article>
 
-        <!-- Browse Movies by Genre (real links for search engines) -->
-        <section class="genre-browse" aria-label="Browse movies by genre">
-          <h2>Browse Movies by Genre</h2>
+        <!-- =========================
+             GENRES
+             ========================= -->
+
+        <section
+          class="genre-browse"
+          aria-label="Browse movies by genre"
+        >
+          <h2>
+            Browse Movies by Genre
+          </h2>
+
           <div class="genre-browse-list">
             {genres.map((g) => (
-              <a href={`/genre/${slugify(g.name)}`} title={genreLabel(g.name)}>{genreLabel(g.name)}</a>
+              <a
+                href={`/genre/${slugify(g.name)}`}
+                title={genreLabel(g.name)}
+              >
+                {genreLabel(g.name)}
+              </a>
             ))}
           </div>
         </section>
 
+        <!-- =========================
+             TRENDING TITLE
+             ========================= -->
+
         <div style="margin-bottom: 12px;">
-          <h2 style="font-size: 16px; font-weight: 800; margin: 0;">🔥 Trending Today</h2>
+          <h2
+            style="
+              font-size: 16px;
+              font-weight: 800;
+              margin: 0;
+            "
+          >
+            🔥 Trending Today
+          </h2>
         </div>
 
-        <!-- Movie Grid -->
-        <section class="grid-movies" aria-label="Trending Movies List">
+        <!-- =========================
+             MOVIE GRID
+             ========================= -->
+
+        <section
+          class="grid-movies"
+          aria-label="Trending Movies List"
+        >
           {movies.map((m) => (
-            <a href={`/movie/${m.id}`} class="movie-card" title={`Watch ${m.title} online`}>
+            <a
+              href={`/movie/${m.id}`}
+              class="movie-card"
+              title={`Watch ${m.title} online`}
+            >
               <div class="poster-box">
-                <img src={m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : '/no-poster.svg'} onerror="this.onerror=null;this.src='/no-poster.svg'" alt={`${m.title} Poster`} loading="lazy" decoding="async" width="500" height="750" />
-                <span class="badge-hd">HD</span>
-                <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
+
+                <img
+                  src={
+                    m.poster_path
+                      ? `https://image.tmdb.org/t/p/w500${m.poster_path}`
+                      : '/no-poster.svg'
+                  }
+                  onerror="this.onerror=null;this.src='/no-poster.svg'"
+                  alt={`${m.title} Poster`}
+                  loading="lazy"
+                  decoding="async"
+                  width="500"
+                  height="750"
+                />
+
+                <span class="badge-hd">
+                  HD
+                </span>
+
+                <span class="badge-rating">
+                  ⭐ {m.vote_average
+                    ? m.vote_average.toFixed(1)
+                    : 'N/A'}
+                </span>
+
               </div>
-              <h3 class="card-title">{m.title}</h3>
+
+              <h3 class="card-title">
+                {m.title}
+              </h3>
             </a>
           ))}
         </section>
 
-        <!-- Ad slot: Native Banner (Adsterra) -->
-        <div class="ad-slot">
-          <script async data-cfasync="false" src="https://toleranceteaminadequate.com/e9a7ebb5b4ccad1a0f4057850ab50885/invoke.js"></script>
-          <div id="container-e9a7ebb5b4ccad1a0f4057850ab50885"></div>
+        <!-- =========================
+             AD 1 - NATIVE BANNER
+             ========================= -->
+
+        <div class="ad-slot native-ad">
+          <div
+            id="ad-native-host"
+            class="ad-host ad-host-native"
+          ></div>
         </div>
 
-        <!-- Latest Sports Videos (official YouTube channels), below the movies -->
+        <!-- =========================
+             AD 2 - 300x250
+             ========================= -->
+
+        <div class="ad-slot ad-300x250">
+          <div
+            id="ad-300-host"
+            class="ad-host ad-host-300"
+          ></div>
+        </div>
+
+        <!-- =========================
+             AD 3 - 320x50
+             ========================= -->
+
+        <div class="ad-slot ad-320x50">
+          <div
+            id="ad-320-host"
+            class="ad-host ad-host-320"
+          ></div>
+        </div>
+
+        <!-- =========================
+             LATEST SPORTS VIDEOS
+             ========================= -->
+
         {sportsVideos.length > 0 && (
-          <section class="sports-home" aria-label="Latest sports videos">
+          <section
+            class="sports-home"
+            aria-label="Latest sports videos"
+          >
             <div class="sports-head">
-              <h2>🏆 Latest Sports Videos</h2>
-              <a href="/sports" class="see-all">All sports →</a>
+
+              <h2>
+                🏆 Latest Sports Videos
+              </h2>
+
+              <a
+                href="/sports"
+                class="see-all"
+              >
+                All sports →
+              </a>
+
             </div>
+
             <div class="sports-row">
+
               {sportsVideos.map((v) => (
-                <a href={`/sports/watch/${v.id}`} class="sv-card" title={v.title}>
+                <a
+                  href={`/sports/watch/${v.id}`}
+                  class="sv-card"
+                  title={v.title}
+                >
                   <div class="sv-thumb">
-                    <img src={v.thumb} alt={v.title} loading="lazy" decoding="async" width="480" height="270" />
-                    <span class={v.live === 'live' ? 'sv-badge live' : 'sv-badge'}>
-                      {v.live === 'live' ? 'LIVE' : `${v.sport.emoji} ${v.sport.name}`}
+
+                    <img
+                      src={v.thumb}
+                      alt={v.title}
+                      loading="lazy"
+                      decoding="async"
+                      width="480"
+                      height="270"
+                    />
+
+                    <span
+                      class={
+                        v.live === 'live'
+                          ? 'sv-badge live'
+                          : 'sv-badge'
+                      }
+                    >
+                      {v.live === 'live'
+                        ? 'LIVE'
+                        : `${v.sport.emoji} ${v.sport.name}`}
                     </span>
+
                   </div>
-                  <h3 class="sv-title">{v.title}</h3>
+
+                  <h3 class="sv-title">
+                    {v.title}
+                  </h3>
                 </a>
               ))}
+
             </div>
+
+            <!-- Sports category pills -->
             <div class="genre-browse-list sports-pills">
+
               {SPORTS.map((s) => (
-                <a href={`/sports/${s.slug}`} title={`${s.name} highlights and live streams`}>{s.emoji} {s.name}</a>
+                <a
+                  href={`/sports/${s.slug}`}
+                  title={`${s.name} highlights and live streams`}
+                >
+                  {s.emoji} {s.name}
+                </a>
               ))}
+
             </div>
           </section>
         )}
 
-        <!-- AEO & GEO Direct Information Box (Helps Perplexity, ChatGPT & Gemini Indexing) -->
+        <!-- =========================
+             AEO / GEO CONTENT
+             ========================= -->
+
         <section class="aeo-section">
-          <h2>About Vix Movies Free Streaming</h2>
-          <p><strong>Vix Movies</strong> is an online movie database and streaming discovery platform designed to provide high-quality stream links, release information, and ratings for global movies and TV series.</p>
-          <h3>Frequently Asked Questions</h3>
+
+          <h2>
+            About Vix Movies Free Streaming
+          </h2>
+
+          <p>
+            <strong>Vix Movies</strong> is an online
+            movie database and streaming discovery
+            platform designed to provide high-quality
+            stream links, release information, and
+            ratings for global movies and TV series.
+          </p>
+
+          <h3>
+            Frequently Asked Questions
+          </h3>
+
           <ul>
-            <li><strong>Is Vix Movies free?</strong> Yes, you can browse and watch trending content without hidden subscription fees.</li>
-            <li><strong>How often is content updated?</strong> Daily trending lists are automatically updated via real-time TMDB API integration.</li>
+
+            <li>
+              <strong>Is Vix Movies free?</strong>
+              Yes, you can browse and watch trending
+              content without hidden subscription fees.
+            </li>
+
+            <li>
+              <strong>How often is content updated?</strong>
+              Daily trending lists are automatically
+              updated via real-time TMDB API integration.
+            </li>
+
           </ul>
+
         </section>
+
       </main>
 
-      <!-- SEO Footer Structure -->
+      <!-- =========================
+           FOOTER
+           ========================= -->
+
       <footer class="site-footer">
+
         <div class="footer-links">
-          <a href="/about">About Us</a>
-          <a href="/contact">Contact Us</a>
-          <a href="/privacy-policy">Privacy Policy</a>
+
+          <a href="/about">
+            About Us
+          </a>
+
+          <a href="/contact">
+            Contact Us
+          </a>
+
+          <a href="/privacy-policy">
+            Privacy Policy
+          </a>
+
         </div>
-        <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
+
+        <p class="copyright-text">
+          &copy; {new Date().getFullYear()}
+          Vix Movies. All rights reserved.
+        </p>
+
       </footer>
+
     </div>
+
+    <!-- =========================
+         ADSTERRA LOADER
+         ========================= -->
+
+    <script is:inline>
+      function loadNativeAd(hostId, containerId, key) {
+        return new Promise((resolve) => {
+          const host = document.getElementById(hostId);
+
+          if (!host) {
+            resolve();
+            return;
+          }
+
+          const container = document.createElement('div');
+
+          container.id = containerId;
+
+          host.appendChild(container);
+
+          const script = document.createElement('script');
+
+          script.async = true;
+
+          script.setAttribute(
+            'data-cfasync',
+            'false'
+          );
+
+          script.src =
+            `https://toleranceteaminadequate.com/${key}/invoke.js`;
+
+          script.onload = resolve;
+          script.onerror = resolve;
+
+          host.appendChild(script);
+        });
+      }
+
+
+      function loadBannerAd(
+        hostId,
+        key,
+        width,
+        height
+      ) {
+        return new Promise((resolve) => {
+          const host = document.getElementById(hostId);
+
+          if (!host) {
+            resolve();
+            return;
+          }
+
+          /*
+           * Adsterra uses the global atOptions object.
+           * Each ad is therefore loaded sequentially.
+           */
+
+          window.atOptions = {
+            key: key,
+            format: 'iframe',
+            height: height,
+            width: width,
+            params: {}
+          };
+
+          const script = document.createElement('script');
+
+          script.type = 'text/javascript';
+
+          script.src =
+            `https://toleranceteaminadequate.com/${key}/invoke.js`;
+
+          script.async = false;
+
+          script.onload = resolve;
+          script.onerror = resolve;
+
+          host.appendChild(script);
+        });
+      }
+
+
+      async function loadAds() {
+
+        /*
+         * AD 1
+         * Native Banner
+         */
+
+        await loadNativeAd(
+          'ad-native-host',
+          'container-e9a7ebb5b4ccad1a0f4057850ab50885',
+          'e9a7ebb5b4ccad1a0f4057850ab50885'
+        );
+
+
+        /*
+         * AD 2
+         * 300 x 250 Banner
+         */
+
+        await loadBannerAd(
+          'ad-300-host',
+          '2800610326ebafc17c30013f7a1096e5',
+          300,
+          250
+        );
+
+
+        /*
+         * AD 3
+         * 320 x 50 Mobile Banner
+         */
+
+        await loadBannerAd(
+          'ad-320-host',
+          '09d84e44afaa5e3c051baecc7e938408',
+          320,
+          50
+        );
+      }
+
+
+      /*
+       * Start loading after DOM is ready.
+       */
+
+      if (
+        document.readyState === 'loading'
+      ) {
+        document.addEventListener(
+          'DOMContentLoaded',
+          loadAds
+        );
+      } else {
+        loadAds();
+      }
+    </script>
+
   </body>
 </html>
