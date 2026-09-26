@@ -1,178 +1,260 @@
 ---
+const { type = 'top' } = Astro.props;
+
+const configs = {
+  top: {
+    hostId: 'vix-ad-320',
+    key: '09d84e44afaa5e3c051baecc7e938408',
+    width: 320,
+    height: 50,
+    className: 'ad-320x50'
+  },
+
+  native: {
+    hostId: 'vix-ad-native',
+    containerId:
+      'container-e9a7ebb5b4ccad1a0f4057850ab50885',
+    key: 'e9a7ebb5b4ccad1a0f4057850ab50885',
+    className: 'ad-native'
+  },
+
+  square: {
+    hostId: 'vix-ad-300',
+    key: '2800610326ebafc17c30013f7a1096e5',
+    width: 300,
+    height: 250,
+    className: 'ad-300x250'
+  }
+};
+
+const config = configs[type];
 ---
 
-<div class="global-ads">
-
-  <!-- =========================
-       TOP 320x50 BANNER
-       ========================= -->
-
-  <div class="ad-slot top-banner-ad">
+{config && (
+  <div class={`vix-ad-slot ${config.className}`}>
     <div
-      id="global-ad-top-320"
-      class="ad-host ad-host-320"
+      id={config.hostId}
+      class="vix-ad-host"
     ></div>
   </div>
+)}
 
+{config && type === 'top' && (
+  <script is:inline define:vars={{
+    hostId: config.hostId,
+    key: config.key,
+    width: config.width,
+    height: config.height
+  }}>
+    (() => {
 
-  <!-- =========================
-       NATIVE BANNER
-       ========================= -->
+      window.__vixBannerQueue =
+        window.__vixBannerQueue || Promise.resolve();
 
-  <div class="ad-slot native-ad">
-    <div
-      id="global-ad-native"
-      class="ad-host ad-host-native"
-    ></div>
-  </div>
+      window.__vixBannerQueue =
+        window.__vixBannerQueue.then(() => {
 
+          return new Promise((resolve) => {
 
-  <!-- =========================
-       300x250 BANNER
-       ========================= -->
+            const host =
+              document.getElementById(hostId);
 
-  <div class="ad-slot ad-300x250">
-    <div
-      id="global-ad-300"
-      class="ad-host ad-host-300"
-    ></div>
-  </div>
+            if (!host) {
+              resolve();
+              return;
+            }
 
-</div>
+            if (host.dataset.loaded === 'true') {
+              resolve();
+              return;
+            }
 
+            host.dataset.loaded = 'true';
 
-<script is:inline>
-  function loadGlobalNativeAd(hostId, containerId, key) {
-    return new Promise((resolve) => {
-      const host = document.getElementById(hostId);
+            window.atOptions = {
+              key: key,
+              format: 'iframe',
+              height: height,
+              width: width,
+              params: {}
+            };
 
-      if (!host) {
-        resolve();
-        return;
-      }
+            const script =
+              document.createElement('script');
 
-      const container = document.createElement('div');
-      container.id = containerId;
-      host.appendChild(container);
+            script.type =
+              'text/javascript';
 
-      const script = document.createElement('script');
+            script.src =
+              `https://toleranceteaminadequate.com/${key}/invoke.js`;
 
-      script.async = true;
-      script.setAttribute('data-cfasync', 'false');
-      script.src =
-        `https://toleranceteaminadequate.com/${key}/invoke.js`;
+            script.async = false;
 
-      script.onload = resolve;
-      script.onerror = resolve;
+            script.onload = () => resolve();
+            script.onerror = () => resolve();
 
-      host.appendChild(script);
-    });
-  }
+            host.appendChild(script);
 
+          });
 
-  function loadGlobalBannerAd(hostId, key, width, height) {
-    return new Promise((resolve) => {
-      const host = document.getElementById(hostId);
+        });
 
-      if (!host) {
-        resolve();
-        return;
-      }
+    })();
+  </script>
+)}
 
-      window.atOptions = {
-        key: key,
-        format: 'iframe',
-        height: height,
-        width: width,
-        params: {}
+{config && type === 'native' && (
+  <script is:inline define:vars={{
+    hostId: config.hostId,
+    containerId: config.containerId,
+    key: config.key
+  }}>
+    (() => {
+
+      const loadNative = () => {
+
+        const host =
+          document.getElementById(hostId);
+
+        if (!host) return;
+
+        if (host.dataset.loaded === 'true') {
+          return;
+        }
+
+        host.dataset.loaded = 'true';
+
+        const container =
+          document.createElement('div');
+
+        container.id = containerId;
+
+        host.appendChild(container);
+
+        const script =
+          document.createElement('script');
+
+        script.async = true;
+
+        script.setAttribute(
+          'data-cfasync',
+          'false'
+        );
+
+        script.src =
+          `https://toleranceteaminadequate.com/${key}/invoke.js`;
+
+        host.appendChild(script);
       };
 
-      const script = document.createElement('script');
+      if (
+        document.readyState === 'loading'
+      ) {
+        document.addEventListener(
+          'DOMContentLoaded',
+          loadNative,
+          { once: true }
+        );
+      } else {
+        loadNative();
+      }
 
-      script.type = 'text/javascript';
-      script.src =
-        `https://toleranceteaminadequate.com/${key}/invoke.js`;
+    })();
+  </script>
+)}
 
-      script.async = false;
+{config && type === 'square' && (
+  <script is:inline define:vars={{
+    hostId: config.hostId,
+    key: config.key,
+    width: config.width,
+    height: config.height
+  }}>
+    (() => {
 
-      script.onload = resolve;
-      script.onerror = resolve;
+      window.__vixBannerQueue =
+        window.__vixBannerQueue || Promise.resolve();
 
-      host.appendChild(script);
-    });
-  }
+      window.__vixBannerQueue =
+        window.__vixBannerQueue.then(() => {
 
+          return new Promise((resolve) => {
 
-  async function loadGlobalAds() {
+            const host =
+              document.getElementById(hostId);
 
-    /* 320x50 */
-    await loadGlobalBannerAd(
-      'global-ad-top-320',
-      '09d84e44afaa5e3c051baecc7e938408',
-      320,
-      50
-    );
+            if (!host) {
+              resolve();
+              return;
+            }
 
+            if (host.dataset.loaded === 'true') {
+              resolve();
+              return;
+            }
 
-    /* Native */
-    await loadGlobalNativeAd(
-      'global-ad-native',
-      'container-e9a7ebb5b4ccad1a0f4057850ab50885',
-      'e9a7ebb5b4ccad1a0f4057850ab50885'
-    );
+            host.dataset.loaded = 'true';
 
+            window.atOptions = {
+              key: key,
+              format: 'iframe',
+              height: height,
+              width: width,
+              params: {}
+            };
 
-    /* 300x250 */
-    await loadGlobalBannerAd(
-      'global-ad-300',
-      '2800610326ebafc17c30013f7a1096e5',
-      300,
-      250
-    );
+            const script =
+              document.createElement('script');
 
-  }
+            script.type =
+              'text/javascript';
 
+            script.src =
+              `https://toleranceteaminadequate.com/${key}/invoke.js`;
 
-  if (document.readyState === 'loading') {
-    document.addEventListener(
-      'DOMContentLoaded',
-      loadGlobalAds
-    );
-  } else {
-    loadGlobalAds();
-  }
-</script>
+            script.async = false;
 
+            script.onload = () => resolve();
+            script.onerror = () => resolve();
+
+            host.appendChild(script);
+
+          });
+
+        });
+
+    })();
+  </script>
+)}
 
 <style>
-  .global-ads {
-    width: 100%;
-  }
 
-  .ad-slot {
+  .vix-ad-slot {
     width: 100%;
-    margin: 20px 0;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
     overflow: hidden;
+    margin: 20px 0;
   }
 
-  .top-banner-ad {
+  .ad-320x50 {
     min-height: 50px;
-    margin: 8px 0 14px 0;
+    margin: 14px 0 20px;
   }
 
-  .native-ad {
+  .ad-native {
     min-height: 90px;
+    margin: 25px 0;
   }
 
   .ad-300x250 {
     min-height: 250px;
+    margin: 28px 0;
   }
 
-  .ad-host {
+  .vix-ad-host {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -180,27 +262,30 @@
     overflow: hidden;
   }
 
-  .ad-host-320 {
+  #vix-ad-320 {
     width: 320px;
     min-height: 50px;
     max-width: 100%;
   }
 
-  .ad-host-native {
+  #vix-ad-native {
     width: 100%;
     min-height: 90px;
   }
 
-  .ad-host-300 {
+  #vix-ad-300 {
     width: 300px;
     min-height: 250px;
     max-width: 100%;
   }
 
   @media (max-width: 340px) {
-    .ad-host-320 {
-      transform: scale(0.95);
+
+    #vix-ad-320 {
+      transform: scale(0.94);
       transform-origin: center;
     }
+
   }
+
 </style>
