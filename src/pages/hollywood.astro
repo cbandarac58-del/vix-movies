@@ -1,5 +1,6 @@
 ---
 import Navbar from '../components/Navbar.astro';
+import Ads from '../components/Ads.astro';
 
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
 const SITE_URL = 'https://movies.vixtube.net';
@@ -170,7 +171,6 @@ const schema = {
         text-overflow: ellipsis;
       }
 
-      /* Browse by Genre Links */
       .genre-browse {
         margin-top: 35px;
       }
@@ -200,7 +200,6 @@ const schema = {
         color: white;
       }
 
-      /* Footer */
       .site-footer {
         margin-top: 40px;
         padding-top: 20px;
@@ -225,45 +224,57 @@ const schema = {
       }
     </style>
   </head>
+
   <body>
     <div class="container">
       <Navbar activePage="hollywood" />
 
       <main>
         <h1 class="page-title">🎬 Popular Hollywood Movies</h1>
+
         <p class="intro">
           Explore {hollywoodMovies.length} popular English-language movies, sorted by popularity.
           {topNames.length > 0 && ` Right now the most popular titles include ${topNames.join(', ')}.`}
           Open any movie to see its rating, cast, trailer and full details.
         </p>
 
+        <!-- TOP AD -->
+        <Ads type="top" />
+
         <section class="grid-movies" aria-label="Popular Hollywood movies">
-          {hollywoodMovies.map((m) => (
-            <a href={`/movie/${m.id}`} class="movie-card" title={`Watch ${m.title} online`}>
-              <div class="poster-box">
-                <img
-                  src={`https://image.tmdb.org/t/p/w500${m.poster_path}`}
-                  onerror="this.onerror=null;this.src='/no-poster.svg'"
-                  alt={`${m.title} Poster`}
-                  loading="lazy"
-                  decoding="async"
-                  width="500"
-                  height="750"
-                />
-                <span class="badge-hd">HD</span>
-                <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
-              </div>
-              <h2 class="card-title">{m.title}</h2>
-            </a>
+          {hollywoodMovies.map((m, index) => (
+            <>
+              <a href={`/movie/${m.id}`} class="movie-card" title={`Watch ${m.title} online`}>
+                <div class="poster-box">
+                  <img
+                    src={`https://image.tmdb.org/t/p/w500${m.poster_path}`}
+                    onerror="this.onerror=null;this.src='/no-poster.svg'"
+                    alt={`${m.title} Poster`}
+                    loading="lazy"
+                    decoding="async"
+                    width="500"
+                    height="750"
+                  />
+                  <span class="badge-hd">HD</span>
+                  <span class="badge-rating">⭐ {m.vote_average ? m.vote_average.toFixed(1) : 'N/A'}</span>
+                </div>
+                <h2 class="card-title">{m.title}</h2>
+              </a>
+
+              {index === 7 && <Ads type="native" />}
+              {index === 15 && <Ads type="square" />}
+            </>
           ))}
         </section>
 
-        <!-- Browse Movies by Genre (real links for search engines) -->
         <section class="genre-browse" aria-label="Browse movies by genre">
           <h2>Browse Movies by Genre</h2>
+
           <div class="genre-browse-list">
             {genres.map((g) => (
-              <a href={`/genre/${slugify(g.name)}`} title={`${g.name} movies`}>{g.name}</a>
+              <a href={`/genre/${slugify(g.name)}`} title={`${g.name} movies`}>
+                {g.name}
+              </a>
             ))}
           </div>
         </section>
@@ -275,7 +286,10 @@ const schema = {
           <a href="/contact">Contact Us</a>
           <a href="/privacy-policy">Privacy Policy</a>
         </div>
-        <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
+
+        <p class="copyright-text">
+          &copy; {new Date().getFullYear()} Vix Movies. All rights reserved.
+        </p>
       </footer>
     </div>
   </body>
