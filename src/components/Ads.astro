@@ -1,113 +1,206 @@
 ---
 ---
 
-<div class="vix-ads">
+<div class="global-ads">
 
-  <!-- TOP BANNER -->
-  <div class="ad-top">
-    <div class="ad-mobile">
-      <script>
-        atOptions = {
-          'key' : '09d84e44afaa5e3c051baecc7e938408',
-          'format' : 'iframe',
-          'height' : 50,
-          'width' : 320,
-          'params' : {}
-        };
-      </script>
-      <script src="https://toleranceteaminadequate.com/09d84e44afaa5e3c051baecc7e938408/invoke.js"></script>
-    </div>
+  <!-- =========================
+       TOP 320x50 BANNER
+       ========================= -->
 
-    <div class="ad-desktop">
-      <script>
-        atOptions = {
-          'key' : '9811cc42403575f9dd8e4dcdde62d5fb',
-          'format' : 'iframe',
-          'height' : 90,
-          'width' : 728,
-          'params' : {}
-        };
-      </script>
-      <script src="https://toleranceteaminadequate.com/9811cc42403575f9dd8e4dcdde62d5fb/invoke.js"></script>
-    </div>
+  <div class="ad-slot top-banner-ad">
+    <div
+      id="global-ad-top-320"
+      class="ad-host ad-host-320"
+    ></div>
   </div>
 
-  <!-- NATIVE -->
-  <div class="native-ad">
-    <script
-      async
-      data-cfasync="false"
-      src="https://toleranceteaminadequate.com/e9a7ebb5b4ccad1a0f4057850ab50885/invoke.js">
-    </script>
-    <div id="container-e9a7ebb5b4ccad1a0f4057850ab50885"></div>
+
+  <!-- =========================
+       NATIVE BANNER
+       ========================= -->
+
+  <div class="ad-slot native-ad">
+    <div
+      id="global-ad-native"
+      class="ad-host ad-host-native"
+    ></div>
   </div>
 
-  <!-- 300x250 -->
-  <div class="square-ad">
-    <script>
-      atOptions = {
-        'key' : '2800610326ebafc17c30013f7a1096e5',
-        'format' : 'iframe',
-        'height' : 250,
-        'width' : 300,
-        'params' : {}
-      };
-    </script>
-    <script src="https://toleranceteaminadequate.com/2800610326ebafc17c30013f7a1096e5/invoke.js"></script>
+
+  <!-- =========================
+       300x250 BANNER
+       ========================= -->
+
+  <div class="ad-slot ad-300x250">
+    <div
+      id="global-ad-300"
+      class="ad-host ad-host-300"
+    ></div>
   </div>
 
 </div>
 
+
+<script is:inline>
+  function loadGlobalNativeAd(hostId, containerId, key) {
+    return new Promise((resolve) => {
+      const host = document.getElementById(hostId);
+
+      if (!host) {
+        resolve();
+        return;
+      }
+
+      const container = document.createElement('div');
+      container.id = containerId;
+      host.appendChild(container);
+
+      const script = document.createElement('script');
+
+      script.async = true;
+      script.setAttribute('data-cfasync', 'false');
+      script.src =
+        `https://toleranceteaminadequate.com/${key}/invoke.js`;
+
+      script.onload = resolve;
+      script.onerror = resolve;
+
+      host.appendChild(script);
+    });
+  }
+
+
+  function loadGlobalBannerAd(hostId, key, width, height) {
+    return new Promise((resolve) => {
+      const host = document.getElementById(hostId);
+
+      if (!host) {
+        resolve();
+        return;
+      }
+
+      window.atOptions = {
+        key: key,
+        format: 'iframe',
+        height: height,
+        width: width,
+        params: {}
+      };
+
+      const script = document.createElement('script');
+
+      script.type = 'text/javascript';
+      script.src =
+        `https://toleranceteaminadequate.com/${key}/invoke.js`;
+
+      script.async = false;
+
+      script.onload = resolve;
+      script.onerror = resolve;
+
+      host.appendChild(script);
+    });
+  }
+
+
+  async function loadGlobalAds() {
+
+    /* 320x50 */
+    await loadGlobalBannerAd(
+      'global-ad-top-320',
+      '09d84e44afaa5e3c051baecc7e938408',
+      320,
+      50
+    );
+
+
+    /* Native */
+    await loadGlobalNativeAd(
+      'global-ad-native',
+      'container-e9a7ebb5b4ccad1a0f4057850ab50885',
+      'e9a7ebb5b4ccad1a0f4057850ab50885'
+    );
+
+
+    /* 300x250 */
+    await loadGlobalBannerAd(
+      'global-ad-300',
+      '2800610326ebafc17c30013f7a1096e5',
+      300,
+      250
+    );
+
+  }
+
+
+  if (document.readyState === 'loading') {
+    document.addEventListener(
+      'DOMContentLoaded',
+      loadGlobalAds
+    );
+  } else {
+    loadGlobalAds();
+  }
+</script>
+
+
 <style>
-  .vix-ads {
+  .global-ads {
     width: 100%;
   }
 
-  .ad-top {
+  .ad-slot {
     width: 100%;
+    margin: 20px 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 10px auto 18px;
     text-align: center;
     overflow: hidden;
   }
 
-  .ad-desktop {
-    display: block;
-  }
-
-  .ad-mobile {
-    display: none;
+  .top-banner-ad {
+    min-height: 50px;
+    margin: 8px 0 14px 0;
   }
 
   .native-ad {
+    min-height: 90px;
+  }
+
+  .ad-300x250 {
+    min-height: 250px;
+  }
+
+  .ad-host {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .ad-host-320 {
+    width: 320px;
+    min-height: 50px;
+    max-width: 100%;
+  }
+
+  .ad-host-native {
     width: 100%;
     min-height: 90px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 18px auto;
-    overflow: hidden;
   }
 
-  .square-ad {
-    width: 100%;
+  .ad-host-300 {
+    width: 300px;
     min-height: 250px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 25px auto;
-    overflow: hidden;
+    max-width: 100%;
   }
 
-  @media (max-width: 699px) {
-    .ad-desktop {
-      display: none;
-    }
-
-    .ad-mobile {
-      display: block;
+  @media (max-width: 340px) {
+    .ad-host-320 {
+      transform: scale(0.95);
+      transform-origin: center;
     }
   }
 </style>
