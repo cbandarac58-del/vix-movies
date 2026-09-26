@@ -40,16 +40,20 @@ const config = configs[type];
 )}
 
 {config && type === 'top' && (
-  <script is:inline define:vars={{
-    hostId: config.hostId,
-    key: config.key,
-    width: config.width,
-    height: config.height
-  }}>
+  <script
+    is:inline
+    define:vars={{
+      hostId: config.hostId,
+      key: config.key,
+      width: config.width,
+      height: config.height
+    }}
+  >
     (() => {
 
       window.__vixBannerQueue =
-        window.__vixBannerQueue || Promise.resolve();
+        window.__vixBannerQueue ||
+        Promise.resolve();
 
       window.__vixBannerQueue =
         window.__vixBannerQueue.then(() => {
@@ -64,7 +68,9 @@ const config = configs[type];
               return;
             }
 
-            if (host.dataset.loaded === 'true') {
+            if (
+              host.dataset.loaded === 'true'
+            ) {
               resolve();
               return;
             }
@@ -91,6 +97,7 @@ const config = configs[type];
             script.async = false;
 
             script.onload = () => resolve();
+
             script.onerror = () => resolve();
 
             host.appendChild(script);
@@ -104,11 +111,14 @@ const config = configs[type];
 )}
 
 {config && type === 'native' && (
-  <script is:inline define:vars={{
-    hostId: config.hostId,
-    containerId: config.containerId,
-    key: config.key
-  }}>
+  <script
+    is:inline
+    define:vars={{
+      hostId: config.hostId,
+      containerId: config.containerId,
+      key: config.key
+    }}
+  >
     (() => {
 
       const loadNative = () => {
@@ -118,7 +128,9 @@ const config = configs[type];
 
         if (!host) return;
 
-        if (host.dataset.loaded === 'true') {
+        if (
+          host.dataset.loaded === 'true'
+        ) {
           return;
         }
 
@@ -150,13 +162,17 @@ const config = configs[type];
       if (
         document.readyState === 'loading'
       ) {
+
         document.addEventListener(
           'DOMContentLoaded',
           loadNative,
           { once: true }
         );
+
       } else {
+
         loadNative();
+
       }
 
     })();
@@ -164,16 +180,20 @@ const config = configs[type];
 )}
 
 {config && type === 'square' && (
-  <script is:inline define:vars={{
-    hostId: config.hostId,
-    key: config.key,
-    width: config.width,
-    height: config.height
-  }}>
+  <script
+    is:inline
+    define:vars={{
+      hostId: config.hostId,
+      key: config.key,
+      width: config.width,
+      height: config.height
+    }}
+  >
     (() => {
 
       window.__vixBannerQueue =
-        window.__vixBannerQueue || Promise.resolve();
+        window.__vixBannerQueue ||
+        Promise.resolve();
 
       window.__vixBannerQueue =
         window.__vixBannerQueue.then(() => {
@@ -188,7 +208,9 @@ const config = configs[type];
               return;
             }
 
-            if (host.dataset.loaded === 'true') {
+            if (
+              host.dataset.loaded === 'true'
+            ) {
               resolve();
               return;
             }
@@ -215,6 +237,7 @@ const config = configs[type];
             script.async = false;
 
             script.onload = () => resolve();
+
             script.onerror = () => resolve();
 
             host.appendChild(script);
