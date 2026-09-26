@@ -4,182 +4,199 @@ export function getSiteAdsScript() {
 (function () {
   'use strict';
 
-  if (window.__VIX_GLOBAL_ADS_LOADED) return;
-  window.__VIX_GLOBAL_ADS_LOADED = true;
+  if (window.__VIX_AD_SYSTEM__) return;
+  window.__VIX_AD_SYSTEM__ = true;
 
-  const AD_HOST = 'https://toleranceteaminadequate.com/';
+  const HOST = 'https://toleranceteaminadequate.com/';
 
-  const ADS = {
-    banner320: {
-      key: '09d84e44afaa5e3c051baecc7e938408',
-      width: 320,
-      height: 50
-    },
+  function createBox(className) {
+    const el = document.createElement('div');
+    el.className = className;
+    return el;
+  }
 
-    banner468: {
-      key: 'ea0c551c70dff7d0eaa582b5e7e48185',
-      width: 468,
-      height: 60
-    },
+  function runBanner(box, key, width, height) {
+    if (!box) return;
 
-    banner728: {
-      key: '9811cc42403575f9dd8e4dcdde62d5fb',
-      width: 728,
-      height: 90
-    },
+    const options = document.createElement('script');
 
-    native: {
-      key: 'e9a7ebb5b4ccad1a0f4057850ab50885'
-    },
-
-    square: {
-      key: '2800610326ebafc17c30013f7a1096e5',
-      width: 300,
-      height: 250
-    },
-
-    side300: {
-      key: 'e83579d17388656c4773bc62268c78eb',
-      width: 160,
-      height: 300
-    },
-
-    side600: {
-      key: '4a7ac21e7da2b90676125bb44a4e04a0',
-      width: 160,
-      height: 600
-    }
-  };
-
-  function loadBanner(slot, ad) {
-    if (!slot || slot.dataset.loaded === '1') return;
-
-    slot.dataset.loaded = '1';
-
-    const config = document.createElement('script');
-    config.textContent =
-      "atOptions = {" +
-      "'key' : '" + ad.key + "'," +
-      "'format' : 'iframe'," +
-      "'height' : " + ad.height + "," +
-      "'width' : " + ad.width + "," +
-      "'params' : {}" +
-      "};";
+    options.text = \`
+      atOptions = {
+        'key' : '\${key}',
+        'format' : 'iframe',
+        'height' : \${height},
+        'width' : \${width},
+        'params' : {}
+      };
+    \`;
 
     const loader = document.createElement('script');
-    loader.src = AD_HOST + ad.key + '/invoke.js';
-    loader.async = false;
 
-    slot.appendChild(config);
-    slot.appendChild(loader);
+    loader.src = HOST + key + '/invoke.js';
+
+    box.appendChild(options);
+
+    setTimeout(function () {
+      box.appendChild(loader);
+    }, 20);
   }
 
-  function loadNative(slot) {
-    if (!slot || slot.dataset.loaded === '1') return;
-
-    slot.dataset.loaded = '1';
+  function runNative(box) {
+    if (!box) return;
 
     const container = document.createElement('div');
-    container.id = 'container-e9a7ebb5b4ccad1a0f4057850ab50885';
+
+    container.id =
+      'container-e9a7ebb5b4ccad1a0f4057850ab50885';
+
+    box.appendChild(container);
 
     const script = document.createElement('script');
+
     script.async = true;
     script.setAttribute('data-cfasync', 'false');
-    script.src = AD_HOST + 'e9a7ebb5b4ccad1a0f4057850ab50885/invoke.js';
 
-    slot.appendChild(script);
-    slot.appendChild(container);
+    script.src =
+      HOST +
+      'e9a7ebb5b4ccad1a0f4057850ab50885/invoke.js';
+
+    setTimeout(function () {
+      box.appendChild(script);
+    }, 50);
   }
 
-  function makeSlot(className) {
-    const div = document.createElement('div');
-    div.className = className;
-    return div;
-  }
-
-  function hasAd(key) {
+  function hasKey(key) {
     return document.documentElement.innerHTML.indexOf(key) !== -1;
   }
 
-  function insertAfter(el, target) {
-    if (!el || !target || !target.parentNode) return;
-    target.parentNode.insertBefore(el, target.nextSibling);
+  function insertAfter(newEl, target) {
+    if (!target || !target.parentNode) return;
+
+    target.parentNode.insertBefore(
+      newEl,
+      target.nextSibling
+    );
   }
 
-  function initAds() {
+  function startAds() {
 
-    /*
-     * TOP RESPONSIVE BANNER
-     * Navbar ekata passe
-     */
+    /* =========================================
+       1. TOP RESPONSIVE BANNER
+       ========================================= */
+
     if (
-      !hasAd(ADS.banner320.key) &&
-      !hasAd(ADS.banner468.key) &&
-      !hasAd(ADS.banner728.key)
+      !hasKey('09d84e44afaa5e3c051baecc7e938408') &&
+      !hasKey('ea0c551c70dff7d0eaa582b5e7e48185') &&
+      !hasKey('9811cc42403575f9dd8e4dcdde62d5fb')
     ) {
-      const navbar = document.querySelector('.navbar-container');
 
-      const top = makeSlot('vix-ad-top');
+      const top = createBox('vix-top-ad');
+
+      const navbar =
+        document.querySelector('.navbar-container');
 
       if (navbar) {
         insertAfter(top, navbar);
       } else {
-        document.body.insertBefore(top, document.body.firstChild);
+        document.body.insertBefore(
+          top,
+          document.body.firstChild
+        );
       }
 
-      function loadResponsiveBanner() {
-        const w = window.innerWidth;
+      const width = window.innerWidth;
 
-        if (w < 700) {
-          loadBanner(top, ADS.banner320);
-        } else if (w < 1100) {
-          loadBanner(top, ADS.banner468);
-        } else {
-          loadBanner(top, ADS.banner728);
-        }
+      if (width < 700) {
+
+        runBanner(
+          top,
+          '09d84e44afaa5e3c051baecc7e938408',
+          320,
+          50
+        );
+
+      } else if (width < 1100) {
+
+        runBanner(
+          top,
+          'ea0c551c70dff7d0eaa582b5e7e48185',
+          468,
+          60
+        );
+
+      } else {
+
+        runBanner(
+          top,
+          '9811cc42403575f9dd8e4dcdde62d5fb',
+          728,
+          90
+        );
       }
-
-      loadResponsiveBanner();
     }
 
-    /*
-     * NATIVE BANNER
-     * Main content eke uda
-     */
-    if (!hasAd(ADS.native.key)) {
-      const native = makeSlot('vix-ad-native');
 
-      const main = document.querySelector('main');
+    /* =========================================
+       2. NATIVE BANNER
+       ========================================= */
 
-      if (main) {
-        const first = main.firstElementChild;
+    if (
+      !hasKey(
+        'e9a7ebb5b4ccad1a0f4057850ab50885'
+      )
+    ) {
 
-        if (first) {
-          insertAfter(native, first);
-        } else {
-          main.insertBefore(native, main.firstChild);
-        }
+      const nativeBox =
+        createBox('vix-native-ad');
+
+      const main =
+        document.querySelector('main');
+
+      if (main && main.firstElementChild) {
+
+        insertAfter(
+          nativeBox,
+          main.firstElementChild
+        );
+
       } else {
-        const navbar = document.querySelector('.navbar-container');
+
+        const navbar =
+          document.querySelector(
+            '.navbar-container'
+          );
 
         if (navbar) {
-          insertAfter(native, navbar);
+          insertAfter(
+            nativeBox,
+            navbar
+          );
         } else {
-          document.body.appendChild(native);
+          document.body.appendChild(
+            nativeBox
+          );
         }
       }
 
-      loadNative(native);
+      runNative(nativeBox);
     }
 
-    /*
-     * 300x250
-     * Main content eke pahala
-     */
-    if (!hasAd(ADS.square.key)) {
-      const square = makeSlot('vix-ad-square');
 
-      const main = document.querySelector('main');
+    /* =========================================
+       3. 300x250
+       ========================================= */
+
+    if (
+      !hasKey(
+        '2800610326ebafc17c30013f7a1096e5'
+      )
+    ) {
+
+      const square =
+        createBox('vix-square-ad');
+
+      const main =
+        document.querySelector('main');
 
       if (main) {
         main.appendChild(square);
@@ -187,46 +204,77 @@ export function getSiteAdsScript() {
         document.body.appendChild(square);
       }
 
-      loadBanner(square, ADS.square);
+      runBanner(
+        square,
+        '2800610326ebafc17c30013f7a1096e5',
+        300,
+        250
+      );
     }
 
-    /*
-     * DESKTOP SIDE AD
-     *
-     * 1500px+  -> 160x300
-     * 1700px+  -> 160x600
-     */
-    if (
-      !hasAd(ADS.side300.key) &&
-      !hasAd(ADS.side600.key)
-    ) {
-      const width = window.innerWidth;
 
-      if (width >= 1500) {
-        const side = makeSlot('vix-ad-side');
+    /* =========================================
+       4. DESKTOP SIDE AD
+       ========================================= */
+
+    if (
+      !hasKey(
+        '4a7ac21e7da2b90676125bb44a4e04a0'
+      ) &&
+      !hasKey(
+        'e83579d17388656c4773bc62268c78eb'
+      )
+    ) {
+
+      const width =
+        window.innerWidth;
+
+      if (width >= 1700) {
+
+        const side =
+          createBox('vix-side-ad');
 
         document.body.appendChild(side);
 
-        if (width >= 1700) {
-          loadBanner(side, ADS.side600);
-        } else {
-          loadBanner(side, ADS.side300);
-        }
+        runBanner(
+          side,
+          '4a7ac21e7da2b90676125bb44a4e04a0',
+          160,
+          600
+        );
+
+      } else if (width >= 1500) {
+
+        const side =
+          createBox('vix-side-ad');
+
+        document.body.appendChild(side);
+
+        runBanner(
+          side,
+          'e83579d17388656c4773bc62268c78eb',
+          160,
+          300
+        );
       }
     }
 
-    /*
-     * SOCIAL BAR / GLOBAL SCRIPT
-     */
+
+    /* =========================================
+       5. SOCIAL BAR
+       ========================================= */
+
     if (
       !document.querySelector(
         'script[src*="6a9c5ac03c309d25864dd0e4fb44207f"]'
       )
     ) {
-      const social = document.createElement('script');
+
+      const social =
+        document.createElement('script');
 
       social.src =
-        AD_HOST +
+        HOST +
         '6a/9c/5a/6a9c5ac03c309d25864dd0e4fb44207f.js';
 
       social.async = true;
@@ -235,90 +283,100 @@ export function getSiteAdsScript() {
     }
   }
 
-  function addStyles() {
-    if (document.getElementById('vix-global-ad-styles')) return;
 
-    const style = document.createElement('style');
-    style.id = 'vix-global-ad-styles';
+  /* =========================================
+     STYLES
+     ========================================= */
 
-    style.textContent = \`
-      .vix-ad-top {
-        width: 100%;
+  const style =
+    document.createElement('style');
+
+  style.textContent = \`
+
+    .vix-top-ad {
+      width: 100%;
+      min-height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 8px auto 15px;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    .vix-native-ad {
+      width: 100%;
+      min-height: 90px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 18px auto;
+      overflow: hidden;
+    }
+
+    .vix-square-ad {
+      width: 100%;
+      min-height: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 25px auto;
+      overflow: hidden;
+    }
+
+    .vix-side-ad {
+      position: fixed;
+      top: 180px;
+      right: max(
+        10px,
+        calc((100vw - 1100px) / 2 - 180px)
+      );
+      width: 160px;
+      z-index: 999;
+      text-align: center;
+    }
+
+    @media (max-width: 1499px) {
+      .vix-side-ad {
+        display: none;
+      }
+    }
+
+    @media (max-width: 699px) {
+
+      .vix-top-ad {
         min-height: 50px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 8px auto 14px;
-        overflow: hidden;
-        text-align: center;
       }
 
-      .vix-ad-native {
-        width: 100%;
+      .vix-top-ad iframe {
         max-width: 100%;
-        min-height: 90px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 18px auto;
-        overflow: hidden;
       }
 
-      .vix-ad-square {
-        width: 100%;
-        min-height: 250px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 24px auto;
-        overflow: hidden;
-        text-align: center;
+      .vix-side-ad {
+        display: none;
       }
+    }
 
-      .vix-ad-side {
-        position: fixed;
-        top: 180px;
-        right: max(10px, calc((100vw - 1100px) / 2 - 180px));
-        width: 160px;
-        z-index: 50;
-        text-align: center;
-      }
+  \`;
 
-      @media (max-width: 699px) {
-        .vix-ad-top iframe {
-          max-width: 100%;
-        }
+  document.head.appendChild(style);
 
-        .vix-ad-side {
-          display: none;
-        }
-      }
 
-      @media (max-width: 1499px) {
-        .vix-ad-side {
-          display: none;
-        }
-      }
+  /* Wait until Astro page DOM is ready */
 
-      @media (max-width: 360px) {
-        .vix-ad-top {
-          transform: scale(0.95);
-          transform-origin: center;
-        }
-      }
-    \`;
+  if (
+    document.readyState === 'loading'
+  ) {
 
-    document.head.appendChild(style);
-  }
+    document.addEventListener(
+      'DOMContentLoaded',
+      startAds
+    );
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      addStyles();
-      initAds();
-    });
   } else {
-    addStyles();
-    initAds();
+
+    startAds();
+
   }
 
 })();
