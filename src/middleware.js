@@ -1,49 +1,75 @@
 import { defineMiddleware } from 'astro:middleware';
-import { getSiteAdsScript } from './utils/site-ads.js';
 
-export const onRequest = defineMiddleware(async (context, next) => {
-  const response = await next();
+export const onRequest = defineMiddleware(
+  async (context, next) => {
 
-  const type = response.headers.get('content-type') || '';
+    const response = await next();
 
-  // HTML pages only
-  if (!type.includes('text/html')) {
-    return response;
-  }
+    const type =
+      response.headers.get('content-type') || '';
 
-  let html = await response.text();
+    if (!type.includes('text/html')) {
+      return response;
+    }
 
-  /*
-   * Favicon
-   */
-  if (!html.includes('rel="icon"')) {
-    html = html.replace(
-      '</head>',
-      '<link rel="icon" type="image/svg+xml" href="/favicon.svg" /></head>'
+    let html = await response.text();
+
+    /*
+     * ================================
+     * FAVICON
+     * ================================
+     */
+
+    if (!html.includes('rel="icon"')) {
+
+      html = html.replace(
+        '</head>',
+        '<link rel="icon" type="image/svg+xml" href="/favicon.svg" /></head>'
+      );
+
+    }
+
+    /*
+     * ================================
+     * ADSTERRA SOCIAL BAR
+     * ================================
+     */
+
+    const socialBar =
+      `<script src="https://toleranceteaminadequate.com/6a/9c/5a/6a9c5ac03c309d25864dd0e4fb44207f.js"></script>`;
+
+    if (
+      !html.includes(
+        '6a9c5ac03c309d25864dd0e4fb44207f.js'
+      )
+    ) {
+
+      html = html.replace(
+        '</body>',
+        `${socialBar}</body>`
+      );
+
+    }
+
+    /*
+     * ================================
+     * RETURN HTML
+     * ================================
+     */
+
+    const headers =
+      new Headers(response.headers);
+
+    headers.delete('content-length');
+
+    return new Response(
+      html,
+      {
+        status: response.status,
+        statusText: response.statusText,
+        headers
+      }
     );
+
   }
-
-  /*
-   * Global Vix Movies Ads
-   *
-   * This is injected into every HTML page automatically.
-   * New .astro pages will also receive ads.
-   */
-  if (!html.includes('__VIX_GLOBAL_ADS_LOADED')) {
-    html = html.replace(
-      '</body>',
-      getSiteAdsScript() + '</body>'
-    );
-  }
-
-  const headers = new Headers(response.headers);
-
-  // Body size changed after HTML injection
-  headers.delete('content-length');
-
-  return new Response(html, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
-});
+);
