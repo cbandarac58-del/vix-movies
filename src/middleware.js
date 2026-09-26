@@ -15,9 +15,9 @@ export const onRequest = defineMiddleware(
     let html = await response.text();
 
     /*
-     * ================================
+     * =====================================
      * FAVICON
-     * ================================
+     * =====================================
      */
 
     if (!html.includes('rel="icon"')) {
@@ -30,9 +30,9 @@ export const onRequest = defineMiddleware(
     }
 
     /*
-     * ================================
-     * ADSTERRA SOCIAL BAR
-     * ================================
+     * =====================================
+     * SOCIAL BAR
+     * =====================================
      */
 
     const socialBar =
@@ -52,9 +52,9 @@ export const onRequest = defineMiddleware(
     }
 
     /*
-     * ================================
-     * RETURN HTML
-     * ================================
+     * =====================================
+     * RESPONSE
+     * =====================================
      */
 
     const headers =
