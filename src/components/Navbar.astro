@@ -4,23 +4,12 @@ const { activePage } = Astro.props;
 const path = Astro.url.pathname;
 
 const detect = () => {
-
   if (path === '/') return 'home';
-
-  if (path.startsWith('/hollywood'))
-    return 'hollywood';
-
-  if (path.startsWith('/bollywood'))
-    return 'bollywood';
-
-  if (path.startsWith('/tv'))
-    return 'tv';
-
-  if (path.startsWith('/trending'))
-    return 'trending';
-
-  if (path.startsWith('/sports'))
-    return 'sports';
+  if (path.startsWith('/hollywood')) return 'hollywood';
+  if (path.startsWith('/bollywood')) return 'bollywood';
+  if (path.startsWith('/tv')) return 'tv';
+  if (path.startsWith('/trending')) return 'trending';
+  if (path.startsWith('/sports')) return 'sports';
 
   if (
     path.startsWith('/movie') ||
@@ -95,15 +84,8 @@ const items = [
         class="menu-btn"
         aria-label="Open menu"
       >
-
-        <span class="bars">
-          ☰
-        </span>
-
-        <span>
-          Menu
-        </span>
-
+        <span class="bars">☰</span>
+        <span>Menu</span>
       </summary>
 
       <nav
@@ -112,7 +94,6 @@ const items = [
       >
 
         {items.map((i) => (
-
           <a
             href={i.href}
             class={
@@ -121,15 +102,12 @@ const items = [
                 : 'menu-item'
             }
           >
-
             <span class="menu-icon">
               {i.icon}
             </span>
 
             {i.label}
-
           </a>
-
         ))}
 
       </nav>
@@ -169,7 +147,6 @@ const items = [
   >
 
     {items.map((i) => (
-
       <a
         href={i.href}
         class={
@@ -180,7 +157,6 @@ const items = [
       >
         {i.label}
       </a>
-
     ))}
 
   </nav>
@@ -201,9 +177,7 @@ const items = [
       if (
         menu &&
         menu.hasAttribute('open') &&
-        !menu.contains(
-          e.target as Node
-        )
+        !menu.contains(e.target as Node)
       ) {
 
         menu.removeAttribute('open');
