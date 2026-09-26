@@ -1,5 +1,6 @@
 ---
 import Navbar from '../../components/Navbar.astro';
+import Ads from '../../components/Ads.astro';
 
 const { id } = Astro.params;
 const TMDB_KEY = import.meta.env.TMDB_API_KEY;
@@ -22,25 +23,41 @@ const simRes = await fetch(
   `https://api.themoviedb.org/3/movie/${id}/similar?api_key=${TMDB_KEY}`
 );
 const simData = await simRes.json();
+
 const similarMovies = (simData.results || [])
   .filter((m) => m.poster_path)
   .slice(0, 6);
 
 // Basic data
 const SITE_URL = 'https://movies.vixtube.net';
-const movieTitle = movie.title || 'Movie Details';
+
+const movieTitle =
+  movie.title || 'Movie Details';
+
 const releaseYear = movie.release_date
   ? movie.release_date.split('-')[0]
   : '';
-const titleYear = `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''}`;
 
-const crew = movie.credits?.crew || [];
-const castAll = movie.credits?.cast || [];
-const cast = castAll.slice(0, 6);
-const castRoles = castAll.slice(0, 10);
+const titleYear =
+  `${movieTitle}${releaseYear ? ` (${releaseYear})` : ''}`;
 
-const directorObj = crew.find((c) => c.job === 'Director');
-const director = directorObj?.name;
+const crew =
+  movie.credits?.crew || [];
+
+const castAll =
+  movie.credits?.cast || [];
+
+const cast =
+  castAll.slice(0, 6);
+
+const castRoles =
+  castAll.slice(0, 10);
+
+const directorObj =
+  crew.find((c) => c.job === 'Director');
+
+const director =
+  directorObj?.name;
 
 const writers = [
   ...new Set(
@@ -52,14 +69,27 @@ const writers = [
   ),
 ].slice(0, 3);
 
-const trailer = (movie.videos?.results || []).find(
-  (v) => v.site === 'YouTube' && v.type === 'Trailer'
-);
+const trailer =
+  (movie.videos?.results || []).find(
+    (v) =>
+      v.site === 'YouTube' &&
+      v.type === 'Trailer'
+  );
 
-const genres = movie.genres || [];
-const genreNames = genres.map((g) => g.name);
-const genreText = genreNames.join(', ').toLowerCase() || 'feature';
-const article = /^[aeiou]/.test(genreText) ? 'an' : 'a';
+const genres =
+  movie.genres || [];
+
+const genreNames =
+  genres.map((g) => g.name);
+
+const genreText =
+  genreNames.join(', ').toLowerCase() ||
+  'feature';
+
+const article =
+  /^[aeiou]/.test(genreText)
+    ? 'an'
+    : 'a';
 
 // Helpers
 const money = (n) =>
@@ -71,20 +101,27 @@ const money = (n) =>
       }).format(n)
     : '';
 
-const runtimeText = movie.runtime
-  ? `${movie.runtime} minutes (${Math.floor(movie.runtime / 60)}h ${
-      movie.runtime % 60
-    }m)`
-  : '';
+const runtimeText =
+  movie.runtime
+    ? `${movie.runtime} minutes (${Math.floor(movie.runtime / 60)}h ${
+        movie.runtime % 60
+      }m)`
+    : '';
 
-const releaseDateText = movie.release_date
-  ? new Date(movie.release_date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      timeZone: 'UTC',
-    })
-  : '';
+const releaseDateText =
+  movie.release_date
+    ? new Date(
+        movie.release_date
+      ).toLocaleDateString(
+        'en-US',
+        {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          timeZone: 'UTC',
+        }
+      )
+    : '';
 
 // Streaming availability
 const COUNTRIES = {
@@ -96,7 +133,9 @@ const COUNTRIES = {
   LK: 'Sri Lanka',
 };
 
-const provData = movie['watch/providers']?.results || {};
+const provData =
+  movie['watch/providers']?.results ||
+  {};
 
 const names = (arr) =>
   (arr || [])
@@ -104,110 +143,169 @@ const names = (arr) =>
     .slice(0, 6)
     .join(', ');
 
-const providerRows = Object.entries(COUNTRIES)
-  .map(([code, name]) => {
-    const p = provData[code];
+const providerRows =
+  Object.entries(COUNTRIES)
+    .map(([code, name]) => {
 
-    if (!p) return null;
+      const p =
+        provData[code];
 
-    const stream = names(p.flatrate);
-    const rent = names(p.rent);
-    const buy = names(p.buy);
+      if (!p) return null;
 
-    if (!stream && !rent && !buy) return null;
+      const stream =
+        names(p.flatrate);
 
-    return {
-      code,
-      name,
-      stream,
-      rent,
-      buy,
-    };
-  })
-  .filter(Boolean);
+      const rent =
+        names(p.rent);
+
+      const buy =
+        names(p.buy);
+
+      if (
+        !stream &&
+        !rent &&
+        !buy
+      ) {
+        return null;
+      }
+
+      return {
+        code,
+        name,
+        stream,
+        rent,
+        buy,
+      };
+    })
+    .filter(Boolean);
 
 // Summary
-const summary = `${titleYear} is ${article} ${genreText} film${
-  movie.runtime ? ` with a runtime of ${movie.runtime} minutes` : ''
-}${director ? `, directed by ${director}` : ''}${
-  cast.length
-    ? `, starring ${cast
-        .slice(0, 3)
-        .map((c) => c.name)
-        .join(', ')}`
-    : ''
-}. It holds a ${
-  movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'
-}/10 rating on TMDB${
-  movie.vote_count ? ` from ${movie.vote_count} votes` : ''
-}.`;
+const summary =
+  `${titleYear} is ${article} ${genreText} film${
+    movie.runtime
+      ? ` with a runtime of ${movie.runtime} minutes`
+      : ''
+  }${
+    director
+      ? `, directed by ${director}`
+      : ''
+  }${
+    cast.length
+      ? `, starring ${cast
+          .slice(0, 3)
+          .map((c) => c.name)
+          .join(', ')}`
+      : ''
+  }. It holds a ${
+    movie.vote_average
+      ? movie.vote_average.toFixed(1)
+      : 'N/A'
+  }/10 rating on TMDB${
+    movie.vote_count
+      ? ` from ${movie.vote_count} votes`
+      : ''
+  }.`;
 
 // FAQ
 const faqs = [];
 
 if (director) {
+
   faqs.push({
     q: `Who directed ${titleYear}?`,
     a: `${movieTitle} was directed by ${director}.`,
   });
+
 }
 
 if (castRoles.length) {
-  const list = castRoles
-    .slice(0, 5)
-    .map((c) =>
-      c.character
-        ? `${c.name} (as ${c.character})`
-        : c.name
-    )
-    .join(', ');
+
+  const list =
+    castRoles
+      .slice(0, 5)
+      .map((c) =>
+        c.character
+          ? `${c.name} (as ${c.character})`
+          : c.name
+      )
+      .join(', ');
 
   faqs.push({
     q: `Who stars in ${movieTitle}?`,
     a: `The main cast of ${movieTitle} includes ${list}.`,
   });
+
 }
 
 if (runtimeText) {
+
   faqs.push({
     q: `How long is ${movieTitle}?`,
     a: `${movieTitle} has a runtime of ${runtimeText}.`,
   });
+
 }
 
 if (releaseDateText) {
+
   faqs.push({
     q: `When was ${movieTitle} released?`,
     a: `${movieTitle} was released on ${releaseDateText}.`,
   });
+
 }
 
 if (genreNames.length) {
+
   faqs.push({
     q: `What genre is ${movieTitle}?`,
     a: `${movieTitle} is ${article} ${genreText} film.`,
   });
+
 }
 
-if (movie.vote_count > 0 && movie.vote_average) {
+if (
+  movie.vote_count > 0 &&
+  movie.vote_average
+) {
+
   faqs.push({
     q: `What is the rating of ${movieTitle}?`,
     a: `${movieTitle} has a rating of ${movie.vote_average.toFixed(
       1
     )}/10 on TMDB, based on ${movie.vote_count} votes.`,
   });
+
 }
 
 if (providerRows.length) {
-  const parts = providerRows.map((r) => {
-    const bits = [];
 
-    if (r.stream) bits.push(`streaming on ${r.stream}`);
-    if (r.rent) bits.push(`rent on ${r.rent}`);
-    if (r.buy) bits.push(`buy on ${r.buy}`);
+  const parts =
+    providerRows.map((r) => {
 
-    return `${r.name}: ${bits.join('; ')}`;
-  });
+      const bits = [];
+
+      if (r.stream) {
+        bits.push(
+          `streaming on ${r.stream}`
+        );
+      }
+
+      if (r.rent) {
+        bits.push(
+          `rent on ${r.rent}`
+        );
+      }
+
+      if (r.buy) {
+        bits.push(
+          `buy on ${r.buy}`
+        );
+      }
+
+      return `${r.name}: ${bits.join('; ')}`;
+
+    });
 
   faqs.push({
     q: `Where can I watch ${movieTitle} legally?`,
@@ -215,38 +313,49 @@ if (providerRows.length) {
       '. '
     )}.`,
   });
+
 }
 
-if (movie.belongs_to_collection?.name) {
+if (
+  movie.belongs_to_collection?.name
+) {
+
   faqs.push({
     q: `Is ${movieTitle} part of a series?`,
     a: `Yes, ${movieTitle} is part of the ${movie.belongs_to_collection.name}.`,
   });
+
 }
 
 if (money(movie.budget)) {
+
   faqs.push({
     q: `What was the budget of ${movieTitle}?`,
     a: `The reported budget of ${movieTitle} was ${money(movie.budget)}.`,
   });
+
 }
 
 if (money(movie.revenue)) {
+
   faqs.push({
     q: `How much did ${movieTitle} earn?`,
     a: `${movieTitle} earned a reported ${money(
       movie.revenue
     )} worldwide.`,
   });
+
 }
 
 // Thin pages
 const isThin =
-  !movie.overview || (movie.vote_count || 0) < 5;
+  !movie.overview ||
+  (movie.vote_count || 0) < 5;
 
-const robotsContent = isThin
-  ? 'noindex, follow'
-  : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+const robotsContent =
+  isThin
+    ? 'noindex, follow'
+    : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
 
 const pageTitle =
   `${titleYear} - Cast, Trailer & Details | Vix Movies`;
@@ -256,22 +365,27 @@ const pageDescription =
     ? summary.slice(0, 155) + '...'
     : summary;
 
-const posterUrl = movie.poster_path
-  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-  : `${SITE_URL}/no-poster.svg`;
+const posterUrl =
+  movie.poster_path
+    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    : `${SITE_URL}/no-poster.svg`;
 
-const backdropUrl = movie.backdrop_path
-  ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
-  : posterUrl;
+const backdropUrl =
+  movie.backdrop_path
+    ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+    : posterUrl;
 
-const facadeUrl = movie.backdrop_path
-  ? `https://image.tmdb.org/t/p/w780${movie.backdrop_path}`
-  : posterUrl;
+const facadeUrl =
+  movie.backdrop_path
+    ? `https://image.tmdb.org/t/p/w780${movie.backdrop_path}`
+    : posterUrl;
 
-const pageUrl = `${SITE_URL}/movie/${id}`;
+const pageUrl =
+  `${SITE_URL}/movie/${id}`;
 
 // Breadcrumb
-const firstGenre = genres[0];
+const firstGenre =
+  genres[0];
 
 const breadcrumb = [
   {
@@ -280,6 +394,7 @@ const breadcrumb = [
     name: 'Home',
     item: SITE_URL,
   },
+
   ...(firstGenre
     ? [
         {
@@ -292,6 +407,7 @@ const breadcrumb = [
         },
       ]
     : []),
+
   {
     '@type': 'ListItem',
     position: firstGenre ? 3 : 2,
@@ -302,49 +418,69 @@ const breadcrumb = [
 
 // Schema
 const schemaGraph = [
+
   {
     '@type': 'Movie',
     '@id': pageUrl,
     url: pageUrl,
     name: movieTitle,
     image: posterUrl,
-    description: movie.overview || pageDescription,
-    datePublished: movie.release_date || releaseYear,
-    duration: movie.runtime
-      ? `PT${movie.runtime}M`
-      : undefined,
+    description:
+      movie.overview ||
+      pageDescription,
+
+    datePublished:
+      movie.release_date ||
+      releaseYear,
+
+    duration:
+      movie.runtime
+        ? `PT${movie.runtime}M`
+        : undefined,
+
     genre: genreNames,
-    director: director
-      ? {
-          '@type': 'Person',
-          name: director,
-          url: `${SITE_URL}/person/${directorObj.id}`,
-        }
-      : undefined,
-    actor: cast.map((c) => ({
-      '@type': 'Person',
-      name: c.name,
-      url: `${SITE_URL}/person/${c.id}`,
-    })),
+
+    director:
+      director
+        ? {
+            '@type': 'Person',
+            name: director,
+            url: `${SITE_URL}/person/${directorObj.id}`,
+          }
+        : undefined,
+
+    actor:
+      cast.map((c) => ({
+        '@type': 'Person',
+        name: c.name,
+        url: `${SITE_URL}/person/${c.id}`,
+      })),
   },
+
   {
     '@type': 'BreadcrumbList',
     itemListElement: breadcrumb,
   },
+
 ];
 
 if (faqs.length) {
+
   schemaGraph.push({
     '@type': 'FAQPage',
-    mainEntity: faqs.map((f) => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: f.a,
-      },
-    })),
+
+    mainEntity:
+      faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: f.a,
+        },
+      })),
   });
+
 }
 
 const movieSchema = {
@@ -354,9 +490,13 @@ const movieSchema = {
 ---
 
 <!DOCTYPE html>
+
 <html lang="en">
+
   <head>
+
     <meta charset="utf-8" />
+
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0"
@@ -390,6 +530,7 @@ const movieSchema = {
     />
 
     <!-- Open Graph -->
+
     <meta
       property="og:type"
       content="video.movie"
@@ -416,6 +557,7 @@ const movieSchema = {
     />
 
     <!-- Twitter -->
+
     <meta
       name="twitter:card"
       content="summary_large_image"
@@ -442,12 +584,14 @@ const movieSchema = {
     />
 
     <!-- Structured Data -->
+
     <script
       type="application/ld+json"
       set:html={JSON.stringify(movieSchema)}
     />
 
     <style>
+
       * {
         box-sizing: border-box;
       }
@@ -455,9 +599,15 @@ const movieSchema = {
       body {
         background-color: #0b0f19;
         color: #f8fafc;
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          'Segoe UI',
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
         margin: 0;
-        padding: 0 15px 40px 15px;
+        padding:
+          0 15px 40px 15px;
       }
 
       .container {
@@ -473,7 +623,8 @@ const movieSchema = {
       .movie-title {
         font-size: 26px;
         font-weight: 800;
-        margin: 0 0 5px 0;
+        margin:
+          0 0 5px 0;
       }
 
       .movie-meta {
@@ -499,24 +650,29 @@ const movieSchema = {
         align-items: center;
         gap: 10px;
         flex-wrap: wrap;
-        border: 1px solid #334155;
+        border:
+          1px solid #334155;
       }
 
       .server-btn {
         background: #0f172a;
         color: #cbd5e1;
-        border: 1px solid #334155;
-        padding: 8px 14px;
+        border:
+          1px solid #334155;
+        padding:
+          8px 14px;
         border-radius: 6px;
         cursor: pointer;
         font-size: 13px;
-        transition: all 0.2s;
+        transition:
+          all 0.2s;
       }
 
       .server-btn.active {
         background: #0284c7;
         color: white;
-        border-color: #0284c7;
+        border-color:
+          #0284c7;
       }
 
       .player-container {
@@ -525,9 +681,12 @@ const movieSchema = {
         height: 0;
         overflow: hidden;
         border-radius: 12px;
-        border: 1px solid #334155;
+        border:
+          1px solid #334155;
         background: #000;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        box-shadow:
+          0 10px 30px
+          rgba(0,0,0,0.5);
       }
 
       .player-iframe {
@@ -549,17 +708,20 @@ const movieSchema = {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        filter: brightness(0.7);
+        filter:
+          brightness(0.7);
       }
 
       .facade-play {
         position: absolute;
         left: 50%;
         top: 50%;
-        transform: translate(-50%, -50%);
+        transform:
+          translate(-50%, -50%);
         width: 72px;
         height: 72px;
-        background: rgba(2, 132, 199, 0.95);
+        background:
+          rgba(2, 132, 199, 0.95);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -582,13 +744,16 @@ const movieSchema = {
 
       .action-bar {
         display: flex;
-        justify-content: space-between;
+        justify-content:
+          space-between;
         align-items: center;
         background: #1e293b;
-        padding: 12px 16px;
+        padding:
+          12px 16px;
         border-radius: 8px;
         margin-top: 15px;
-        border: 1px solid #334155;
+        border:
+          1px solid #334155;
         flex-wrap: wrap;
         gap: 12px;
       }
@@ -609,13 +774,16 @@ const movieSchema = {
       .vote-btn {
         background: #0f172a;
         color: #f8fafc;
-        border: 1px solid #334155;
-        padding: 6px 14px;
+        border:
+          1px solid #334155;
+        padding:
+          6px 14px;
         border-radius: 6px;
         cursor: pointer;
         font-size: 13px;
         font-weight: 600;
-        transition: background 0.2s;
+        transition:
+          background 0.2s;
       }
 
       .vote-btn:hover {
@@ -637,12 +805,14 @@ const movieSchema = {
       .share-btn {
         border: none;
         color: white;
-        padding: 6px 12px;
+        padding:
+          6px 12px;
         border-radius: 6px;
         font-size: 12px;
         font-weight: bold;
         cursor: pointer;
-        transition: opacity 0.2s;
+        transition:
+          opacity 0.2s;
       }
 
       .share-btn:hover {
@@ -670,7 +840,8 @@ const movieSchema = {
         background: #1e293b;
         padding: 20px;
         border-radius: 12px;
-        border: 1px solid #334155;
+        border:
+          1px solid #334155;
       }
 
       .movie-info-block h2 {
@@ -713,7 +884,8 @@ const movieSchema = {
       .faq-item h3 {
         font-size: 15px;
         color: #f8fafc;
-        margin: 14px 0 4px 0;
+        margin:
+          14px 0 4px 0;
       }
 
       .faq-item p {
@@ -726,57 +898,33 @@ const movieSchema = {
         margin-top: 8px;
       }
 
-      /* =========================
-         AD SLOTS
-         ========================= */
+      /*
+       * =========================
+       * AD SPACING
+       * =========================
+       */
 
-      .ad-slot {
-        width: 100%;
-        min-height: 60px;
-        margin: 24px 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        overflow: hidden;
-      }
-
-      .ad-slot.native-ad {
-        min-height: 60px;
-      }
-
-      .ad-slot.ad-300x250 {
-        min-height: 250px;
-      }
-
-      .ad-slot.ad-320x50 {
-        min-height: 50px;
-      }
-
-      .ad-host {
+      .movie-ad {
         width: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
         text-align: center;
-        overflow: hidden;
       }
 
-      .ad-host-300 {
-        width: 300px;
-        min-height: 250px;
-        max-width: 100%;
+      .movie-ad-top {
+        margin:
+          14px 0 20px;
       }
 
-      .ad-host-320 {
-        width: 320px;
-        min-height: 50px;
-        max-width: 100%;
+      .movie-ad-native {
+        margin:
+          25px 0;
       }
 
-      .ad-host-native {
-        width: 100%;
-        min-height: 60px;
+      .movie-ad-square {
+        margin:
+          28px 0;
       }
 
       .comments-section {
@@ -784,7 +932,8 @@ const movieSchema = {
         background: #1e293b;
         padding: 20px;
         border-radius: 12px;
-        border: 1px solid #334155;
+        border:
+          1px solid #334155;
       }
 
       .comment-input-box {
@@ -797,9 +946,11 @@ const movieSchema = {
       .comment-input,
       .comment-textarea {
         background: #0f172a;
-        border: 1px solid #334155;
+        border:
+          1px solid #334155;
         color: white;
-        padding: 10px 12px;
+        padding:
+          10px 12px;
         border-radius: 6px;
         font-size: 14px;
         outline: none;
@@ -815,11 +966,13 @@ const movieSchema = {
         background: #0284c7;
         color: white;
         border: none;
-        padding: 8px 20px;
+        padding:
+          8px 20px;
         border-radius: 6px;
         font-weight: 600;
         cursor: pointer;
-        transition: background 0.2s;
+        transition:
+          background 0.2s;
       }
 
       .comment-btn:hover {
@@ -828,8 +981,10 @@ const movieSchema = {
 
       .comment-card {
         background: #0f172a;
-        border: 1px solid #334155;
-        padding: 12px 15px;
+        border:
+          1px solid #334155;
+        padding:
+          12px 15px;
         border-radius: 8px;
         margin-bottom: 10px;
       }
@@ -867,10 +1022,11 @@ const movieSchema = {
 
       .grid-recommendations {
         display: grid;
-        grid-template-columns: repeat(
-          auto-fill,
-          minmax(150px, 1fr)
-        );
+        grid-template-columns:
+          repeat(
+            auto-fill,
+            minmax(150px, 1fr)
+          );
         gap: 15px;
         margin-top: 15px;
       }
@@ -879,21 +1035,26 @@ const movieSchema = {
         background: #1e293b;
         border-radius: 8px;
         overflow: hidden;
-        border: 1px solid #334155;
+        border:
+          1px solid #334155;
         text-decoration: none;
         color: white;
-        transition: transform 0.2s;
+        transition:
+          transform 0.2s;
       }
 
       .rec-card:hover {
-        transform: translateY(-4px);
-        border-color: #38bdf8;
+        transform:
+          translateY(-4px);
+        border-color:
+          #38bdf8;
       }
 
       .site-footer {
         margin-top: 40px;
         padding-top: 20px;
-        border-top: 1px solid #334155;
+        border-top:
+          1px solid #334155;
         text-align: center;
       }
 
@@ -918,7 +1079,8 @@ const movieSchema = {
       .copyright-text {
         color: #64748b;
         font-size: 12px;
-        margin: 0 0 8px 0;
+        margin:
+          0 0 8px 0;
       }
 
       .tmdb-note {
@@ -928,6 +1090,7 @@ const movieSchema = {
       }
 
       @media (max-width: 600px) {
+
         body {
           padding-left: 10px;
           padding-right: 10px;
@@ -952,22 +1115,31 @@ const movieSchema = {
           flex-wrap: wrap;
           gap: 12px;
         }
+
       }
+
     </style>
+
   </head>
 
   <body>
+
     <div class="container">
+
       <Navbar />
 
       <main>
-        <!-- Header -->
+
+        <!-- Movie Header -->
+
         <header class="movie-header">
+
           <h1 class="movie-title">
             {titleYear}
           </h1>
 
           <div class="movie-meta">
+
             <span>
               ⭐
               {movie.vote_average
@@ -984,34 +1156,65 @@ const movieSchema = {
             </span>
 
             <span
-              style="color: #38bdf8; font-weight: bold;"
+              style="
+                color: #38bdf8;
+                font-weight: bold;
+              "
             >
               HD Quality
             </span>
 
             {genres.length > 0 && (
               <span>
+
                 🎭{' '}
+
                 {genres.map((g, i) => (
                   <>
-                    <a href={`/genre/${slugify(g.name)}`}>
+
+                    <a
+                      href={`/genre/${slugify(g.name)}`}
+                    >
                       {g.name}
                     </a>
-                    {i < genres.length - 1 ? ', ' : ''}
+
+                    {i < genres.length - 1
+                      ? ', '
+                      : ''}
+
                   </>
                 ))}
+
               </span>
             )}
+
           </div>
+
         </header>
 
+        <!--
+          320x50 AD
+          Natural position:
+          directly below movie title/meta
+        -->
+
+        <div class="movie-ad movie-ad-top">
+          <Ads type="top" />
+        </div>
+
         <!-- Server Switcher -->
+
         <nav
           class="server-bar"
           aria-label="Streaming Server Selection"
         >
+
           <span
-            style="font-size: 14px; font-weight: 600; color: #94a3b8;"
+            style="
+              font-size: 14px;
+              font-weight: 600;
+              color: #94a3b8;
+            "
           >
             Select Server:
           </span>
@@ -1036,9 +1239,11 @@ const movieSchema = {
           >
             Server 3 (SmashyStream)
           </button>
+
         </nav>
 
         <!-- Player -->
+
         <section
           id="player-box"
           class="player-container facade"
@@ -1046,6 +1251,7 @@ const movieSchema = {
           tabindex="0"
           aria-label={`Play ${movieTitle}`}
         >
+
           <img
             class="facade-img"
             src={facadeUrl}
@@ -1056,22 +1262,31 @@ const movieSchema = {
             fetchpriority="high"
           />
 
-          <span class="facade-play">▶</span>
+          <span class="facade-play">
+            ▶
+          </span>
 
           <span class="facade-label">
             Click to play
           </span>
+
         </section>
 
         <!-- Action Bar -->
+
         <div class="action-bar">
+
           <div class="vote-container">
+
             <button
               id="like-btn"
               class="vote-btn"
               aria-label="Like movie"
             >
-              👍 <span id="like-count">0</span>
+              👍
+              <span id="like-count">
+                0
+              </span>
             </button>
 
             <button
@@ -1079,11 +1294,16 @@ const movieSchema = {
               class="vote-btn"
               aria-label="Dislike movie"
             >
-              👎 <span id="dislike-count">0</span>
+              👎
+              <span id="dislike-count">
+                0
+              </span>
             </button>
+
           </div>
 
           <div class="share-container">
+
             <span class="share-title">
               Share:
             </span>
@@ -1115,26 +1335,47 @@ const movieSchema = {
             >
               📋 Copy Link
             </button>
+
           </div>
+
         </div>
 
         <!-- Movie Information -->
+
         <article class="movie-info-block">
-          <h2>Storyline & Overview</h2>
+
+          <h2>
+            Storyline & Overview
+          </h2>
 
           <p>
             {movie.overview ||
               'No storyline overview available for this title.'}
           </p>
 
-          <p>{summary}</p>
+          <p>
+            {summary}
+          </p>
 
-          <h2>Details</h2>
+          <!--
+            NATIVE BANNER
+            After storyline / overview
+          -->
+
+          <div class="movie-ad movie-ad-native">
+            <Ads type="native" />
+          </div>
+
+          <h2>
+            Details
+          </h2>
 
           <ul class="details-list">
+
             {movie.tagline && (
               <li>
-                <b>Tagline:</b> {movie.tagline}
+                <b>Tagline:</b>
+                {movie.tagline}
               </li>
             )}
 
@@ -1155,24 +1396,29 @@ const movieSchema = {
 
             {runtimeText && (
               <li>
-                <b>Runtime:</b> {runtimeText}
+                <b>Runtime:</b>
+                {runtimeText}
               </li>
             )}
 
             {movie.status && (
               <li>
-                <b>Status:</b> {movie.status}
+                <b>Status:</b>
+                {movie.status}
               </li>
             )}
 
             {director && (
               <li>
+
                 <b>Director:</b>{' '}
+
                 <a
                   href={`/person/${directorObj.id}`}
                 >
                   {director}
                 </a>
+
               </li>
             )}
 
@@ -1185,31 +1431,40 @@ const movieSchema = {
 
             {movie.spoken_languages?.length > 0 && (
               <li>
+
                 <b>Languages:</b>{' '}
+
                 {movie.spoken_languages
                   .map((l) => l.english_name)
                   .join(', ')}
+
               </li>
             )}
 
             {movie.production_countries?.length >
               0 && (
               <li>
+
                 <b>Countries:</b>{' '}
+
                 {movie.production_countries
                   .map((c) => c.name)
                   .join(', ')}
+
               </li>
             )}
 
             {movie.production_companies?.length >
               0 && (
               <li>
+
                 <b>Production:</b>{' '}
+
                 {movie.production_companies
                   .slice(0, 3)
                   .map((c) => c.name)
                   .join(', ')}
+
               </li>
             )}
 
@@ -1233,61 +1488,66 @@ const movieSchema = {
                 {money(movie.revenue)}
               </li>
             )}
+
           </ul>
 
-          <!-- ==============================
-               AD 1 - NATIVE BANNER
-               ============================== -->
-          <div class="ad-slot native-ad">
-            <div
-              id="ad-native-host"
-              class="ad-host ad-host-native"
-            ></div>
-          </div>
-
           <!-- Cast -->
+
           {castRoles.length > 0 && (
             <>
-              <h2>Cast & Characters</h2>
+
+              <h2>
+                Cast & Characters
+              </h2>
 
               <ul class="cast-list">
+
                 {castRoles.map((c) => (
                   <li>
+
                     <a
                       href={`/person/${c.id}`}
                     >
-                      <b>{c.name}</b>
+                      <b>
+                        {c.name}
+                      </b>
                     </a>
 
                     {c.character
                       ? ` as ${c.character}`
                       : ''}
+
                   </li>
                 ))}
+
               </ul>
+
             </>
           )}
 
-          <!-- ==============================
-               AD 2 - 300x250
-               ============================== -->
-          <div class="ad-slot ad-300x250">
-            <div
-              id="ad-300-host"
-              class="ad-host ad-host-300"
-            ></div>
+          <!--
+            300x250 AD
+            After cast
+          -->
+
+          <div class="movie-ad movie-ad-square">
+            <Ads type="square" />
           </div>
 
           <!-- Providers -->
+
           {providerRows.length > 0 && (
             <>
+
               <h2>
                 Where to Watch {movieTitle} Legally
               </h2>
 
               <ul class="provider-list">
+
                 {providerRows.map((r) => (
                   <li>
+
                     <b>{r.name}:</b>
 
                     {r.stream &&
@@ -1298,20 +1558,25 @@ const movieSchema = {
 
                     {r.buy &&
                       ` Buy on ${r.buy}.`}
+
                   </li>
                 ))}
+
               </ul>
 
               <p class="attribution">
                 Streaming availability data
                 provided by JustWatch via TMDB.
               </p>
+
             </>
           )}
 
           <!-- FAQ -->
+
           {faqs.length > 0 && (
             <>
+
               <h2>
                 Frequently Asked Questions about{' '}
                 {movieTitle}
@@ -1319,19 +1584,32 @@ const movieSchema = {
 
               {faqs.map((f) => (
                 <div class="faq-item">
-                  <h3>{f.q}</h3>
-                  <p>{f.a}</p>
+
+                  <h3>
+                    {f.q}
+                  </h3>
+
+                  <p>
+                    {f.a}
+                  </p>
+
                 </div>
               ))}
+
             </>
           )}
 
           <!-- Trailer -->
+
           {trailer && (
             <>
-              <h2>Trailer</h2>
+
+              <h2>
+                Trailer
+              </h2>
 
               <div class="player-container">
+
                 <iframe
                   class="player-iframe"
                   src={`https://www.youtube.com/embed/${trailer.key}`}
@@ -1340,26 +1618,21 @@ const movieSchema = {
                   allowfullscreen
                 >
                 </iframe>
+
               </div>
+
             </>
           )}
+
         </article>
 
-        <!-- ==============================
-             AD 3 - 320x50 MOBILE BANNER
-             ============================== -->
-        <div class="ad-slot ad-320x50">
-          <div
-            id="ad-320-host"
-            class="ad-host ad-host-320"
-          ></div>
-        </div>
-
         <!-- Comments -->
+
         <section
           class="comments-section"
           aria-label="User Reviews and Comments"
         >
+
           <h2
             style="
               font-size: 18px;
@@ -1371,6 +1644,7 @@ const movieSchema = {
           </h2>
 
           <div class="comment-input-box">
+
             <input
               type="text"
               id="user-name"
@@ -1390,6 +1664,7 @@ const movieSchema = {
             >
               Post Comment
             </button>
+
           </div>
 
           <div id="comments-list"></div>
@@ -1401,14 +1676,17 @@ const movieSchema = {
           >
             View More Comments
           </button>
+
         </section>
 
         <!-- Similar Movies -->
+
         {similarMovies.length > 0 && (
           <section
             style="margin-top: 35px;"
             aria-label="Recommended Movies"
           >
+
             <h2
               style="
                 font-size: 18px;
@@ -1419,12 +1697,15 @@ const movieSchema = {
             </h2>
 
             <div class="grid-recommendations">
+
               {similarMovies.map((sim) => (
+
                 <a
                   href={`/movie/${sim.id}`}
                   class="rec-card"
                   title={`Watch ${sim.title}`}
                 >
+
                   <img
                     src={`https://image.tmdb.org/t/p/w500${sim.poster_path}`}
                     onerror="this.onerror=null;this.src='/no-poster.svg'"
@@ -1443,6 +1724,7 @@ const movieSchema = {
                   />
 
                   <div style="padding: 8px;">
+
                     <h3
                       style="
                         font-size: 12px;
@@ -1454,17 +1736,26 @@ const movieSchema = {
                     >
                       {sim.title}
                     </h3>
+
                   </div>
+
                 </a>
+
               ))}
+
             </div>
+
           </section>
         )}
+
       </main>
 
       <!-- Footer -->
+
       <footer class="site-footer">
+
         <div class="footer-links">
+
           <a href="/about">
             About Us
           </a>
@@ -1476,24 +1767,33 @@ const movieSchema = {
           <a href="/privacy-policy">
             Privacy Policy
           </a>
+
         </div>
 
         <p class="copyright-text">
-          &copy; {new Date().getFullYear()}
-          Vix Movies. All rights reserved.
+
+          &copy;
+          {new Date().getFullYear()}
+          Vix Movies.
+          All rights reserved.
+
         </p>
 
         <p class="tmdb-note">
+
           This product uses the TMDB API but is not
           endorsed or certified by TMDB.
+
         </p>
+
       </footer>
+
     </div>
 
-    <!-- ==========================================
-         CLIENT SIDE SCRIPT
-         Player + Likes + Share + Comments + ADS
-         ========================================== -->
+    <!--
+      CLIENT SIDE SCRIPT
+      Player + Likes + Share + Comments
+    -->
 
     <script
       is:inline
@@ -1502,153 +1802,10 @@ const movieSchema = {
         movieTitle: movieTitle
       }}
     >
+
       document.addEventListener(
         'DOMContentLoaded',
         async () => {
-
-          /* =====================================
-             ADSTERra AD LOADER
-             ===================================== */
-
-          function loadAdScript(
-            hostId,
-            key,
-            width,
-            height
-          ) {
-            return new Promise((resolve) => {
-              const host =
-                document.getElementById(hostId);
-
-              if (!host) {
-                resolve();
-                return;
-              }
-
-              /*
-               * Important:
-               * Adsterra banner code expects
-               * window.atOptions to exist BEFORE
-               * invoke.js is executed.
-               */
-
-              window.atOptions = {
-                key: key,
-                format: 'iframe',
-                height: height,
-                width: width,
-                params: {}
-              };
-
-              const script =
-                document.createElement('script');
-
-              script.type = 'text/javascript';
-
-              script.src =
-                'https://toleranceteaminadequate.com/' +
-                key +
-                '/invoke.js';
-
-              script.async = false;
-
-              script.onload = () => {
-                resolve();
-              };
-
-              script.onerror = () => {
-                /*
-                 * Do not stop the rest of the page
-                 * if one ad fails.
-                 */
-                resolve();
-              };
-
-              host.appendChild(script);
-            });
-          }
-
-          function loadNativeAd(
-            hostId,
-            containerId,
-            key
-          ) {
-            return new Promise((resolve) => {
-              const host =
-                document.getElementById(hostId);
-
-              if (!host) {
-                resolve();
-                return;
-              }
-
-              /*
-               * Native ad needs its container
-               * BEFORE invoke.js runs.
-               */
-
-              const container =
-                document.createElement('div');
-
-              container.id = containerId;
-
-              host.appendChild(container);
-
-              const script =
-                document.createElement('script');
-
-              script.async = true;
-
-              script.setAttribute(
-                'data-cfasync',
-                'false'
-              );
-
-              script.src =
-                'https://toleranceteaminadequate.com/' +
-                key +
-                '/invoke.js';
-
-              script.onload = () => {
-                resolve();
-              };
-
-              script.onerror = () => {
-                resolve();
-              };
-
-              host.appendChild(script);
-            });
-          }
-
-          /*
-           * Load ads ONE BY ONE.
-           *
-           * This is important because all
-           * Adsterra banner zones use the same
-           * global window.atOptions variable.
-           */
-
-          await loadNativeAd(
-            'ad-native-host',
-            'container-e9a7ebb5b4ccad1a0f4057850ab50885',
-            'e9a7ebb5b4ccad1a0f4057850ab50885'
-          );
-
-          await loadAdScript(
-            'ad-300-host',
-            '2800610326ebafc17c30013f7a1096e5',
-            300,
-            250
-          );
-
-          await loadAdScript(
-            'ad-320-host',
-            '09d84e44afaa5e3c051baecc7e938408',
-            320,
-            50
-          );
-
 
           /* =====================================
              PLAYER + SERVER SWITCHER
@@ -1664,34 +1821,52 @@ const movieSchema = {
               'player-box'
             );
 
-          let currentServer = 'vidsrc';
+          let currentServer =
+            'vidsrc';
+
           let iframe = null;
 
           function srcFor(server) {
-            if (server === 'vidsrc') {
+
+            if (
+              server === 'vidsrc'
+            ) {
+
               return (
                 `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`
               );
+
             }
 
-            if (server === 'smashy') {
+            if (
+              server === 'smashy'
+            ) {
+
               return (
                 `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`
               );
+
             }
 
             return (
               `https://autoembed.co/movie/tmdb/${tmdbId}`
             );
+
           }
 
           function loadPlayer() {
+
             const src =
-              srcFor(currentServer);
+              srcFor(
+                currentServer
+              );
 
             if (!iframe) {
+
               iframe =
-                document.createElement('iframe');
+                document.createElement(
+                  'iframe'
+                );
 
               iframe.style.cssText =
                 'position:absolute;top:0;left:0;width:100%;height:100%;border:0;';
@@ -1702,32 +1877,49 @@ const movieSchema = {
               );
 
               iframe.title =
-                'Watch ' + movieTitle;
+                'Watch ' +
+                movieTitle;
 
               iframe.allow =
                 'autoplay; encrypted-media; picture-in-picture; fullscreen';
 
-              iframe.allowFullscreen = true;
+              iframe.allowFullscreen =
+                true;
 
-              iframe.src = src;
+              iframe.src =
+                src;
 
-              box.replaceChildren(iframe);
+              box.replaceChildren(
+                iframe
+              );
 
               box.classList.remove(
                 'facade'
               );
 
-              box.removeAttribute('role');
-              box.removeAttribute('tabindex');
+              box.removeAttribute(
+                'role'
+              );
+
+              box.removeAttribute(
+                'tabindex'
+              );
+
               box.removeAttribute(
                 'aria-label'
               );
+
             } else if (
-              iframe.getAttribute('src') !==
-              src
+              iframe.getAttribute(
+                'src'
+              ) !== src
             ) {
-              iframe.src = src;
+
+              iframe.src =
+                src;
+
             }
+
           }
 
           box.addEventListener(
@@ -1738,40 +1930,51 @@ const movieSchema = {
           box.addEventListener(
             'keydown',
             (e) => {
+
               if (
                 e.key === 'Enter' ||
                 e.key === ' '
               ) {
+
                 e.preventDefault();
+
                 loadPlayer();
+
               }
+
             }
           );
 
-          serverButtons.forEach((btn) => {
-            btn.addEventListener(
-              'click',
-              (e) => {
-                serverButtons.forEach(
-                  (b) =>
-                    b.classList.remove(
-                      'active'
-                    )
-                );
+          serverButtons.forEach(
+            (btn) => {
 
-                e.target.classList.add(
-                  'active'
-                );
+              btn.addEventListener(
+                'click',
+                (e) => {
 
-                currentServer =
-                  e.target.getAttribute(
-                    'data-server'
+                  serverButtons.forEach(
+                    (b) =>
+                      b.classList.remove(
+                        'active'
+                      )
                   );
 
-                loadPlayer();
-              }
-            );
-          });
+                  e.target.classList.add(
+                    'active'
+                  );
+
+                  currentServer =
+                    e.target.getAttribute(
+                      'data-server'
+                    );
+
+                  loadPlayer();
+
+                }
+              );
+
+            }
+          );
 
 
           /* =====================================
@@ -1807,17 +2010,19 @@ const movieSchema = {
               'dislike-count'
             );
 
-          let likes = parseInt(
-            localStorage.getItem(
-              likeKey
-            ) || '0'
-          );
+          let likes =
+            parseInt(
+              localStorage.getItem(
+                likeKey
+              ) || '0'
+            );
 
-          let dislikes = parseInt(
-            localStorage.getItem(
-              dislikeKey
-            ) || '0'
-          );
+          let dislikes =
+            parseInt(
+              localStorage.getItem(
+                dislikeKey
+              ) || '0'
+            );
 
           let userVote =
             localStorage.getItem(
@@ -1825,6 +2030,7 @@ const movieSchema = {
             );
 
           function renderVotes() {
+
             likeCountEl.innerText =
               likes;
 
@@ -1839,38 +2045,52 @@ const movieSchema = {
               'active-dislike'
             );
 
-            if (userVote === 'like') {
+            if (
+              userVote === 'like'
+            ) {
+
               likeBtn.classList.add(
                 'active-like'
               );
+
             }
 
             if (
               userVote === 'dislike'
             ) {
+
               dislikeBtn.classList.add(
                 'active-dislike'
               );
+
             }
+
           }
 
           likeBtn.addEventListener(
             'click',
             () => {
+
               if (
                 userVote === 'like'
               ) {
+
                 likes--;
                 userVote = null;
+
               } else {
+
                 if (
                   userVote === 'dislike'
                 ) {
+
                   dislikes--;
+
                 }
 
                 likes++;
                 userVote = 'like';
+
               }
 
               localStorage.setItem(
@@ -1884,37 +2104,49 @@ const movieSchema = {
               );
 
               if (userVote) {
+
                 localStorage.setItem(
                   userVoteKey,
                   userVote
                 );
+
               } else {
+
                 localStorage.removeItem(
                   userVoteKey
                 );
+
               }
 
               renderVotes();
+
             }
           );
 
           dislikeBtn.addEventListener(
             'click',
             () => {
+
               if (
                 userVote === 'dislike'
               ) {
+
                 dislikes--;
                 userVote = null;
+
               } else {
+
                 if (
                   userVote === 'like'
                 ) {
+
                   likes--;
+
                 }
 
                 dislikes++;
                 userVote = 'dislike';
+
               }
 
               localStorage.setItem(
@@ -1928,17 +2160,22 @@ const movieSchema = {
               );
 
               if (userVote) {
+
                 localStorage.setItem(
                   userVoteKey,
                   userVote
                 );
+
               } else {
+
                 localStorage.removeItem(
                   userVoteKey
                 );
+
               }
 
               renderVotes();
+
             }
           );
 
@@ -1960,47 +2197,63 @@ const movieSchema = {
             );
 
           document
-            .getElementById('share-wa')
+            .getElementById(
+              'share-wa'
+            )
             .addEventListener(
               'click',
               () => {
+
                 window.open(
                   `https://api.whatsapp.com/send?text=${shareText}%20${currentUrl}`,
                   '_blank'
                 );
+
               }
             );
 
           document
-            .getElementById('share-fb')
+            .getElementById(
+              'share-fb'
+            )
             .addEventListener(
               'click',
               () => {
+
                 window.open(
                   `https://www.facebook.com/sharer/sharer.php?u=${currentUrl}`,
                   '_blank'
                 );
+
               }
             );
 
           document
-            .getElementById('share-tg')
+            .getElementById(
+              'share-tg'
+            )
             .addEventListener(
               'click',
               () => {
+
                 window.open(
                   `https://t.me/share/url?url=${currentUrl}&text=${shareText}`,
                   '_blank'
                 );
+
               }
             );
 
           document
-            .getElementById('copy-link')
+            .getElementById(
+              'copy-link'
+            )
             .addEventListener(
               'click',
               async () => {
+
                 try {
+
                   await navigator.clipboard.writeText(
                     window.location.href
                   );
@@ -2008,11 +2261,15 @@ const movieSchema = {
                   alert(
                     'Link copied to clipboard!'
                   );
+
                 } catch (err) {
+
                   alert(
                     'Unable to copy link.'
                   );
+
                 }
+
               }
             );
 
@@ -2032,7 +2289,8 @@ const movieSchema = {
               ) || '[]'
             );
 
-          let showingAll = false;
+          let showingAll =
+            false;
 
           const listDiv =
             document.getElementById(
@@ -2050,11 +2308,15 @@ const movieSchema = {
             );
 
           function renderComments() {
-            listDiv.innerHTML = '';
+
+            listDiv.innerHTML =
+              '';
 
             if (
-              allComments.length === 0
+              allComments.length ===
+              0
             ) {
+
               listDiv.innerHTML =
                 '<p style="color: #64748b; font-size: 13px;">No comments yet. Be the first to comment!</p>';
 
@@ -2062,6 +2324,7 @@ const movieSchema = {
                 'none';
 
               return;
+
             }
 
             const visibleComments =
@@ -2074,6 +2337,7 @@ const movieSchema = {
 
             visibleComments.forEach(
               (c) => {
+
                 const card =
                   document.createElement(
                     'div'
@@ -2097,6 +2361,7 @@ const movieSchema = {
                 listDiv.appendChild(
                   card
                 );
+
               }
             );
 
@@ -2104,6 +2369,7 @@ const movieSchema = {
               allComments.length > 5 &&
               !showingAll
             ) {
+
               loadBtn.style.display =
                 'block';
 
@@ -2111,15 +2377,20 @@ const movieSchema = {
                 `View More Comments (${
                   allComments.length - 5
                 } remaining)`;
+
             } else {
+
               loadBtn.style.display =
                 'none';
+
             }
+
           }
 
           postBtn.addEventListener(
             'click',
             () => {
+
               const nameInput =
                 document.getElementById(
                   'user-name'
@@ -2138,16 +2409,21 @@ const movieSchema = {
                 commentInput.value.trim();
 
               if (!text) {
+
                 alert(
                   'Please enter a comment before posting.'
                 );
 
                 return;
+
               }
 
               const newComment = {
+
                 name: name,
+
                 text: text,
+
                 date:
                   new Date().toLocaleDateString(
                     'en-US',
@@ -2157,6 +2433,7 @@ const movieSchema = {
                       year: 'numeric'
                     }
                   )
+
               };
 
               allComments.unshift(
@@ -2170,21 +2447,28 @@ const movieSchema = {
                 )
               );
 
-              commentInput.value = '';
+              commentInput.value =
+                '';
 
               renderComments();
+
             }
           );
 
           loadBtn.addEventListener(
             'click',
             () => {
-              showingAll = true;
+
+              showingAll =
+                true;
+
               renderComments();
+
             }
           );
 
           function escapeHtml(text) {
+
             return text
               .replace(
                 /&/g,
@@ -2206,11 +2490,16 @@ const movieSchema = {
                 /'/g,
                 '&#039;'
               );
+
           }
 
           renderComments();
+
         }
       );
+
     </script>
+
   </body>
+
 </html>
