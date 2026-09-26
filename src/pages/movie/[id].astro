@@ -46,8 +46,7 @@ const similarMovies =
 // BASIC DATA
 // =====================================
 
-const SITE_URL =
-  'https://movies.vixtube.net';
+const SITE_URL = 'https://movies.vixtube.net';
 
 const movieTitle =
   movie.title || 'Movie Details';
@@ -254,6 +253,7 @@ const summary =
       ? ` from ${movie.vote_count} votes`
       : ''
   }.`;
+
 
 // =====================================
 // FAQ
@@ -712,10 +712,15 @@ body {
   border-color: #0284c7;
 }
 
+/* =====================================
+   PLAYER
+   ===================================== */
+
 .player-container {
   position: relative;
-  padding-bottom: 56.25%;
-  height: 0;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
   overflow: hidden;
   border-radius: 12px;
   border: 1px solid #334155;
@@ -727,11 +732,14 @@ body {
 
 .player-iframe {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  display: block;
   border: 0;
+  background: #000;
 }
 
 .facade {
@@ -776,6 +784,10 @@ body {
   font-weight: 700;
   color: #e2e8f0;
 }
+
+/* =====================================
+   ACTION BAR
+   ===================================== */
 
 .action-bar {
   display: flex;
@@ -860,6 +872,10 @@ body {
   background: #475569;
 }
 
+/* =====================================
+   MOVIE INFO
+   ===================================== */
+
 .movie-info-block {
   margin-top: 25px;
   background: #1e293b;
@@ -921,6 +937,10 @@ body {
   margin-top: 8px;
 }
 
+/* =====================================
+   ADS
+   ===================================== */
+
 .movie-ad {
   width: 100%;
   display: flex;
@@ -940,6 +960,10 @@ body {
 .movie-ad-square {
   margin: 28px 0;
 }
+
+/* =====================================
+   COMMENTS
+   ===================================== */
 
 .comments-section {
   margin-top: 35px;
@@ -1026,6 +1050,10 @@ body {
   margin-top: 10px;
 }
 
+/* =====================================
+   RECOMMENDATIONS
+   ===================================== */
+
 .grid-recommendations {
   display: grid;
   grid-template-columns:
@@ -1051,6 +1079,10 @@ body {
   transform: translateY(-4px);
   border-color: #38bdf8;
 }
+
+/* =====================================
+   FOOTER
+   ===================================== */
 
 .site-footer {
   margin-top: 40px;
@@ -1088,6 +1120,10 @@ body {
   font-size: 11px;
   margin: 0;
 }
+
+/* =====================================
+   MOBILE
+   ===================================== */
 
 @media (max-width: 600px) {
 
@@ -1215,7 +1251,7 @@ body {
 
 <button
   type="button"
-  class="server-btn"
+  class="server-btn active"
   data-server="autoembed"
 >
   Server 1 (AutoEmbed)
@@ -1223,7 +1259,7 @@ body {
 
 <button
   type="button"
-  class="server-btn active"
+  class="server-btn"
   data-server="vidsrc"
 >
   Server 2 (VidSrc)
@@ -1794,13 +1830,13 @@ endorsed or certified by TMDB.
   }}
 >
 
-document.addEventListener(
-  'DOMContentLoaded',
-  () => {
+(() => {
 
-    // =====================================
-    // PLAYER
-    // =====================================
+  // =====================================
+  // PLAYER
+  // =====================================
+
+  function initPlayer() {
 
     const serverButtons =
       document.querySelectorAll(
@@ -1817,7 +1853,7 @@ document.addEventListener(
     }
 
     let currentServer =
-      'vidsrc';
+      'autoembed';
 
     let iframe = null;
 
@@ -1825,7 +1861,7 @@ document.addEventListener(
 
       if (server === 'vidsrc') {
 
-        return `https://vidsrc.to/embed/movie/${tmdbId}`;
+        return `https://vidsrc.sh/embed/movie/${tmdbId}`;
 
       }
 
@@ -1839,95 +1875,113 @@ document.addEventListener(
 
     }
 
+    function createIframe(src) {
+
+      const newIframe =
+        document.createElement(
+          'iframe'
+        );
+
+      newIframe.className =
+        'player-iframe';
+
+      newIframe.src =
+        src;
+
+      newIframe.title =
+        `Watch ${movieTitle}`;
+
+      newIframe.setAttribute(
+        'frameborder',
+        '0'
+      );
+
+      newIframe.setAttribute(
+        'allow',
+        'autoplay; encrypted-media; picture-in-picture; fullscreen'
+      );
+
+      newIframe.setAttribute(
+        'allowfullscreen',
+        ''
+      );
+
+      newIframe.style.position =
+        'absolute';
+
+      newIframe.style.inset =
+        '0';
+
+      newIframe.style.width =
+        '100%';
+
+      newIframe.style.height =
+        '100%';
+
+      newIframe.style.border =
+        '0';
+
+      newIframe.style.display =
+        'block';
+
+      newIframe.style.background =
+        '#000';
+
+      return newIframe;
+
+    }
+
     function loadPlayer() {
 
       const src =
         srcFor(currentServer);
 
-      if (!iframe) {
+      const newIframe =
+        createIframe(src);
 
-        iframe =
-          document.createElement(
-            'iframe'
-          );
+      iframe =
+        newIframe;
 
-        iframe.className =
-          'player-iframe';
+      box.replaceChildren(
+        newIframe
+      );
 
-        iframe.setAttribute(
-          'frameborder',
-          '0'
-        );
+      box.classList.remove(
+        'facade'
+      );
 
-        iframe.setAttribute(
-          'allow',
-          'autoplay; encrypted-media; picture-in-picture; fullscreen'
-        );
+      box.removeAttribute(
+        'role'
+      );
 
-        iframe.setAttribute(
-          'allowfullscreen',
-          ''
-        );
+      box.removeAttribute(
+        'tabindex'
+      );
 
-        iframe.setAttribute(
-          'referrerpolicy',
-          'origin'
-        );
-
-        iframe.title =
-          `Watch ${movieTitle}`;
-
-        iframe.src = src;
-
-        box.replaceChildren(
-          iframe
-        );
-
-        box.classList.remove(
-          'facade'
-        );
-
-        box.removeAttribute(
-          'role'
-        );
-
-        box.removeAttribute(
-          'tabindex'
-        );
-
-        box.removeAttribute(
-          'aria-label'
-        );
-
-      } else {
-
-        iframe.src = src;
-
-      }
+      box.removeAttribute(
+        'aria-label'
+      );
 
     }
 
-    // Click facade to start player
+    // =====================================
+    // PLAY
+    // =====================================
 
     box.addEventListener(
       'click',
-      (e) => {
+      () => {
 
-        if (
-          e.target.closest &&
-          e.target.closest(
-            '.server-btn'
-          )
-        ) {
-          return;
+        if (!iframe) {
+          loadPlayer();
         }
-
-        loadPlayer();
 
       }
     );
 
-    // Keyboard support
+    // =====================================
+    // KEYBOARD
+    // =====================================
 
     box.addEventListener(
       'keydown',
@@ -1940,14 +1994,18 @@ document.addEventListener(
 
           e.preventDefault();
 
-          loadPlayer();
+          if (!iframe) {
+            loadPlayer();
+          }
 
         }
 
       }
     );
 
-    // Server switching
+    // =====================================
+    // SERVER BUTTONS
+    // =====================================
 
     serverButtons.forEach(
       (btn) => {
@@ -1957,14 +2015,14 @@ document.addEventListener(
           (e) => {
 
             e.preventDefault();
-
             e.stopPropagation();
 
             serverButtons.forEach(
-              (b) =>
+              (b) => {
                 b.classList.remove(
                   'active'
-                )
+                );
+              }
             );
 
             btn.classList.add(
@@ -1974,7 +2032,7 @@ document.addEventListener(
             currentServer =
               btn.getAttribute(
                 'data-server'
-              ) || 'vidsrc';
+              ) || 'autoembed';
 
             loadPlayer();
 
@@ -1983,6 +2041,7 @@ document.addEventListener(
 
       }
     );
+
 
     // =====================================
     // LIKE / DISLIKE
@@ -2040,22 +2099,31 @@ document.addEventListener(
 
     function renderVotes() {
 
-      likeCountEl.innerText =
-        likes;
+      if (likeCountEl) {
+        likeCountEl.innerText =
+          likes;
+      }
 
-      dislikeCountEl.innerText =
-        dislikes;
+      if (dislikeCountEl) {
+        dislikeCountEl.innerText =
+          dislikes;
+      }
 
-      likeBtn.classList.remove(
-        'active-like'
-      );
+      if (likeBtn) {
+        likeBtn.classList.remove(
+          'active-like'
+        );
+      }
 
-      dislikeBtn.classList.remove(
-        'active-dislike'
-      );
+      if (dislikeBtn) {
+        dislikeBtn.classList.remove(
+          'active-dislike'
+        );
+      }
 
       if (
-        userVote === 'like'
+        userVote === 'like' &&
+        likeBtn
       ) {
 
         likeBtn.classList.add(
@@ -2065,7 +2133,8 @@ document.addEventListener(
       }
 
       if (
-        userVote === 'dislike'
+        userVote === 'dislike' &&
+        dislikeBtn
       ) {
 
         dislikeBtn.classList.add(
@@ -2076,115 +2145,124 @@ document.addEventListener(
 
     }
 
-    likeBtn.addEventListener(
-      'click',
-      () => {
+    if (likeBtn) {
 
-        if (
-          userVote === 'like'
-        ) {
-
-          likes--;
-          userVote = null;
-
-        } else {
-
-          if (
-            userVote === 'dislike'
-          ) {
-            dislikes--;
-          }
-
-          likes++;
-          userVote = 'like';
-
-        }
-
-        localStorage.setItem(
-          likeKey,
-          likes
-        );
-
-        localStorage.setItem(
-          dislikeKey,
-          dislikes
-        );
-
-        if (userVote) {
-
-          localStorage.setItem(
-            userVoteKey,
-            userVote
-          );
-
-        } else {
-
-          localStorage.removeItem(
-            userVoteKey
-          );
-
-        }
-
-        renderVotes();
-
-      }
-    );
-
-    dislikeBtn.addEventListener(
-      'click',
-      () => {
-
-        if (
-          userVote === 'dislike'
-        ) {
-
-          dislikes--;
-          userVote = null;
-
-        } else {
+      likeBtn.addEventListener(
+        'click',
+        () => {
 
           if (
             userVote === 'like'
           ) {
+
             likes--;
+            userVote = null;
+
+          } else {
+
+            if (
+              userVote === 'dislike'
+            ) {
+              dislikes--;
+            }
+
+            likes++;
+            userVote = 'like';
+
           }
 
-          dislikes++;
-          userVote = 'dislike';
-
-        }
-
-        localStorage.setItem(
-          likeKey,
-          likes
-        );
-
-        localStorage.setItem(
-          dislikeKey,
-          dislikes
-        );
-
-        if (userVote) {
+          localStorage.setItem(
+            likeKey,
+            likes
+          );
 
           localStorage.setItem(
-            userVoteKey,
-            userVote
+            dislikeKey,
+            dislikes
           );
 
-        } else {
+          if (userVote) {
 
-          localStorage.removeItem(
-            userVoteKey
-          );
+            localStorage.setItem(
+              userVoteKey,
+              userVote
+            );
+
+          } else {
+
+            localStorage.removeItem(
+              userVoteKey
+            );
+
+          }
+
+          renderVotes();
 
         }
+      );
 
-        renderVotes();
+    }
 
-      }
-    );
+    if (dislikeBtn) {
+
+      dislikeBtn.addEventListener(
+        'click',
+        () => {
+
+          if (
+            userVote === 'dislike'
+          ) {
+
+            dislikes--;
+            userVote = null;
+
+          } else {
+
+            if (
+              userVote === 'like'
+            ) {
+              likes--;
+            }
+
+            dislikes++;
+            userVote = 'dislike';
+
+          }
+
+          localStorage.setItem(
+            likeKey,
+            likes
+          );
+
+          localStorage.setItem(
+            dislikeKey,
+            dislikes
+          );
+
+          if (userVote) {
+
+            localStorage.setItem(
+              userVoteKey,
+              userVote
+            );
+
+          } else {
+
+            localStorage.removeItem(
+              userVoteKey
+            );
+
+          }
+
+          renderVotes();
+
+        }
+      );
+
+    }
 
     renderVotes();
+
 
     // =====================================
     // SHARE
@@ -2312,6 +2390,7 @@ document.addEventListener(
 
     }
 
+
     // =====================================
     // COMMENTS
     // =====================================
@@ -2390,6 +2469,10 @@ document.addEventListener(
     }
 
     function renderComments() {
+
+      if (!listDiv || !loadBtn) {
+        return;
+      }
 
       listDiv.innerHTML =
         '';
@@ -2470,90 +2553,121 @@ document.addEventListener(
 
     }
 
-    postBtn.addEventListener(
-      'click',
-      () => {
+    if (postBtn) {
 
-        const nameInput =
-          document.getElementById(
-            'user-name'
+      postBtn.addEventListener(
+        'click',
+        () => {
+
+          const nameInput =
+            document.getElementById(
+              'user-name'
+            );
+
+          const commentInput =
+            document.getElementById(
+              'user-comment'
+            );
+
+          const name =
+            nameInput.value.trim() ||
+            'Anonymous User';
+
+          const text =
+            commentInput.value.trim();
+
+          if (!text) {
+
+            alert(
+              'Please enter a comment before posting.'
+            );
+
+            return;
+
+          }
+
+          const newComment = {
+
+            name,
+
+            text,
+
+            date:
+              new Date().toLocaleDateString(
+                'en-US',
+                {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                }
+              )
+
+          };
+
+          allComments.unshift(
+            newComment
           );
 
-        const commentInput =
-          document.getElementById(
-            'user-comment'
+          localStorage.setItem(
+            storageKey,
+            JSON.stringify(
+              allComments
+            )
           );
 
-        const name =
-          nameInput.value.trim() ||
-          'Anonymous User';
+          commentInput.value =
+            '';
 
-        const text =
-          commentInput.value.trim();
-
-        if (!text) {
-
-          alert(
-            'Please enter a comment before posting.'
-          );
-
-          return;
+          renderComments();
 
         }
+      );
 
-        const newComment = {
+    }
 
-          name,
+    if (loadBtn) {
 
-          text,
+      loadBtn.addEventListener(
+        'click',
+        () => {
 
-          date:
-            new Date().toLocaleDateString(
-              'en-US',
-              {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-              }
-            )
+          showingAll =
+            true;
 
-        };
+          renderComments();
 
-        allComments.unshift(
-          newComment
-        );
+        }
+      );
 
-        localStorage.setItem(
-          storageKey,
-          JSON.stringify(
-            allComments
-          )
-        );
-
-        commentInput.value =
-          '';
-
-        renderComments();
-
-      }
-    );
-
-    loadBtn.addEventListener(
-      'click',
-      () => {
-
-        showingAll =
-          true;
-
-        renderComments();
-
-      }
-    );
+    }
 
     renderComments();
 
   }
-);
+
+
+  // =====================================
+  // START
+  // =====================================
+
+  if (
+    document.readyState ===
+    'loading'
+  ) {
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      initPlayer,
+      { once: true }
+    );
+
+  } else {
+
+    initPlayer();
+
+  }
+
+})();
 
 </script>
 
