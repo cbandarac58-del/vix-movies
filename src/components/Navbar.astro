@@ -1,19 +1,27 @@
 ---
-import Ads from './Ads.astro';
-
 const { activePage } = Astro.props;
 
-// Work out the active tab from the URL,
-// so pages don't need to pass it
 const path = Astro.url.pathname;
 
 const detect = () => {
+
   if (path === '/') return 'home';
-  if (path.startsWith('/hollywood')) return 'hollywood';
-  if (path.startsWith('/bollywood')) return 'bollywood';
-  if (path.startsWith('/tv')) return 'tv';
-  if (path.startsWith('/trending')) return 'trending';
-  if (path.startsWith('/sports')) return 'sports';
+
+  if (path.startsWith('/hollywood'))
+    return 'hollywood';
+
+  if (path.startsWith('/bollywood'))
+    return 'bollywood';
+
+  if (path.startsWith('/tv'))
+    return 'tv';
+
+  if (path.startsWith('/trending'))
+    return 'trending';
+
+  if (path.startsWith('/sports'))
+    return 'sports';
+
   if (
     path.startsWith('/movie') ||
     path.startsWith('/genre')
@@ -66,13 +74,7 @@ const items = [
 ];
 ---
 
-<!-- =========================
-     NAVBAR
-     ========================= -->
-
 <header class="navbar-container">
-
-  <!-- TOP ROW -->
 
   <div class="nav-top">
 
@@ -83,9 +85,6 @@ const items = [
     >
       <span class="blue">VIX</span> MOVIES
     </a>
-
-
-    <!-- MOBILE MENU -->
 
     <details
       class="menu"
@@ -106,7 +105,6 @@ const items = [
         </span>
 
       </summary>
-
 
       <nav
         class="menu-panel"
@@ -140,11 +138,6 @@ const items = [
 
   </div>
 
-
-  <!-- =========================
-       SEARCH BAR
-       ========================= -->
-
   <form
     action="/search"
     method="GET"
@@ -170,11 +163,6 @@ const items = [
 
   </form>
 
-
-  <!-- =========================
-       DESKTOP NAVIGATION
-       ========================= -->
-
   <nav
     class="nav-links"
     aria-label="Main navigation"
@@ -198,21 +186,6 @@ const items = [
   </nav>
 
 </header>
-
-
-<!-- =========================
-     GLOBAL ADS
-     
-     Every page that imports
-     Navbar.astro gets these ads.
-     ========================= -->
-
-<Ads />
-
-
-<!-- =========================
-     MOBILE MENU SCRIPT
-     ========================= -->
 
 <script>
 
@@ -242,366 +215,183 @@ const items = [
 
 </script>
 
-
 <style>
 
-  /* =========================
-     NAVBAR CONTAINER
-     ========================= */
-
   .navbar-container {
-
     display: flex;
-
     flex-direction: column;
-
     gap: 12px;
-
     padding: 15px 0 10px 0;
-
   }
-
-
-  /* =========================
-     TOP ROW
-     ========================= */
 
   .nav-top {
-
     display: flex;
-
     justify-content: space-between;
-
     align-items: center;
-
   }
-
-
-  /* =========================
-     LOGO
-     ========================= */
 
   .logo {
-
     font-size: 22px;
-
     font-weight: 900;
-
     color: white;
-
     text-decoration: none;
-
     letter-spacing: 0.5px;
-
   }
-
 
   .blue {
-
     color: #38bdf8;
-
   }
-
-
-  /* =========================
-     MOBILE MENU
-     ========================= */
 
   .menu {
-
     position: relative;
-
   }
-
 
   .menu-btn {
-
     list-style: none;
-
     display: flex;
-
     align-items: center;
-
     gap: 6px;
-
     background: #1e293b;
-
     border: 1px solid #334155;
-
     color: #f8fafc;
-
     padding: 8px 14px;
-
     border-radius: 8px;
-
     font-size: 14px;
-
     font-weight: 700;
-
     cursor: pointer;
-
     user-select: none;
-
   }
-
 
   .menu-btn::-webkit-details-marker {
-
     display: none;
-
   }
-
 
   .menu[open] .menu-btn {
-
     border-color: #38bdf8;
-
     color: #38bdf8;
-
   }
-
 
   .bars {
-
     font-size: 16px;
-
     line-height: 1;
-
   }
 
-
-  /* =========================
-     MOBILE MENU PANEL
-     ========================= */
-
   .menu-panel {
-
     position: absolute;
-
     right: 0;
-
     top: calc(100% + 8px);
-
     min-width: 210px;
-
     background: #1e293b;
-
     border: 1px solid #334155;
-
     border-radius: 12px;
-
     padding: 6px;
-
     z-index: 100;
-
     box-shadow:
       0 12px 30px
       rgba(0, 0, 0, 0.5);
-
     display: flex;
-
     flex-direction: column;
-
   }
-
-
-  /* =========================
-     MOBILE MENU ITEMS
-     ========================= */
 
   .menu-item {
-
     display: flex;
-
     align-items: center;
-
     gap: 10px;
-
     color: #cbd5e1;
-
     text-decoration: none;
-
     font-size: 15px;
-
     font-weight: 600;
-
     padding: 11px 12px;
-
     border-radius: 8px;
-
   }
-
 
   .menu-item:hover {
-
     background: #0f172a;
-
     color: #f8fafc;
-
   }
-
 
   .menu-item.active {
-
     background:
       rgba(56, 189, 248, 0.12);
-
     color: #38bdf8;
-
   }
-
 
   .menu-icon {
-
     width: 22px;
-
     text-align: center;
-
   }
-
-
-  /* =========================
-     SEARCH BAR
-     ========================= */
 
   .search-bar {
-
     display: flex;
-
     gap: 8px;
-
     width: 100%;
-
   }
-
 
   .search-input {
-
     flex: 1;
-
     background: #1e293b;
-
     border: 1px solid #334155;
-
     color: white;
-
     padding: 10px 14px;
-
     border-radius: 8px;
-
     font-size: 14px;
-
     outline: none;
-
   }
-
 
   .search-input:focus {
-
     border-color: #38bdf8;
-
   }
-
 
   .search-btn {
-
     background: #0284c7;
-
     color: white;
-
     border: none;
-
     padding: 10px 16px;
-
     border-radius: 8px;
-
     font-weight: bold;
-
     cursor: pointer;
-
   }
-
 
   .search-btn:hover {
-
     background: #0369a1;
-
   }
-
-
-  /* =========================
-     DESKTOP NAVIGATION
-     ========================= */
 
   .nav-links {
-
     display: none;
-
     gap: 16px;
-
     overflow-x: auto;
-
     padding-bottom: 4px;
-
   }
-
 
   .nav-item {
-
     color: #94a3b8;
-
     text-decoration: none;
-
     font-size: 14px;
-
     font-weight: 600;
-
     white-space: nowrap;
-
     flex-shrink: 0;
-
-    transition:
-      color 0.2s;
-
+    transition: color 0.2s;
   }
-
 
   .nav-item:hover {
-
     color: #f8fafc;
-
   }
-
 
   .nav-item.active {
-
     color: #38bdf8;
-
     border-bottom:
       2px solid #38bdf8;
-
     padding-bottom: 2px;
-
   }
-
-
-  /* =========================
-     DESKTOP BREAKPOINT
-     ========================= */
 
   @media (min-width: 700px) {
 
     .menu {
-
       display: none;
-
     }
 
-
     .nav-links {
-
       display: flex;
-
     }
 
   }
