@@ -1,0 +1,603 @@
+---
+import Navbar from '../../components/Navbar.astro';
+import { LISTS } from '../../utils/lists-config.js';
+
+const SITE_URL = 'https://movies.vixtube.net';
+const pageUrl = `${SITE_URL}/lists`;
+const pageTitle = 'Movie Lists: Top Rated, Popular, Now Playing & Upcoming | Vix Movies';
+const pageDescription =
+  'Browse curated movie lists: top rated movies, most popular movies, movies now playing in theaters, and upcoming releases.';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "CollectionPage",
+      "@id": pageUrl,
+      "url": pageUrl,
+      "name": "Movie Lists",
+      "description": pageDescription
+    },
+    {
+      "@type": "ItemList",
+      "itemListElement": LISTS.map((l, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "url": `${SITE_URL}/lists/${l.slug}`,
+        "name": l.name
+      }))
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": SITE_URL
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Lists",
+          "item": pageUrl
+        }
+      ]
+    }
+  ]
+};
+---
+
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+
+    <title>{pageTitle}</title>
+
+    <meta
+      name="description"
+      content={pageDescription}
+    />
+
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large"
+    />
+
+    <link
+      rel="canonical"
+      href={pageUrl}
+    />
+
+    <!-- Open Graph -->
+
+    <meta
+      property="og:type"
+      content="website"
+    />
+
+    <meta
+      property="og:url"
+      content={pageUrl}
+    />
+
+    <meta
+      property="og:title"
+      content={pageTitle}
+    />
+
+    <meta
+      property="og:description"
+      content={pageDescription}
+    />
+
+    <!-- Twitter / X -->
+
+    <meta
+      name="twitter:card"
+      content="summary"
+    />
+
+    <!-- Structured Data -->
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(schema)}
+    />
+
+    <style>
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background-color: #0b0f19;
+        color: #f8fafc;
+        font-family:
+          'Segoe UI',
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        margin: 0;
+        padding: 0 15px 40px 15px;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      /* =========================
+         ADSTERRA
+         ========================= */
+
+      .ad-slot {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        overflow: hidden;
+      }
+
+      /* TOP 320x50 */
+
+      .top-banner-ad {
+        min-height: 50px;
+        margin: 8px 0 16px 0;
+      }
+
+      .native-ad {
+        min-height: 90px;
+        margin: 30px 0;
+      }
+
+      .ad-host {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        overflow: hidden;
+      }
+
+      .ad-host-320 {
+        width: 320px;
+        min-height: 50px;
+        max-width: 100%;
+      }
+
+      .ad-host-native {
+        width: 100%;
+        min-height: 90px;
+      }
+
+      /* =========================
+         PAGE
+         ========================= */
+
+      .page-title {
+        font-size: 22px;
+        font-weight: 800;
+        margin: 20px 0 8px 0;
+        color: #38bdf8;
+      }
+
+      .intro {
+        color: #cbd5e1;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0 0 20px 0;
+      }
+
+      /* =========================
+         LIST GRID
+         ========================= */
+
+      .list-grid {
+        display: grid;
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      @media (min-width: 700px) {
+
+        .list-grid {
+          grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+        }
+
+      }
+
+      .list-card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 18px 14px;
+        text-decoration: none;
+        color: white;
+        text-align: center;
+        transition:
+          border-color 0.2s ease,
+          transform 0.2s ease;
+      }
+
+      .list-card:hover {
+        border-color: #38bdf8;
+        transform: translateY(-2px);
+      }
+
+      .list-emoji {
+        font-size: 34px;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .list-name {
+        font-size: 14px;
+        font-weight: 700;
+        margin: 0 0 6px 0;
+      }
+
+      .list-desc {
+        font-size: 11px;
+        color: #94a3b8;
+        line-height: 1.4;
+        margin: 0;
+      }
+
+      /* =========================
+         FOOTER
+         ========================= */
+
+      .site-footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #334155;
+        text-align: center;
+      }
+
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 12px;
+      }
+
+      .footer-links a {
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 13px;
+      }
+
+      .footer-links a:hover {
+        color: #38bdf8;
+      }
+
+      .copyright-text {
+        color: #64748b;
+        font-size: 12px;
+        margin: 0;
+      }
+
+      /* =========================
+         MOBILE AD SAFETY
+         ========================= */
+
+      @media (max-width: 340px) {
+
+        .ad-host-320 {
+          transform: scale(0.95);
+          transform-origin: center;
+        }
+
+      }
+
+    </style>
+
+  </head>
+
+
+  <body>
+
+    <div class="container">
+
+      <!-- =========================
+           NAVBAR
+           ========================= -->
+
+      <Navbar />
+
+
+      <!-- =========================
+           TOP 320x50 BANNER AD
+           ========================= -->
+
+      <div class="ad-slot top-banner-ad">
+
+        <div
+          id="ad-top-320-host"
+          class="ad-host ad-host-320"
+        ></div>
+
+      </div>
+
+
+      <!-- =========================
+           MAIN
+           ========================= -->
+
+      <main>
+
+        <h1 class="page-title">
+          🎞️ Movie Lists
+        </h1>
+
+        <p class="intro">
+          Curated, regularly updated movie lists
+          sourced from TMDB. Pick a list to see
+          the full lineup.
+        </p>
+
+
+        <!-- =========================
+             LISTS
+             ========================= -->
+
+        <section
+          class="list-grid"
+          aria-label="Movie lists"
+        >
+
+          {LISTS.map((l) => (
+
+            <a
+              href={`/lists/${l.slug}`}
+              class="list-card"
+              title={l.name}
+            >
+
+              <span class="list-emoji">
+                {l.emoji}
+              </span>
+
+              <h2 class="list-name">
+                {l.name}
+              </h2>
+
+              <p class="list-desc">
+                {l.intro}
+              </p>
+
+            </a>
+
+          ))}
+
+        </section>
+
+
+        <!-- =========================
+             NATIVE BANNER AD
+             ========================= -->
+
+        <div class="ad-slot native-ad">
+
+          <div
+            id="ad-native-host"
+            class="ad-host ad-host-native"
+          ></div>
+
+        </div>
+
+      </main>
+
+
+      <!-- =========================
+           FOOTER
+           ========================= -->
+
+      <footer class="site-footer">
+
+        <div class="footer-links">
+
+          <a href="/about">
+            About Us
+          </a>
+
+          <a href="/contact">
+            Contact Us
+          </a>
+
+          <a href="/privacy-policy">
+            Privacy Policy
+          </a>
+
+        </div>
+
+        <p class="copyright-text">
+          &copy; {new Date().getFullYear()}
+          Vix Movies. All rights reserved.
+        </p>
+
+      </footer>
+
+    </div>
+
+
+    <!-- =========================
+         ADSTERRA LOADER
+         ========================= -->
+
+    <script is:inline>
+
+      function loadNativeAd(
+        hostId,
+        containerId,
+        key
+      ) {
+
+        return new Promise((resolve) => {
+
+          const host =
+            document.getElementById(hostId);
+
+          if (!host) {
+            resolve();
+            return;
+          }
+
+          const container =
+            document.createElement('div');
+
+          container.id =
+            containerId;
+
+          host.appendChild(
+            container
+          );
+
+          const script =
+            document.createElement('script');
+
+          script.async = true;
+
+          script.setAttribute(
+            'data-cfasync',
+            'false'
+          );
+
+          script.src =
+            `https://toleranceteaminadequate.com/${key}/invoke.js`;
+
+          script.onload =
+            resolve;
+
+          script.onerror =
+            resolve;
+
+          host.appendChild(
+            script
+          );
+
+        });
+
+      }
+
+
+      function loadBannerAd(
+        hostId,
+        key,
+        width,
+        height
+      ) {
+
+        return new Promise((resolve) => {
+
+          const host =
+            document.getElementById(hostId);
+
+          if (!host) {
+            resolve();
+            return;
+          }
+
+          /*
+           * Adsterra uses the global
+           * atOptions object.
+           */
+
+          window.atOptions = {
+            key: key,
+            format: 'iframe',
+            height: height,
+            width: width,
+            params: {}
+          };
+
+          const script =
+            document.createElement('script');
+
+          script.type =
+            'text/javascript';
+
+          script.src =
+            `https://toleranceteaminadequate.com/${key}/invoke.js`;
+
+          script.async = false;
+
+          script.onload =
+            resolve;
+
+          script.onerror =
+            resolve;
+
+          host.appendChild(
+            script
+          );
+
+        });
+
+      }
+
+
+      async function loadAds() {
+
+        /*
+         * TOP 320x50
+         */
+
+        await loadBannerAd(
+          'ad-top-320-host',
+          '09d84e44afaa5e3c051baecc7e938408',
+          320,
+          50
+        );
+
+
+        /*
+         * NATIVE BANNER
+         */
+
+        await loadNativeAd(
+          'ad-native-host',
+          'container-e9a7ebb5b4ccad1a0f4057850ab50885',
+          'e9a7ebb5b4ccad1a0f4057850ab50885'
+        );
+
+      }
+
+
+      /*
+       * Start after DOM is ready
+       */
+
+      if (
+        document.readyState === 'loading'
+      ) {
+
+        document.addEventListener(
+          'DOMContentLoaded',
+          loadAds
+        );
+
+      } else {
+
+        loadAds();
+
+      }
+
+    </script>
+
+  </body>
+
+</html>
