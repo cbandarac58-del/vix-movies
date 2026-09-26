@@ -1,7 +1,9 @@
 ---
 import Navbar from '../../components/Navbar.astro';
+import Ads from '../../components/Ads.astro';
 
 const { id } = Astro.params;
+
 if (!/^\d+$/.test(id || '')) {
   return new Response('Not found', { status: 404 });
 }
@@ -12,26 +14,42 @@ const SITE_URL = 'https://movies.vixtube.net';
 const res = await fetch(
   `https://api.themoviedb.org/3/person/${id}?api_key=${TMDB_KEY}&append_to_response=combined_credits`
 );
+
 if (res.status === 404) {
   return new Response('Not found', { status: 404 });
 }
+
 if (!res.ok) {
-  // TMDB problem = temporary (503), so Google keeps the old version of the page
-  return new Response('Temporarily unavailable. Please try again in a few minutes.', {
-    status: 503,
-    headers: { 'Retry-After': '600', 'Content-Type': 'text/plain; charset=utf-8' },
-  });
+  return new Response(
+    'Temporarily unavailable. Please try again in a few minutes.',
+    {
+      status: 503,
+      headers: {
+        'Retry-After': '600',
+        'Content-Type': 'text/plain; charset=utf-8',
+      },
+    }
+  );
 }
+
 const person = await res.json();
+
 if (!person.id || person.adult) {
   return new Response('Not found', { status: 404 });
 }
 
 // Helpers
 const name = person.name || 'Person';
-const titleOf = (c) => c.title || c.name || '';
-const dateOf = (c) => c.release_date || c.first_air_date || '';
-const yearOf = (c) => dateOf(c).slice(0, 4);
+
+const titleOf = (c) =>
+  c.title || c.name || '';
+
+const dateOf = (c) =>
+  c.release_date || c.first_air_date || '';
+
+const yearOf = (c) =>
+  dateOf(c).slice(0, 4);
+
 const fmtDate = (d) =>
   d
     ? new Date(d).toLocaleDateString('en-US', {
@@ -41,63 +59,168 @@ const fmtDate = (d) =>
         timeZone: 'UTC',
       })
     : '';
+
 const joinList = (arr) =>
-  arr.length <= 1 ? arr.join('') : `${arr.slice(0, -1).join(', ')} and ${arr[arr.length - 1]}`;
-const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  arr.length <= 1
+    ? arr.join('')
+    : `${arr.slice(0, -1).join(', ')} and ${arr[arr.length - 1]}`;
+
+const plural = (n, word) =>
+  `${n} ${word}${n === 1 ? '' : 's'}`;
 
 const ageBetween = (from, to) => {
   if (!from) return null;
+
   const b = new Date(from);
   const e = to ? new Date(to) : new Date();
+
   if (isNaN(b) || isNaN(e)) return null;
-  let a = e.getUTCFullYear() - b.getUTCFullYear();
-  const m = e.getUTCMonth() - b.getUTCMonth();
-  if (m < 0 || (m === 0 && e.getUTCDate() < b.getUTCDate())) a--;
+
+  let a =
+    e.getUTCFullYear() -
+    b.getUTCFullYear();
+
+  const m =
+    e.getUTCMonth() -
+    b.getUTCMonth();
+
+  if (
+    m < 0 ||
+    (m === 0 &&
+      e.getUTCDate() < b.getUTCDate())
+  ) {
+    a--;
+  }
+
   return a >= 0 && a < 125 ? a : null;
 };
-const age = ageBetween(person.birthday, person.deathday);
 
-// Credits: movies and TV only, no adult titles, no talk / news / reality appearances
+const age = ageBetween(
+  person.birthday,
+  person.deathday
+);
+
+// Credits
 const cc = person.combined_credits || {};
-const SKIP_GENRES = [10767, 10763, 10764];
+
+const SKIP_GENRES = [
+  10767,
+  10763,
+  10764,
+];
+
 const usable = (c) =>
   !c.adult &&
-  (c.media_type === 'movie' || c.media_type === 'tv') &&
-  !(c.media_type === 'tv' && (c.genre_ids || []).some((g) => SKIP_GENRES.includes(g)));
+  (c.media_type === 'movie' ||
+    c.media_type === 'tv') &&
+  !(
+    c.media_type === 'tv' &&
+    (c.genre_ids || []).some((g) =>
+      SKIP_GENRES.includes(g)
+    )
+  );
+
 const dedupe = (list) => {
   const seen = new Set();
+
   return list.filter((c) => {
-    const k = `${c.media_type}-${c.id}`;
+    const k =
+      `${c.media_type}-${c.id}`;
+
     if (seen.has(k)) return false;
+
     seen.add(k);
     return true;
   });
 };
-const solid = (c) => (c.vote_count || 0) >= 10 && titleOf(c);
-const byDateDesc = (a, b) => (dateOf(b) || '0').localeCompare(dateOf(a) || '0');
 
-const castCredits = dedupe((cc.cast || []).filter(usable));
-const directed = dedupe((cc.crew || []).filter((c) => usable(c) && c.job === 'Director'));
-const movieCredits = castCredits.filter((c) => c.media_type === 'movie');
-const tvCredits = castCredits.filter((c) => c.media_type === 'tv');
+const solid = (c) =>
+  (c.vote_count || 0) >= 10 &&
+  titleOf(c);
 
-// Lists shown on the page (well-known titles only, so links go to real pages)
-const movieList = movieCredits.filter(solid).sort(byDateDesc).slice(0, 50);
-const tvList = tvCredits.filter(solid).sort(byDateDesc).slice(0, 30);
-const directedList = directed.filter(solid).sort(byDateDesc).slice(0, 20);
+const byDateDesc = (a, b) =>
+  (dateOf(b) || '0').localeCompare(
+    dateOf(a) || '0'
+  );
+
+const castCredits = dedupe(
+  (cc.cast || []).filter(usable)
+);
+
+const directed = dedupe(
+  (cc.crew || []).filter(
+    (c) =>
+      usable(c) &&
+      c.job === 'Director'
+  )
+);
+
+const movieCredits =
+  castCredits.filter(
+    (c) => c.media_type === 'movie'
+  );
+
+const tvCredits =
+  castCredits.filter(
+    (c) => c.media_type === 'tv'
+  );
+
+const movieList = movieCredits
+  .filter(solid)
+  .sort(byDateDesc)
+  .slice(0, 50);
+
+const tvList = tvCredits
+  .filter(solid)
+  .sort(byDateDesc)
+  .slice(0, 30);
+
+const directedList = directed
+  .filter(solid)
+  .sort(byDateDesc)
+  .slice(0, 20);
+
 const knownFor = castCredits
-  .filter((c) => solid(c) && c.poster_path)
-  .sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0))
+  .filter(
+    (c) =>
+      solid(c) &&
+      c.poster_path
+  )
+  .sort(
+    (a, b) =>
+      (b.vote_count || 0) -
+      (a.vote_count || 0)
+  )
   .slice(0, 8);
+
 const topRated = movieCredits
-  .filter((c) => (c.vote_count || 0) >= 200 && c.vote_average)
-  .sort((a, b) => b.vote_average - a.vote_average)
+  .filter(
+    (c) =>
+      (c.vote_count || 0) >= 200 &&
+      c.vote_average
+  )
+  .sort(
+    (a, b) =>
+      b.vote_average -
+      a.vote_average
+  )
   .slice(0, 5);
-const today = new Date().toISOString().slice(0, 10);
-const latestMovie = movieList.find((c) => dateOf(c) && dateOf(c) <= today);
+
+const today =
+  new Date()
+    .toISOString()
+    .slice(0, 10);
+
+const latestMovie = movieList.find(
+  (c) =>
+    dateOf(c) &&
+    dateOf(c) <= today
+);
 
 // Role word
-const dept = person.known_for_department || '';
+const dept =
+  person.known_for_department || '';
+
 const roleWord =
   dept === 'Acting'
     ? person.gender === 1
@@ -110,91 +233,214 @@ const roleWord =
     : dept === 'Production'
     ? 'producer'
     : 'film and TV professional';
-const article = /^[aeiou]/.test(roleWord) ? 'an' : 'a';
 
-// Summary (built from real data)
-const knownNames = knownFor.slice(0, 3).map(titleOf);
+const article =
+  /^[aeiou]/.test(roleWord)
+    ? 'an'
+    : 'a';
+
+// Summary
+const knownNames =
+  knownFor
+    .slice(0, 3)
+    .map(titleOf);
+
 const bornPart = person.birthday
-  ? ` born on ${fmtDate(person.birthday)}${person.place_of_birth ? ` in ${person.place_of_birth}` : ''}`
+  ? ` born on ${fmtDate(person.birthday)}${
+      person.place_of_birth
+        ? ` in ${person.place_of_birth}`
+        : ''
+    }`
   : person.place_of_birth
   ? ` born in ${person.place_of_birth}`
   : '';
-const deathPart = person.deathday ? `${bornPart ? ' and' : ''} died on ${fmtDate(person.deathday)}` : '';
-const summary = `${name} is ${article} ${roleWord}${bornPart}${deathPart}.${
-  knownNames.length ? ` Known for ${joinList(knownNames)}.` : ''
-} TMDB lists ${plural(movieCredits.length, 'movie credit')} and ${plural(tvCredits.length, 'TV credit')} for ${name}.`;
 
-// Biography (shortened)
-const bio = (person.biography || '').replace(/\s+/g, ' ').trim();
-const bioShort = bio.length > 900 ? `${bio.slice(0, 900).replace(/\s+\S*$/, '')}...` : bio;
+const deathPart =
+  person.deathday
+    ? `${
+        bornPart ? ' and' : ''
+      } died on ${fmtDate(
+        person.deathday
+      )}`
+    : '';
 
-// FAQ (every answer comes from real data, and is shown on the page)
-const faqs = [{ q: `Who is ${name}?`, a: summary }];
+const summary =
+  `${name} is ${article} ${roleWord}${bornPart}${deathPart}.${
+    knownNames.length
+      ? ` Known for ${joinList(
+          knownNames
+        )}.`
+      : ''
+  } TMDB lists ${plural(
+    movieCredits.length,
+    'movie credit'
+  )} and ${plural(
+    tvCredits.length,
+    'TV credit'
+  )} for ${name}.`;
+
+// Biography
+const bio =
+  (person.biography || '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const bioShort =
+  bio.length > 900
+    ? `${bio
+        .slice(0, 900)
+        .replace(/\s+\S*$/, '')}...`
+    : bio;
+
+// FAQ
+const faqs = [
+  {
+    q: `Who is ${name}?`,
+    a: summary,
+  },
+];
+
 if (person.birthday) {
   if (person.deathday) {
     faqs.push({
       q: `How old was ${name} when they died?`,
       a:
         age !== null
-          ? `${name} was born on ${fmtDate(person.birthday)} and died on ${fmtDate(person.deathday)} at the age of ${age}.`
-          : `${name} was born on ${fmtDate(person.birthday)} and died on ${fmtDate(person.deathday)}.`,
+          ? `${name} was born on ${fmtDate(
+              person.birthday
+            )} and died on ${fmtDate(
+              person.deathday
+            )} at the age of ${age}.`
+          : `${name} was born on ${fmtDate(
+              person.birthday
+            )} and died on ${fmtDate(
+              person.deathday
+            )}.`,
     });
   } else {
     faqs.push({
       q: `How old is ${name}?`,
       a:
         age !== null
-          ? `${name} was born on ${fmtDate(person.birthday)} and is ${age} years old.`
-          : `${name} was born on ${fmtDate(person.birthday)}.`,
+          ? `${name} was born on ${fmtDate(
+              person.birthday
+            )} and is ${age} years old.`
+          : `${name} was born on ${fmtDate(
+              person.birthday
+            )}.`,
     });
   }
 }
+
 if (person.place_of_birth) {
-  faqs.push({ q: `Where was ${name} born?`, a: `${name} was born in ${person.place_of_birth}.` });
+  faqs.push({
+    q: `Where was ${name} born?`,
+    a: `${name} was born in ${person.place_of_birth}.`,
+  });
 }
+
 if (knownFor.length) {
   const list = knownFor
     .slice(0, 5)
-    .map((c) => `${titleOf(c)}${yearOf(c) ? ` (${yearOf(c)})` : ''}`);
-  faqs.push({ q: `What is ${name} known for?`, a: `${name} is best known for ${joinList(list)}.` });
-}
-if (topRated.length) {
-  const list = topRated.map((c) => `${titleOf(c)} (${c.vote_average.toFixed(1)}/10)`);
+    .map(
+      (c) =>
+        `${titleOf(c)}${
+          yearOf(c)
+            ? ` (${yearOf(c)})`
+            : ''
+        }`
+    );
+
   faqs.push({
-    q: `What are the best movies of ${name}?`,
-    a: `The highest-rated movies featuring ${name} on TMDB include ${joinList(list)}.`,
+    q: `What is ${name} known for?`,
+    a: `${name} is best known for ${joinList(
+      list
+    )}.`,
   });
 }
+
+if (topRated.length) {
+  const list = topRated.map(
+    (c) =>
+      `${titleOf(c)} (${c.vote_average.toFixed(
+        1
+      )}/10)`
+  );
+
+  faqs.push({
+    q: `What are the best movies of ${name}?`,
+    a: `The highest-rated movies featuring ${name} on TMDB include ${joinList(
+      list
+    )}.`,
+  });
+}
+
 if (latestMovie) {
   faqs.push({
     q: `What is the latest movie of ${name}?`,
-    a: `The most recent released movie listed for ${name} is ${titleOf(latestMovie)}${
-      yearOf(latestMovie) ? ` (${yearOf(latestMovie)})` : ''
+    a: `The most recent released movie listed for ${name} is ${titleOf(
+      latestMovie
+    )}${
+      yearOf(latestMovie)
+        ? ` (${yearOf(
+            latestMovie
+          )})`
+        : ''
     }.`,
   });
 }
-if (movieCredits.length + tvCredits.length > 0) {
+
+if (
+  movieCredits.length +
+    tvCredits.length >
+  0
+) {
   faqs.push({
     q: `How many movies and TV shows has ${name} appeared in?`,
-    a: `TMDB lists ${plural(movieCredits.length, 'movie credit')} and ${plural(tvCredits.length, 'TV credit')} for ${name}.`,
+    a: `TMDB lists ${plural(
+      movieCredits.length,
+      'movie credit'
+    )} and ${plural(
+      tvCredits.length,
+      'TV credit'
+    )} for ${name}.`,
   });
 }
 
 // Thin pages should not be indexed
-const isThin = movieList.length + tvList.length + directedList.length < 2;
+const isThin =
+  movieList.length +
+    tvList.length +
+    directedList.length <
+  2;
+
 const robotsContent = isThin
   ? 'noindex, follow'
   : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
 
-const pageTitle = `${name} - Movies, TV Shows & Biography | Vix Movies`;
-const pageDescription = summary.length > 158 ? `${summary.slice(0, 155)}...` : summary;
-const pageUrl = `${SITE_URL}/person/${id}`;
-const photoUrl = person.profile_path
-  ? `https://image.tmdb.org/t/p/w342${person.profile_path}`
-  : '/no-poster.svg';
-const ogImage = person.profile_path ? `https://image.tmdb.org/t/p/w500${person.profile_path}` : '';
+const pageTitle =
+  `${name} - Movies, TV Shows & Biography | Vix Movies`;
 
-// Schema.org Structured Data
+const pageDescription =
+  summary.length > 158
+    ? `${summary
+        .slice(0, 155)}...`
+    : summary;
+
+const pageUrl =
+  `${SITE_URL}/person/${id}`;
+
+const photoUrl =
+  person.profile_path
+    ? `https://image.tmdb.org/t/p/w342${person.profile_path}`
+    : '/no-poster.svg';
+
+const ogImage =
+  person.profile_path
+    ? `https://image.tmdb.org/t/p/w500${person.profile_path}`
+    : '';
+
+// Schema
 const schemaGraph = [
   {
     "@type": "Person",
@@ -204,67 +450,186 @@ const schemaGraph = [
     "image": ogImage || undefined,
     "birthDate": person.birthday || undefined,
     "deathDate": person.deathday || undefined,
-    "birthPlace": person.place_of_birth ? { "@type": "Place", "name": person.place_of_birth } : undefined,
-    "jobTitle": roleWord.charAt(0).toUpperCase() + roleWord.slice(1),
-    "description": bioShort || summary,
-    "alternateName": (person.also_known_as || []).slice(0, 5),
+    "birthPlace":
+      person.place_of_birth
+        ? {
+            "@type": "Place",
+            "name":
+              person.place_of_birth,
+          }
+        : undefined,
+    "jobTitle":
+      roleWord.charAt(0).toUpperCase() +
+      roleWord.slice(1),
+    "description":
+      bioShort || summary,
+    "alternateName":
+      (person.also_known_as || [])
+        .slice(0, 5),
   },
+
   {
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
-      { "@type": "ListItem", "position": 2, "name": name, "item": pageUrl },
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": SITE_URL,
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": name,
+        "item": pageUrl,
+      },
     ],
   },
+
   {
     "@type": "FAQPage",
     "mainEntity": faqs.map((f) => ({
       "@type": "Question",
       "name": f.q,
-      "acceptedAnswer": { "@type": "Answer", "text": f.a },
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": f.a,
+      },
     })),
   },
 ];
-const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
+
+const schema = {
+  "@context": "https://schema.org",
+  "@graph": schemaGraph,
+};
 ---
 
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
 
     <title>{pageTitle}</title>
-    <meta name="title" content={pageTitle} />
-    <meta name="description" content={pageDescription} />
-    <meta name="robots" content={robotsContent} />
-    <meta name="author" content="Vix Movies" />
-    <link rel="canonical" href={pageUrl} />
 
-    <meta property="og:type" content="profile" />
-    <meta property="og:url" content={pageUrl} />
-    <meta property="og:title" content={pageTitle} />
-    <meta property="og:description" content={pageDescription} />
-    {ogImage && <meta property="og:image" content={ogImage} />}
-    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
-    <meta name="twitter:title" content={pageTitle} />
-    <meta name="twitter:description" content={pageDescription} />
-    {ogImage && <meta name="twitter:image" content={ogImage} />}
+    <meta
+      name="title"
+      content={pageTitle}
+    />
 
-    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <meta
+      name="description"
+      content={pageDescription}
+    />
+
+    <meta
+      name="robots"
+      content={robotsContent}
+    />
+
+    <meta
+      name="author"
+      content="Vix Movies"
+    />
+
+    <link
+      rel="canonical"
+      href={pageUrl}
+    />
+
+    <meta
+      property="og:type"
+      content="profile"
+    />
+
+    <meta
+      property="og:url"
+      content={pageUrl}
+    />
+
+    <meta
+      property="og:title"
+      content={pageTitle}
+    />
+
+    <meta
+      property="og:description"
+      content={pageDescription}
+    />
+
+    {ogImage && (
+      <meta
+        property="og:image"
+        content={ogImage}
+      />
+    )}
+
+    <meta
+      name="twitter:card"
+      content={
+        ogImage
+          ? 'summary_large_image'
+          : 'summary'
+      }
+    />
+
+    <meta
+      name="twitter:title"
+      content={pageTitle}
+    />
+
+    <meta
+      name="twitter:description"
+      content={pageDescription}
+    />
+
+    {ogImage && (
+      <meta
+        name="twitter:image"
+        content={ogImage}
+      />
+    )}
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(schema)}
+    />
 
     <style>
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         background-color: #0b0f19;
         color: #f8fafc;
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-family:
+          'Segoe UI',
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
         margin: 0;
         padding: 0 15px 40px 15px;
       }
-      .container { max-width: 1100px; margin: 0 auto; }
 
-      .profile { display: flex; gap: 16px; margin: 18px 0 8px 0; align-items: flex-start; }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      .profile {
+        display: flex;
+        gap: 16px;
+        margin: 18px 0 8px 0;
+        align-items: flex-start;
+      }
+
       .photo {
         flex: 0 0 120px;
         width: 120px;
@@ -274,14 +639,67 @@ const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
         border: 1px solid #334155;
         background: #1e293b;
       }
-      .profile-info { flex: 1; min-width: 0; }
-      .name { font-size: 24px; font-weight: 800; margin: 0 0 8px 0; line-height: 1.2; }
-      .facts { list-style: none; padding: 0; margin: 0; color: #cbd5e1; font-size: 13px; line-height: 1.8; }
-      .facts b { color: #94a3b8; font-weight: 600; }
+
+      .profile-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .name {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0 0 8px 0;
+        line-height: 1.2;
+      }
+
+      .facts {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        color: #cbd5e1;
+        font-size: 13px;
+        line-height: 1.8;
+      }
+
+      .facts b {
+        color: #94a3b8;
+        font-weight: 600;
+      }
+
       @media (min-width: 700px) {
-        .photo { flex-basis: 170px; width: 170px; }
-        .name { font-size: 30px; }
-        .facts { font-size: 14px; }
+        .photo {
+          flex-basis: 170px;
+          width: 170px;
+        }
+
+        .name {
+          font-size: 30px;
+        }
+
+        .facts {
+          font-size: 14px;
+        }
+      }
+
+      /* Ads */
+
+      .person-ad {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .top-ad {
+        margin: 4px 0 22px;
+      }
+
+      .native-ad {
+        margin: 28px 0;
+      }
+
+      .square-ad {
+        margin: 30px 0;
       }
 
       .info-block {
@@ -291,20 +709,49 @@ const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
         border-radius: 12px;
         border: 1px solid #334155;
       }
-      .info-block h2 { font-size: 18px; color: #38bdf8; margin: 0 0 10px 0; }
-      .info-block h2:not(:first-child) { margin-top: 24px; }
-      .info-block p { color: #cbd5e1; line-height: 1.6; font-size: 14px; margin: 0 0 8px 0; }
-      .attribution { font-size: 11px; color: #64748b; }
 
-      .section-title { font-size: 18px; font-weight: 800; margin: 30px 0 12px 0; }
+      .info-block h2 {
+        font-size: 18px;
+        color: #38bdf8;
+        margin: 0 0 10px 0;
+      }
+
+      .info-block h2:not(:first-child) {
+        margin-top: 24px;
+      }
+
+      .info-block p {
+        color: #cbd5e1;
+        line-height: 1.6;
+        font-size: 14px;
+        margin: 0 0 8px 0;
+      }
+
+      .attribution {
+        font-size: 11px;
+        color: #64748b;
+      }
+
+      .section-title {
+        font-size: 18px;
+        font-weight: 800;
+        margin: 30px 0 12px 0;
+      }
+
       .known-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
         gap: 12px;
       }
+
       @media (min-width: 640px) {
-        .known-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .known-grid {
+          grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+        }
       }
+
       .rec-card {
         background: #1e293b;
         border-radius: 8px;
@@ -313,15 +760,43 @@ const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
         text-decoration: none;
         color: white;
       }
-      .rec-card:hover { border-color: #38bdf8; }
-      .rec-card img { width: 100%; height: auto; aspect-ratio: 2 / 3; object-fit: cover; display: block; }
-      .rec-card .t { padding: 8px; }
-      .rec-card h3 {
-        font-size: 12px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-      .rec-card p { font-size: 11px; color: #94a3b8; margin: 3px 0 0 0; }
 
-      .credit-list { list-style: none; padding: 0; margin: 0; }
+      .rec-card:hover {
+        border-color: #38bdf8;
+      }
+
+      .rec-card img {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 2 / 3;
+        object-fit: cover;
+        display: block;
+      }
+
+      .rec-card .t {
+        padding: 8px;
+      }
+
+      .rec-card h3 {
+        font-size: 12px;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .rec-card p {
+        font-size: 11px;
+        color: #94a3b8;
+        margin: 3px 0 0 0;
+      }
+
+      .credit-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
       .credit-list li {
         display: flex;
         gap: 12px;
@@ -331,28 +806,93 @@ const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
         color: #cbd5e1;
         line-height: 1.4;
       }
-      .credit-list li:last-child { border-bottom: 0; }
-      .credit-list .yr { flex: 0 0 42px; color: #64748b; font-weight: 600; }
-      .credit-list a { color: #38bdf8; text-decoration: none; font-weight: 600; }
-      .credit-list a:hover { text-decoration: underline; }
-      .credit-list .role { color: #94a3b8; }
-      .note { color: #64748b; font-size: 12px; margin: 10px 0 0 0; }
 
-      .faq-item h3 { font-size: 15px; color: #f8fafc; margin: 14px 0 4px 0; }
-      .faq-item p { margin: 0; }
+      .credit-list li:last-child {
+        border-bottom: 0;
+      }
 
-      .site-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #334155; text-align: center; }
-      .footer-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 12px; }
-      .footer-links a { color: #94a3b8; text-decoration: none; font-size: 13px; }
-      .copyright-text { color: #64748b; font-size: 12px; margin: 0 0 8px 0; }
-      .tmdb-note { color: #64748b; font-size: 11px; margin: 0; }
+      .credit-list .yr {
+        flex: 0 0 42px;
+        color: #64748b;
+        font-weight: 600;
+      }
+
+      .credit-list a {
+        color: #38bdf8;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .credit-list a:hover {
+        text-decoration: underline;
+      }
+
+      .credit-list .role {
+        color: #94a3b8;
+      }
+
+      .note {
+        color: #64748b;
+        font-size: 12px;
+        margin: 10px 0 0 0;
+      }
+
+      .faq-item h3 {
+        font-size: 15px;
+        color: #f8fafc;
+        margin: 14px 0 4px 0;
+      }
+
+      .faq-item p {
+        margin: 0;
+      }
+
+      .site-footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #334155;
+        text-align: center;
+      }
+
+      .footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 12px;
+      }
+
+      .footer-links a {
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 13px;
+      }
+
+      .copyright-text {
+        color: #64748b;
+        font-size: 12px;
+        margin: 0 0 8px 0;
+      }
+
+      .tmdb-note {
+        color: #64748b;
+        font-size: 11px;
+        margin: 0;
+      }
     </style>
   </head>
+
   <body>
     <div class="container">
+
       <Navbar />
 
       <main>
+
+        <!-- 320x50 Top Ad -->
+        <div class="person-ad top-ad">
+          <Ads type="top" />
+        </div>
+
         <header class="profile">
           <img
             class="photo"
@@ -363,35 +903,115 @@ const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
             height="513"
             decoding="async"
           />
+
           <div class="profile-info">
-            <h1 class="name">{name}</h1>
+            <h1 class="name">
+              {name}
+            </h1>
+
             <ul class="facts">
-              {dept && <li><b>Known for:</b> {dept}</li>}
-              {person.birthday && <li><b>Born:</b> {fmtDate(person.birthday)}</li>}
-              {person.deathday && <li><b>Died:</b> {fmtDate(person.deathday)}</li>}
-              {age !== null && <li><b>{person.deathday ? 'Age at death' : 'Age'}:</b> {age}</li>}
-              {person.place_of_birth && <li><b>Birthplace:</b> {person.place_of_birth}</li>}
-              {(person.also_known_as || []).length > 0 && (
-                <li><b>Also known as:</b> {(person.also_known_as || []).slice(0, 3).join(', ')}</li>
+              {dept && (
+                <li>
+                  <b>Known for:</b> {dept}
+                </li>
               )}
-              <li><b>Credits:</b> {plural(movieCredits.length, 'movie')}, {plural(tvCredits.length, 'TV show')}</li>
+
+              {person.birthday && (
+                <li>
+                  <b>Born:</b>
+                  {fmtDate(person.birthday)}
+                </li>
+              )}
+
+              {person.deathday && (
+                <li>
+                  <b>Died:</b>
+                  {fmtDate(person.deathday)}
+                </li>
+              )}
+
+              {age !== null && (
+                <li>
+                  <b>
+                    {person.deathday
+                      ? 'Age at death'
+                      : 'Age'}:
+                  </b>
+                  {age}
+                </li>
+              )}
+
+              {person.place_of_birth && (
+                <li>
+                  <b>Birthplace:</b>
+                  {person.place_of_birth}
+                </li>
+              )}
+
+              {(person.also_known_as || [])
+                .length > 0 && (
+                <li>
+                  <b>Also known as:</b>
+                  {(person.also_known_as || [])
+                    .slice(0, 3)
+                    .join(', ')}
+                </li>
+              )}
+
+              <li>
+                <b>Credits:</b>
+                {plural(
+                  movieCredits.length,
+                  'movie'
+                )},{' '}
+                {plural(
+                  tvCredits.length,
+                  'TV show'
+                )}
+              </li>
             </ul>
           </div>
         </header>
 
         <article class="info-block">
           <h2>About {name}</h2>
+
           <p>{summary}</p>
-          {bioShort && <p>{bioShort}</p>}
-          {bioShort && <p class="attribution">Biography text provided by TMDB contributors.</p>}
+
+          {bioShort && (
+            <p>{bioShort}</p>
+          )}
+
+          {bioShort && (
+            <p class="attribution">
+              Biography text provided by
+              TMDB contributors.
+            </p>
+          )}
         </article>
+
+        <!-- Native Ad -->
+        <div class="person-ad native-ad">
+          <Ads type="native" />
+        </div>
 
         {knownFor.length > 0 && (
           <section>
-            <h2 class="section-title">Known For</h2>
+            <h2 class="section-title">
+              Known For
+            </h2>
+
             <div class="known-grid">
               {knownFor.map((c) => (
-                <a href={`/${c.media_type}/${c.id}`} class="rec-card" title={`${titleOf(c)}${yearOf(c) ? ` (${yearOf(c)})` : ''}`}>
+                <a
+                  href={`/${c.media_type}/${c.id}`}
+                  class="rec-card"
+                  title={`${titleOf(c)}${
+                    yearOf(c)
+                      ? ` (${yearOf(c)})`
+                      : ''
+                  }`}
+                >
                   <img
                     src={`https://image.tmdb.org/t/p/w342${c.poster_path}`}
                     onerror="this.onerror=null;this.src='/no-poster.svg'"
@@ -401,9 +1021,18 @@ const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
                     width="342"
                     height="513"
                   />
+
                   <div class="t">
-                    <h3>{titleOf(c)}</h3>
-                    <p>{yearOf(c)}{c.media_type === 'tv' ? ' • TV' : ''}</p>
+                    <h3>
+                      {titleOf(c)}
+                    </h3>
+
+                    <p>
+                      {yearOf(c)}
+                      {c.media_type === 'tv'
+                        ? ' • TV'
+                        : ''}
+                    </p>
                   </div>
                 </a>
               ))}
@@ -411,34 +1040,71 @@ const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
           </section>
         )}
 
+        <!-- 300x250 Ad -->
+        <div class="person-ad square-ad">
+          <Ads type="square" />
+        </div>
+
         {movieList.length > 0 && (
           <section class="info-block">
             <h2>{name} Movies</h2>
+
             <ul class="credit-list">
               {movieList.map((c) => (
                 <li>
-                  <span class="yr">{yearOf(c) || '-'}</span>
+                  <span class="yr">
+                    {yearOf(c) || '-'}
+                  </span>
+
                   <span>
-                    <a href={`/movie/${c.id}`}>{titleOf(c)}</a>
-                    {c.character ? <span class="role"> as {c.character}</span> : null}
+                    <a
+                      href={`/movie/${c.id}`}
+                    >
+                      {titleOf(c)}
+                    </a>
+
+                    {c.character ? (
+                      <span class="role">
+                        {' '}as {c.character}
+                      </span>
+                    ) : null}
                   </span>
                 </li>
               ))}
             </ul>
-            <p class="note">Showing the best-known titles first by date. Source: TMDB.</p>
+
+            <p class="note">
+              Showing the best-known titles
+              first by date. Source: TMDB.
+            </p>
           </section>
         )}
 
         {tvList.length > 0 && (
           <section class="info-block">
-            <h2>{name} TV Shows</h2>
+            <h2>
+              {name} TV Shows
+            </h2>
+
             <ul class="credit-list">
               {tvList.map((c) => (
                 <li>
-                  <span class="yr">{yearOf(c) || '-'}</span>
+                  <span class="yr">
+                    {yearOf(c) || '-'}
+                  </span>
+
                   <span>
-                    <a href={`/tv/${c.id}`}>{titleOf(c)}</a>
-                    {c.character ? <span class="role"> as {c.character}</span> : null}
+                    <a
+                      href={`/tv/${c.id}`}
+                    >
+                      {titleOf(c)}
+                    </a>
+
+                    {c.character ? (
+                      <span class="role">
+                        {' '}as {c.character}
+                      </span>
+                    ) : null}
                   </span>
                 </li>
               ))}
@@ -448,12 +1114,24 @@ const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
 
         {directedList.length > 0 && (
           <section class="info-block">
-            <h2>Directed by {name}</h2>
+            <h2>
+              Directed by {name}
+            </h2>
+
             <ul class="credit-list">
               {directedList.map((c) => (
                 <li>
-                  <span class="yr">{yearOf(c) || '-'}</span>
-                  <span><a href={`/${c.media_type}/${c.id}`}>{titleOf(c)}</a></span>
+                  <span class="yr">
+                    {yearOf(c) || '-'}
+                  </span>
+
+                  <span>
+                    <a
+                      href={`/${c.media_type}/${c.id}`}
+                    >
+                      {titleOf(c)}
+                    </a>
+                  </span>
                 </li>
               ))}
             </ul>
@@ -461,7 +1139,11 @@ const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
         )}
 
         <article class="info-block">
-          <h2>Frequently Asked Questions about {name}</h2>
+          <h2>
+            Frequently Asked Questions about
+            {` ${name}`}
+          </h2>
+
           {faqs.map((f) => (
             <div class="faq-item">
               <h3>{f.q}</h3>
@@ -469,17 +1151,37 @@ const schema = { "@context": "https://schema.org", "@graph": schemaGraph };
             </div>
           ))}
         </article>
+
       </main>
 
       <footer class="site-footer">
+
         <div class="footer-links">
-          <a href="/about">About Us</a>
-          <a href="/contact">Contact Us</a>
-          <a href="/privacy-policy">Privacy Policy</a>
+          <a href="/about">
+            About Us
+          </a>
+
+          <a href="/contact">
+            Contact Us
+          </a>
+
+          <a href="/privacy-policy">
+            Privacy Policy
+          </a>
         </div>
-        <p class="copyright-text">&copy; {new Date().getFullYear()} Vix Movies. All rights reserved.</p>
-        <p class="tmdb-note">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+
+        <p class="copyright-text">
+          &copy; {new Date().getFullYear()}
+          Vix Movies. All rights reserved.
+        </p>
+
+        <p class="tmdb-note">
+          This product uses the TMDB API but is not endorsed
+          or certified by TMDB.
+        </p>
+
       </footer>
+
     </div>
   </body>
 </html>
