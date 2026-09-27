@@ -86,7 +86,6 @@ export const GET = async ({ params, locals }) => {
       getGenres(key, 'tv', '/tv/genre'),
     ]);
 
-    // Static pages
     const pages = [
       '/',
       '/hollywood',
@@ -98,7 +97,6 @@ export const GET = async ({ params, locals }) => {
       '/privacy-policy',
     ];
 
-    // Sports pages
     const sports = [
       '/sports',
       ...SPORTS.map(
@@ -106,7 +104,6 @@ export const GET = async ({ params, locals }) => {
       ),
     ];
 
-    // Lists pages
     const lists = [
       '/lists',
       ...LISTS.map(
@@ -114,13 +111,30 @@ export const GET = async ({ params, locals }) => {
       ),
     ];
 
-    // Combine all pages
     return xmlResponse([
       ...pages,
       ...sports,
       ...lists,
       ...movieGenres,
       ...tvGenres,
+    ]);
+  }
+
+  // =====================================================
+  // SPORTS SITEMAP
+  // /sitemaps/sports.xml
+  // =====================================================
+
+  if (name === 'sports') {
+    const sports = [
+      '/sports',
+      ...SPORTS.map(
+        (s) => `/sports/${s.slug}`
+      ),
+    ];
+
+    return xmlResponse([
+      ...new Set(sports),
     ]);
   }
 
