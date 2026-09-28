@@ -1080,21 +1080,42 @@ const tvSchema = {
           </div>
 
           <div
-            style="margin-left: auto; display: flex; gap: 8px;"
+            style="margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap;"
           >
 
             <button
-              class="server-btn"
+              class="server-btn active"
               data-server="autoembed"
             >
-              Server 1
+              Server 1 (AutoEmbed)
             </button>
 
             <button
-              class="server-btn active"
+              class="server-btn"
               data-server="vidsrc"
             >
-              Server 2
+              Server 2 (VidSrc VIP)
+            </button>
+
+            <button
+              class="server-btn"
+              data-server="embedsu"
+            >
+              Server 3 (EmbedSu HD)
+            </button>
+
+            <button
+              class="server-btn"
+              data-server="multiembed"
+            >
+              Server 4 (MultiEmbed)
+            </button>
+
+            <button
+              class="server-btn"
+              data-server="vidlink"
+            >
+              Server 5 (VidLink Pro)
             </button>
 
           </div>
@@ -1746,7 +1767,7 @@ const tvSchema = {
         const serverBtns =
           document.querySelectorAll('.server-btn');
 
-        let currentServer = 'vidsrc';
+        let currentServer = 'autoembed';
         let iframe = null;
 
         function srcFor() {
