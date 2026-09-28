@@ -53,7 +53,7 @@ export const onRequest = defineMiddleware(
 
     /*
      * =====================================
-     * RESPONSE
+     * RESPONSE & CLOUDFLARE EDGE CACHE HEADERS
      * =====================================
      */
 
@@ -61,6 +61,30 @@ export const onRequest = defineMiddleware(
       new Headers(response.headers);
 
     headers.delete('content-length');
+
+    // Automatically set Cloudflare Edge Cache headers for movie/tv/listing pages
+    if (response.status === 200) {
+      const url = new URL(context.request.url);
+      const path = url.pathname;
+
+      if (
+        path.startsWith('/movie/') ||
+        path.startsWith('/tv/') ||
+        path.startsWith('/person/') ||
+        path.startsWith('/genre/') ||
+        path.startsWith('/lists') ||
+        path.startsWith('/sports') ||
+        path === '/' ||
+        path === '/hollywood' ||
+        path === '/bollywood' ||
+        path === '/trending'
+      ) {
+        // Cache on Cloudflare Edge for 7 days (604800s), Browser for 4 hours (14400s), SWR 1 day
+        headers.set('Cache-Control', 'public, max-age=14400, s-maxage=604800, stale-while-revalidate=86400');
+        headers.set('Cloudflare-CDN-Cache-Control', 'max-age=604800');
+        headers.set('CDN-Cache-Control', 'max-age=604800');
+      }
+    }
 
     return new Response(
       html,
