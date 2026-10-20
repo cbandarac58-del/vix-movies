@@ -16,17 +16,23 @@ export const onRequest = defineMiddleware(
 
     /*
      * =====================================
-     * FAVICON
+     * FAVICON (SVG, ICO, 120x120 PNG, Apple Touch)
      * =====================================
      */
 
-    if (!html.includes('rel="icon"')) {
+    const faviconTags =
+      '<link rel="icon" type="image/svg+xml" href="/favicon.svg" />' +
+      '<link rel="icon" type="image/x-icon" href="/favicon.ico" />' +
+      '<link rel="icon" type="image/png" sizes="120x120" href="/favicon-120x120.png" />' +
+      '<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />';
 
+    if (!html.includes('rel="icon"')) {
+      html = html.replace('</head>', ${faviconTags}</head>);
+    } else if (!html.includes('favicon-120x120.png')) {
       html = html.replace(
         '</head>',
-        '<link rel="icon" type="image/svg+xml" href="/favicon.svg" /></head>'
+        '<link rel="icon" type="image/x-icon" href="/favicon.ico" /><link rel="icon" type="image/png" sizes="120x120" href="/favicon-120x120.png" /><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" /></head>'
       );
-
     }
 
     /*
