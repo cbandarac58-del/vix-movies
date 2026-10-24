@@ -1289,6 +1289,22 @@ body {
   Server 5 (VidLink Pro)
 </button>
 
+<button
+  type="button"
+  class="server-btn"
+  data-server="superembed"
+>
+  Server 6 (SuperEmbed)
+</button>
+
+<button
+  type="button"
+  class="server-btn"
+  data-server="twembed"
+>
+  Server 7 (2Embed)
+</button>
+
 </nav>
 
 <!-- PLAYER -->
@@ -1876,18 +1892,31 @@ endorsed or certified by TMDB.
     function srcFor(server) {
 
       if (server === 'vidsrc') {
-
-        return `https://vidsrc.sh/embed/movie/${tmdbId}`;
-
+        return `https://vidsrc.xyz/embed/movie/${tmdbId}`;
       }
 
-      if (server === 'smashy') {
-
-        return `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`;
-
+      if (server === 'embedsu') {
+        return `https://embed.su/embed/movie/${tmdbId}`;
       }
 
-      return `https://autoembed.co/movie/tmdb/${tmdbId}`;
+      if (server === 'multiembed') {
+        return `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1`;
+      }
+
+      if (server === 'vidlink') {
+        return `https://vidlink.pro/movie/${tmdbId}`;
+      }
+
+      if (server === 'superembed') {
+        return `https://superembed.stream/embed/movie/${tmdbId}`;
+      }
+
+      if (server === 'twembed') {
+        return `https://www.2embed.cc/embed/${tmdbId}`;
+      }
+
+      // Default Server 1: AutoEmbed
+      return `https://autoembed.cc/embed/movie/${tmdbId}`;
 
     }
 
