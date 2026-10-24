@@ -27,7 +27,7 @@ export const onRequest = defineMiddleware(
       '<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />';
 
     if (!html.includes('rel="icon"')) {
-      html = html.replace('</head>', ${faviconTags}</head>);
+      html = html.replace('</head>', `${faviconTags}</head>`);
     } else if (!html.includes('favicon-120x120.png')) {
       html = html.replace(
         '</head>',
@@ -243,7 +243,6 @@ export const onRequest = defineMiddleware(
 
     headers.delete('content-length');
 
-    // Automatically set Cloudflare Edge Cache headers for movie/tv/listing pages
     if (response.status === 200) {
       const url = new URL(context.request.url);
       const path = url.pathname;
@@ -260,7 +259,6 @@ export const onRequest = defineMiddleware(
         path === '/bollywood' ||
         path === '/trending'
       ) {
-        // Cache on Cloudflare Edge for 7 days (604800s), Browser for 4 hours (14400s), SWR 1 day
         headers.set('Cache-Control', 'public, max-age=14400, s-maxage=604800, stale-while-revalidate=86400');
         headers.set('Cloudflare-CDN-Cache-Control', 'max-age=604800');
         headers.set('CDN-Cache-Control', 'max-age=604800');
