@@ -1085,37 +1085,37 @@ const tvSchema = {
 
             <button
               class="server-btn active"
-              data-server="autoembed"
+              data-server="vidsrc-vip"
             >
-              Server 1 (AutoEmbed)
+              Server 1 (VidSrc VIP)
             </button>
 
             <button
               class="server-btn"
-              data-server="vidsrc"
+              data-server="vidsrc-cc"
             >
-              Server 2 (VidSrc VIP)
+              Server 2 (VidSrc CC)
+            </button>
+
+            <button
+              class="server-btn"
+              data-server="vidfast"
+            >
+              Server 3 (VidFast HD)
             </button>
 
             <button
               class="server-btn"
               data-server="embedsu"
             >
-              Server 3 (EmbedSu HD)
+              Server 4 (EmbedSu)
             </button>
 
             <button
               class="server-btn"
-              data-server="multiembed"
+              data-server="smashy"
             >
-              Server 4 (MultiEmbed)
-            </button>
-
-            <button
-              class="server-btn"
-              data-server="vidlink"
-            >
-              Server 5 (VidLink Pro)
+              Server 5 (SmashyStream)
             </button>
 
           </div>
@@ -1767,7 +1767,7 @@ const tvSchema = {
         const serverBtns =
           document.querySelectorAll('.server-btn');
 
-        let currentServer = 'autoembed';
+        let currentServer = 'vidsrc-vip';
         let iframe = null;
 
         function srcFor() {
@@ -1778,13 +1778,23 @@ const tvSchema = {
           const e =
             episodeSelect.value || 1;
 
-          if (currentServer === 'vidsrc') {
-
-            return `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${s}&episode=${e}`;
-
+          if (currentServer === 'vidsrc-cc') {
+            return `https://vidsrc.cc/v2/embed/tv/${tmdbId}/${s}/${e}`;
           }
 
-          return `https://autoembed.co/tv/tmdb/${tmdbId}-${s}-${e}`;
+          if (currentServer === 'vidfast') {
+            return `https://vidfast.pro/embed/tv/${tmdbId}/${s}/${e}`;
+          }
+
+          if (currentServer === 'embedsu') {
+            return `https://embed.su/embed/tv/${tmdbId}/${s}/${e}`;
+          }
+
+          if (currentServer === 'smashy') {
+            return `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}&season=${s}&episode=${e}`;
+          }
+
+          return `https://vidsrc.sh/embed/tv/${tmdbId}/${s}/${e}`;
 
         }
 
