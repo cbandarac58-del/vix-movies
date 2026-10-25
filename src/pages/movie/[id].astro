@@ -807,6 +807,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .share-title {
@@ -866,6 +867,19 @@ body {
 
 .share-btn.tg {
   background: #229ED9;
+}
+
+.share-btn.x {
+  background: #000000;
+  border: 1px solid #334155;
+}
+
+.share-btn.reddit {
+  background: #FF4500;
+}
+
+.share-btn.pinterest {
+  background: #E60023;
 }
 
 .share-btn.copy {
@@ -1379,6 +1393,30 @@ body {
   type="button"
 >
   Telegram
+</button>
+
+<button
+  id="share-x"
+  class="share-btn x"
+  type="button"
+>
+  𝕏 (Twitter)
+</button>
+
+<button
+  id="share-reddit"
+  class="share-btn reddit"
+  type="button"
+>
+  Reddit
+</button>
+
+<button
+  id="share-pinterest"
+  class="share-btn pinterest"
+  type="button"
+>
+  Pinterest
 </button>
 
 <button
@@ -2303,6 +2341,21 @@ endorsed or certified by TMDB.
         'share-tg'
       );
 
+    const shareX =
+      document.getElementById(
+        'share-x'
+      );
+
+    const shareReddit =
+      document.getElementById(
+        'share-reddit'
+      );
+
+    const sharePinterest =
+      document.getElementById(
+        'share-pinterest'
+      );
+
     const copyLink =
       document.getElementById(
         'copy-link'
@@ -2379,6 +2432,30 @@ endorsed or certified by TMDB.
         }
       );
 
+    }
+
+    if (shareX) {
+      shareX.addEventListener('click', () => {
+        const url = encodeURIComponent(window.location.href);
+        const text = encodeURIComponent(`Watch "${movieTitle || 'Movie'}" in HD on Vix Movies!`);
+        window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
+      });
+    }
+
+    if (shareReddit) {
+      shareReddit.addEventListener('click', () => {
+        const url = encodeURIComponent(window.location.href);
+        const title = encodeURIComponent(`Watch "${movieTitle || 'Movie'}" in HD on Vix Movies!`);
+        window.open(`https://www.reddit.com/submit?url=${url}&title=${title}`, '_blank');
+      });
+    }
+
+    if (sharePinterest) {
+      sharePinterest.addEventListener('click', () => {
+        const url = encodeURIComponent(window.location.href);
+        const description = encodeURIComponent(`Watch "${movieTitle || 'Movie'}" in HD on Vix Movies!`);
+        window.open(`https://pinterest.com/pin/create/button/?url=${url}&description=${description}`, '_blank');
+      });
     }
 
     if (copyLink) {
