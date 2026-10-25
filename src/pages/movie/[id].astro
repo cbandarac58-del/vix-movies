@@ -1252,17 +1252,25 @@ body {
 <button
   type="button"
   class="server-btn active"
-  data-server="autoembed"
+  data-server="vidsrc-vip"
 >
-  Server 1 (AutoEmbed)
+  Server 1 (VidSrc VIP)
 </button>
 
 <button
   type="button"
   class="server-btn"
-  data-server="vidsrc"
+  data-server="vidsrc-cc"
 >
-  Server 2 (VidSrc VIP)
+  Server 2 (VidSrc CC)
+</button>
+
+<button
+  type="button"
+  class="server-btn"
+  data-server="vidfast"
+>
+  Server 3 (VidFast HD)
 </button>
 
 <button
@@ -1270,23 +1278,15 @@ body {
   class="server-btn"
   data-server="embedsu"
 >
-  Server 3 (EmbedSu HD)
+  Server 4 (EmbedSu)
 </button>
 
 <button
   type="button"
   class="server-btn"
-  data-server="multiembed"
+  data-server="smashy"
 >
-  Server 4 (MultiEmbed)
-</button>
-
-<button
-  type="button"
-  class="server-btn"
-  data-server="vidlink"
->
-  Server 5 (VidLink Pro)
+  Server 5 (SmashyStream)
 </button>
 
 </nav>
@@ -1869,25 +1869,29 @@ endorsed or certified by TMDB.
     }
 
     let currentServer =
-      'autoembed';
+      'vidsrc-vip';
 
     let iframe = null;
 
     function srcFor(server) {
 
-      if (server === 'vidsrc') {
+      if (server === 'vidsrc-cc') {
+        return `https://vidsrc.cc/v2/embed/movie/${tmdbId}`;
+      }
 
-        return `https://vidsrc.sh/embed/movie/${tmdbId}`;
+      if (server === 'vidfast') {
+        return `https://vidfast.pro/embed/movie/${tmdbId}`;
+      }
 
+      if (server === 'embedsu') {
+        return `https://embed.su/embed/movie/${tmdbId}`;
       }
 
       if (server === 'smashy') {
-
         return `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`;
-
       }
 
-      return `https://autoembed.co/movie/tmdb/${tmdbId}`;
+      return `https://vidsrc.sh/embed/movie/${tmdbId}`;
 
     }
 
@@ -2048,7 +2052,7 @@ endorsed or certified by TMDB.
             currentServer =
               btn.getAttribute(
                 'data-server'
-              ) || 'autoembed';
+              ) || 'vidsrc-vip';
 
             loadPlayer();
 
