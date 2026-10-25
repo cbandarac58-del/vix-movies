@@ -647,6 +647,7 @@ const tvSchema = {
         display: flex;
         align-items: center;
         gap: 8px;
+        flex-wrap: wrap;
       }
 
       .share-title {
@@ -708,6 +709,19 @@ const tvSchema = {
 
       .share-btn.tg {
         background: #229ED9;
+      }
+
+      .share-btn.x {
+        background: #000000;
+        border: 1px solid #334155;
+      }
+
+      .share-btn.reddit {
+        background: #FF4500;
+      }
+
+      .share-btn.pinterest {
+        background: #E60023;
       }
 
       .share-btn.copy {
@@ -1203,6 +1217,27 @@ const tvSchema = {
               class="share-btn tg"
             >
               Telegram
+            </button>
+
+            <button
+              id="share-x"
+              class="share-btn x"
+            >
+              𝕏 (Twitter)
+            </button>
+
+            <button
+              id="share-reddit"
+              class="share-btn reddit"
+            >
+              Reddit
+            </button>
+
+            <button
+              id="share-pinterest"
+              class="share-btn pinterest"
+            >
+              Pinterest
             </button>
 
             <button
@@ -2215,6 +2250,24 @@ const tvSchema = {
 
             }
           );
+
+        document.getElementById('share-x').addEventListener('click', () => {
+          const url = encodeURIComponent(window.location.href);
+          const text = encodeURIComponent(`Watch TV Series "${showName || 'TV Series'}" in HD on Vix Movies!`);
+          window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
+        });
+
+        document.getElementById('share-reddit').addEventListener('click', () => {
+          const url = encodeURIComponent(window.location.href);
+          const title = encodeURIComponent(`Watch TV Series "${showName || 'TV Series'}" in HD on Vix Movies!`);
+          window.open(`https://www.reddit.com/submit?url=${url}&title=${title}`, '_blank');
+        });
+
+        document.getElementById('share-pinterest').addEventListener('click', () => {
+          const url = encodeURIComponent(window.location.href);
+          const description = encodeURIComponent(`Watch TV Series "${showName || 'TV Series'}" in HD on Vix Movies!`);
+          window.open(`https://pinterest.com/pin/create/button/?url=${url}&description=${description}`, '_blank');
+        });
 
         document
           .getElementById('copy-link')
