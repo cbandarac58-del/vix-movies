@@ -1814,22 +1814,22 @@ const tvSchema = {
             episodeSelect.value || 1;
 
           if (currentServer === 'vidsrc-pro') {
-            return https://vidsrc.to/embed/tv///;
+            return `https://vidsrc.to/embed/tv/${tmdbId}/${s}/${e}`;
           }
 
           if (currentServer === 'vidlink') {
-            return https://vidlink.pro/tv///;
+            return `https://vidlink.pro/tv/${tmdbId}/${s}/${e}`;
           }
 
           if (currentServer === 'vidsrc-cloud') {
-            return https://vidsrc.pm/embed/tv?tmdb=&season=&episode=;
+            return `https://vidsrc.pm/embed/tv?tmdb=${tmdbId}&season=${s}&episode=${e}`;
           }
 
           if (currentServer === 'vidsrc-su') {
-            return https://vidsrc.su/embed/tv///;
+            return `https://vidsrc.su/embed/tv/${tmdbId}/${s}/${e}`;
           }
 
-          return https://vidsrc.me/embed/tv?tmdb=&season=&episode=;
+          return `https://vidsrc.me/embed/tv?tmdb=${tmdbId}&season=${s}&episode=${e}`;
 
         }
 
