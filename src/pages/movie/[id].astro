@@ -1914,22 +1914,22 @@ endorsed or certified by TMDB.
     function srcFor(server) {
 
       if (server === 'vidsrc-pro') {
-        return https://vidsrc.to/embed/movie/;
+        return `https://vidsrc.to/embed/movie/${tmdbId}`;
       }
 
       if (server === 'vidlink') {
-        return https://vidlink.pro/movie/;
+        return `https://vidlink.pro/movie/${tmdbId}`;
       }
 
       if (server === 'vidsrc-cloud') {
-        return https://vidsrc.pm/embed/movie?tmdb=;
+        return `https://vidsrc.pm/embed/movie?tmdb=${tmdbId}`;
       }
 
       if (server === 'vidsrc-su') {
-        return https://vidsrc.su/embed/movie/;
+        return `https://vidsrc.su/embed/movie/${tmdbId}`;
       }
 
-      return https://vidsrc.me/embed/movie?tmdb=;
+      return `https://vidsrc.me/embed/movie?tmdb=${tmdbId}`;
 
     }
 
