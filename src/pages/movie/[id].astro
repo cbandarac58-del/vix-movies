@@ -1274,33 +1274,33 @@ body {
 <button
   type="button"
   class="server-btn"
-  data-server="vidsrc-cc"
+  data-server="vidsrc-pro"
 >
-  Server 2 (VidSrc CC)
+  Server 2 (VidSrc Pro)
 </button>
 
 <button
   type="button"
   class="server-btn"
-  data-server="vidfast"
+  data-server="vidlink"
 >
-  Server 3 (VidFast HD)
+  Server 3 (VidLink HD)
 </button>
 
 <button
   type="button"
   class="server-btn"
-  data-server="embedsu"
+  data-server="vidsrc-cloud"
 >
-  Server 4 (EmbedSu)
+  Server 4 (VidSrc Cloud)
 </button>
 
 <button
   type="button"
   class="server-btn"
-  data-server="smashy"
+  data-server="vidsrc-su"
 >
-  Server 5 (SmashyStream)
+  Server 5 (VidSrc SU)
 </button>
 
 </nav>
@@ -1913,23 +1913,23 @@ endorsed or certified by TMDB.
 
     function srcFor(server) {
 
-      if (server === 'vidsrc-cc') {
-        return `https://vidsrc.cc/v2/embed/movie/${tmdbId}`;
+      if (server === 'vidsrc-pro') {
+        return https://vidsrc.to/embed/movie/;
       }
 
-      if (server === 'vidfast') {
-        return `https://vidfast.pro/embed/movie/${tmdbId}`;
+      if (server === 'vidlink') {
+        return https://vidlink.pro/movie/;
       }
 
-      if (server === 'embedsu') {
-        return `https://embed.su/embed/movie/${tmdbId}`;
+      if (server === 'vidsrc-cloud') {
+        return https://vidsrc.pm/embed/movie?tmdb=;
       }
 
-      if (server === 'smashy') {
-        return `https://embed.smashystream.com/playere.php?tmdb=${tmdbId}`;
+      if (server === 'vidsrc-su') {
+        return https://vidsrc.su/embed/movie/;
       }
 
-      return `https://vidsrc.sh/embed/movie/${tmdbId}`;
+      return https://vidsrc.me/embed/movie?tmdb=;
 
     }
 
