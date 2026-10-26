@@ -1788,7 +1788,7 @@ const tvSchema = {
         showName: showName
       }}
     >
-      document.addEventListener('DOMContentLoaded', () => {
+      function initTvPlayer() {
 
         const seasonSelect =
           document.getElementById('season-select');
@@ -2430,7 +2430,13 @@ const tvSchema = {
 
         loadComments();
 
-      });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTvPlayer, { once: true });
+      } else {
+        initTvPlayer();
+      }
     </script>
 
   </body>
