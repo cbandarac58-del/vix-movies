@@ -197,6 +197,16 @@ const schemaData = {
 
     <meta name="author" content="Vix Movies" />
 
+    <!-- Google tag (gtag.js) -->
+    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-3X9H1FBEPL"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-3X9H1FBEPL');
+    </script>
+
     <link rel="canonical" href={SITE_URL} />
 
     <!-- Open Graph -->
@@ -773,7 +783,7 @@ const schemaData = {
               class="btn-watch"
               aria-label={`Watch ${featured.title} now`}
             >
-              ► Watch Now
+              Γû║ Watch Now
             </a>
           </div>
         </article>
@@ -814,7 +824,7 @@ const schemaData = {
               margin: 0;
             "
           >
-            🔥 Trending Today
+            ≡ƒöÑ Trending Today
           </h2>
         </div>
 
@@ -853,7 +863,7 @@ const schemaData = {
                 </span>
 
                 <span class="badge-rating">
-                  ⭐ {m.vote_average
+                  Γ¡É {m.vote_average
                     ? m.vote_average.toFixed(1)
                     : 'N/A'}
                 </span>
@@ -901,14 +911,14 @@ const schemaData = {
             <div class="sports-head">
 
               <h2>
-                🏆 Latest Sports Videos
+                ≡ƒÅå Latest Sports Videos
               </h2>
 
               <a
                 href="/sports"
                 class="see-all"
               >
-                All sports →
+                All sports ΓåÆ
               </a>
 
             </div>
