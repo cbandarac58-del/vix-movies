@@ -35,7 +35,25 @@ export const onRequest = defineMiddleware(
       );
     }
 
-    /*
+        /*
+     * =====================================
+     * GOOGLE ANALYTICS 4 (G-3X9H1FBEPL)
+     * =====================================
+     */
+
+    const googleAnalyticsTag =
+      '<script async src="https://www.googletagmanager.com/gtag/js?id=G-3X9H1FBEPL"></script>' +
+      '<script>' +
+      'window.dataLayer = window.dataLayer || [];' +
+      'function gtag(){dataLayer.push(arguments);}' +
+      'gtag("js", new Date());' +
+      'gtag("config", "G-3X9H1FBEPL");' +
+      '</script>';
+
+    if (!html.includes('G-3X9H1FBEPL')) {
+      html = html.replace('</head>', ${googleAnalyticsTag}</head>);
+    }
+/*
      * =====================================
      * SOCIAL BAR
      * =====================================
