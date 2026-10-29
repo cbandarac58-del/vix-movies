@@ -550,6 +550,16 @@ const movieSchema = {
 
 <title>{pageTitle}</title>
 
+<!-- Google tag (gtag.js) -->
+<script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-3X9H1FBEPL"></script>
+<script is:inline>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-3X9H1FBEPL');
+</script>
+
 <meta
   name="title"
   content={pageTitle}
@@ -1189,7 +1199,7 @@ body {
 <div class="movie-meta">
 
 <span>
-  ⭐
+  Γ¡É
   {movie.vote_average
     ? movie.vote_average.toFixed(1)
     : 'N/A'}
@@ -1197,7 +1207,7 @@ body {
 </span>
 
 <span>
-  ⏱️
+  ΓÅ▒∩╕Å
   {movie.runtime
     ? `${movie.runtime} mins`
     : 'N/A'}
@@ -1215,7 +1225,7 @@ body {
 {genres.length > 0 && (
 <span>
 
-  🎭{' '}
+  ≡ƒÄ¡{' '}
 
   {genres.map((g, i) => (
     <>
@@ -1326,7 +1336,7 @@ body {
 />
 
 <span class="facade-play">
-  ▶
+  Γû╢
 </span>
 
 <span class="facade-label">
@@ -1346,7 +1356,7 @@ body {
   class="vote-btn"
   type="button"
 >
-  👍
+  ≡ƒæì
   <span id="like-count">
     0
   </span>
@@ -1357,7 +1367,7 @@ body {
   class="vote-btn"
   type="button"
 >
-  👎
+  ≡ƒæÄ
   <span id="dislike-count">
     0
   </span>
@@ -1400,7 +1410,7 @@ body {
   class="share-btn x"
   type="button"
 >
-  𝕏 (Twitter)
+  ≡¥òÅ (Twitter)
 </button>
 
 <button
@@ -1424,7 +1434,7 @@ body {
   class="share-btn copy"
   type="button"
 >
-  📋 Copy Link
+  ≡ƒôï Copy Link
 </button>
 
 </div>
@@ -1721,7 +1731,7 @@ body {
     margin-bottom: 15px;
   "
 >
-  💬 User Comments & Reviews
+  ≡ƒÆ¼ User Comments & Reviews
 </h2>
 
 <div class="comment-input-box">
