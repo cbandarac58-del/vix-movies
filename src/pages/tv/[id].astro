@@ -403,6 +403,16 @@ const tvSchema = {
 
     <title>{pageTitle}</title>
 
+<!-- Google tag (gtag.js) -->
+<script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-3X9H1FBEPL"></script>
+<script is:inline>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-3X9H1FBEPL');
+</script>
+
     <meta
       name="title"
       content={pageTitle}
@@ -1005,7 +1015,7 @@ const tvSchema = {
           <div class="meta">
 
             <span>
-              ⭐
+              Γ¡É
               {show.vote_average
                 ? show.vote_average.toFixed(1)
                 : 'N/A'}
@@ -1015,7 +1025,7 @@ const tvSchema = {
             {
               seasonCount && (
                 <span>
-                  📺 {seasonCount} Season
+                  ≡ƒô║ {seasonCount} Season
                   {seasonCount > 1 ? 's' : ''}
                 </span>
               )
@@ -1030,7 +1040,7 @@ const tvSchema = {
             {
               genres.length > 0 && (
                 <span>
-                  🎭{' '}
+                  ≡ƒÄ¡{' '}
                   {genres.map((g, i) => (
                     <>
                       <a
@@ -1157,7 +1167,7 @@ const tvSchema = {
           />
 
           <span class="facade-play">
-            ▶
+            Γû╢
           </span>
 
           <span class="facade-label">
@@ -1177,7 +1187,7 @@ const tvSchema = {
               class="vote-btn"
               aria-label="Like series"
             >
-              👍
+              ≡ƒæì
               <span id="like-count">0</span>
             </button>
 
@@ -1186,7 +1196,7 @@ const tvSchema = {
               class="vote-btn"
               aria-label="Dislike series"
             >
-              👎
+              ≡ƒæÄ
               <span id="dislike-count">0</span>
             </button>
 
@@ -1223,7 +1233,7 @@ const tvSchema = {
               id="share-x"
               class="share-btn x"
             >
-              𝕏 (Twitter)
+              ≡¥òÅ (Twitter)
             </button>
 
             <button
@@ -1244,7 +1254,7 @@ const tvSchema = {
               id="copy-link"
               class="share-btn copy"
             >
-              📋 Copy Link
+              ≡ƒôï Copy Link
             </button>
 
           </div>
@@ -1646,7 +1656,7 @@ const tvSchema = {
           <h2
             style="font-size: 18px; margin-bottom: 15px;"
           >
-            💬 Leave a Comment
+            ≡ƒÆ¼ Leave a Comment
           </h2>
 
           <form
