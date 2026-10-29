@@ -51,7 +51,7 @@ export const onRequest = defineMiddleware(
       '</script>';
 
     if (!html.includes('G-3X9H1FBEPL')) {
-      html = html.replace('</head>', ${googleAnalyticsTag}</head>);
+      html = html.replace('</head>', googleAnalyticsTag + '</head>');
     }
 /*
      * =====================================
