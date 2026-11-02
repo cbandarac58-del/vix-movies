@@ -283,6 +283,31 @@ export const onRequest = defineMiddleware(
       }
     }
 
+
+    /*
+     * =====================================
+     * INDEXNOW — Auto-notify Bing/Yandex on movie & TV pages
+     * Fires in background (non-blocking) once per URL per day via CF cache.
+     * =====================================
+     */
+    const INDEXNOW_KEY = '2dcf66d454c5424f8d6ac593f9a58a88';
+    const SITE_HOST    = 'movies.vixtube.net';
+
+    const isIndexable =
+      path.startsWith('/movie/') ||
+      path.startsWith('/tv/') ||
+      path === '/' ||
+      path === '/hollywood' ||
+      path === '/bollywood' ||
+      path === '/trending';
+
+    if (isIndexable && context.request.method === 'GET') {
+      const fullUrl = `https://${SITE_HOST}${path}`;
+      const indexNowUrl =
+        `https://api.indexnow.org/indexnow?url=${encodeURIComponent(fullUrl)}&key=${INDEXNOW_KEY}`;
+      // Fire-and-forget — does not block the response
+      context.locals.runtime?.waitUntil?.(fetch(indexNowUrl).catch(() => {}));
+    }
     return new Response(
       html,
       {
