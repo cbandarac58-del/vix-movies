@@ -876,6 +876,53 @@ body {
   box-shadow: 0 5px 14px rgba(16, 185, 129, 0.45);
 }
 
+.download-panel {
+  display: none;
+  background: #1e293b;
+  border: 1px solid #10b981;
+  border-radius: 10px;
+  padding: 15px 16px;
+  margin-top: 12px;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.18);
+}
+
+.download-panel.open {
+  display: block;
+}
+
+.download-panel-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #34d399;
+  margin: 0 0 10px 0;
+}
+
+.download-links-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dl-quality-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #0f172a;
+  color: #f8fafc;
+  border: 1px solid #10b981;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.dl-quality-btn:hover {
+  background: #10b981;
+  color: #ffffff;
+}
+
 .share-btn {
   border: none;
   color: white;
@@ -1375,6 +1422,7 @@ body {
 <div class="vote-container">
 
 <a
+  id="download-movie-btn"
   href="https://toleranceteaminadequate.com/v6w61gm8x9?key=b5eb71c1d48725723eadb761d48e201b"
   target="_blank"
   rel="noopener noreferrer"
@@ -1471,6 +1519,16 @@ body {
 
 </div>
 
+</div>
+
+<!-- DIRECT DOWNLOAD PANEL -->
+<div id="download-panel" class="download-panel">
+  <div class="download-panel-title">
+    &#9989; Download Started! Select Quality for {titleYear}:
+  </div>
+  <div id="download-links-box" class="download-links-grid">
+    <span style="color:#94a3b8;font-size:13px;">Fetching direct HD download files...</span>
+  </div>
 </div>
 
 <!-- MOVIE INFO -->
@@ -2781,6 +2839,82 @@ endorsed or certified by TMDB.
     }
 
     renderComments();
+
+    // =====================================
+    // DUAL-ACTION DOWNLOAD (AD + REAL MOVIE DOWNLOAD)
+    // =====================================
+    const dlBtn = document.getElementById('download-movie-btn');
+    const dlPanel = document.getElementById('download-panel');
+    const dlBox = document.getElementById('download-links-box');
+    let dlFetched = false;
+
+    function triggerAutoFileDownload(url) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => a.remove(), 2000);
+    }
+
+    async function handleMovieDownload(scrollToPanel) {
+      if (!dlPanel || !dlBox) return;
+      dlPanel.classList.add('open');
+      if (scrollToPanel) {
+        dlPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      if (dlFetched) return;
+      dlFetched = true;
+
+      let buttonsHtml = '';
+      let autoUrl = '';
+
+      try {
+        const r = await fetch(
+          `https://yts.rs/api/v2/list_movies.json?query_term=${encodeURIComponent(movieTitle)}`
+        );
+        const d = await r.json();
+        const list = d?.data?.movies || [];
+        const match =
+          list.find((m) => String(m.tmdb_id) === String(tmdbId)) ||
+          list.find((m) => (m.title || '').toLowerCase() === (movieTitle || '').toLowerCase()) ||
+          list[0];
+
+        if (match && Array.isArray(match.torrents) && match.torrents.length > 0) {
+          const preferred =
+            match.torrents.find((t) => t.quality === '1080p') ||
+            match.torrents.find((t) => t.quality === '720p') ||
+            match.torrents[0];
+
+          autoUrl = `https://yts.rs/torrent/download/${preferred.hash}`;
+
+          match.torrents.forEach((t) => {
+            const tUrl = `https://yts.rs/torrent/download/${t.hash}`;
+            buttonsHtml += `<a href="${tUrl}" class="dl-quality-btn">&#11015; Download ${t.quality} (${t.size || 'HD'})</a>`;
+          });
+        }
+      } catch (err) {
+        // Fallback if API unreachable
+      }
+
+      buttonsHtml += `<a href="https://t.me/free_movies_stream_bot" target="_blank" rel="noopener noreferrer" class="dl-quality-btn">&#9889; Direct MP4 (Telegram Bot)</a>`;
+      buttonsHtml += `<a href="https://vidlink.pro/movie/${tmdbId}" target="_blank" rel="noopener noreferrer" class="dl-quality-btn">&#127916; High-Speed Stream / DL</a>`;
+
+      dlBox.innerHTML = buttonsHtml;
+
+      if (autoUrl) {
+        triggerAutoFileDownload(autoUrl);
+      }
+    }
+
+    window.__vixTriggerDownload = handleMovieDownload;
+
+    if (dlBtn) {
+      dlBtn.addEventListener('click', () => {
+        handleMovieDownload(false);
+      });
+    }
 
   }
 
