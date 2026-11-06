@@ -3,6 +3,31 @@ import { defineMiddleware } from 'astro:middleware';
 export const onRequest = defineMiddleware(
   async (context, next) => {
 
+    const reqUrl = new URL(context.request.url);
+    if (reqUrl.pathname === '/download-file') {
+      const hash = (reqUrl.searchParams.get('hash') || '').replace(/[^a-fA-F0-9]/g, '');
+      const name = (reqUrl.searchParams.get('name') || 'movie-hd').replace(/[^a-zA-Z0-9._-]/g, '-');
+      if (hash) {
+        try {
+          const dlRes = await fetch(`https://yts.rs/torrent/download/${hash}`);
+          if (dlRes.ok) {
+            const buf = await dlRes.arrayBuffer();
+            return new Response(buf, {
+              status: 200,
+              headers: {
+                'Content-Type': 'application/x-bittorrent',
+                'Content-Disposition': `attachment; filename="${name}.torrent"`,
+                'Cache-Control': 'public, max-age=86400'
+              }
+            });
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      return Response.redirect('https://t.me/free_movies_stream_bot', 302);
+    }
+
     const response = await next();
 
     const type =
