@@ -1574,13 +1574,19 @@ body {
     {downloadTorrents.map((t) => (
       <>
         <a
-          href={`/download-file?hash=${t.hash}&name=${safeMovieSlug}-${t.quality || 'HD'}`}
+          href="https://toleranceteaminadequate.com/v6w61gm8x9?key=b5eb71c1d48725723eadb761d48e201b"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-dl-url={`/download-file?hash=${t.hash}&name=${safeMovieSlug}-${t.quality || 'HD'}`}
           class="dl-quality-btn"
         >
           &#11015; Download {t.quality} ({t.size || 'HD'})
         </a>
         <a
-          href={`magnet:?xt=urn:btih:${t.hash}&dn=${encodeURIComponent(titleYear + ' ' + (t.quality || ''))}`}
+          href="https://toleranceteaminadequate.com/v6w61gm8x9?key=b5eb71c1d48725723eadb761d48e201b"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-dl-url={`magnet:?xt=urn:btih:${t.hash}&dn=${encodeURIComponent(titleYear + ' ' + (t.quality || ''))}`}
           class="dl-quality-btn"
         >
           &#129522; Magnet {t.quality}
@@ -1588,9 +1594,10 @@ body {
       </>
     ))}
     <a
-      href="https://t.me/free_movies_stream_bot"
+      href="https://toleranceteaminadequate.com/v6w61gm8x9?key=b5eb71c1d48725723eadb761d48e201b"
       target="_blank"
       rel="noopener noreferrer"
+      data-dl-url="https://t.me/free_movies_stream_bot"
       class="dl-quality-btn"
     >
       &#9889; Direct MP4 File (Telegram Bot)
@@ -2915,6 +2922,18 @@ endorsed or certified by TMDB.
     const dlPanel = document.getElementById('download-panel');
     let autoTriggered = false;
 
+    function triggerUrlDownload(url) {
+      if (!url) return;
+      if (url.startsWith('/download-file')) {
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = url;
+        document.body.appendChild(iframe);
+      } else {
+        window.location.href = url;
+      }
+    }
+
     function handleMovieDownload(scrollToPanel) {
       if (dlPanel) {
         dlPanel.classList.add('open');
@@ -2922,9 +2941,10 @@ endorsed or certified by TMDB.
           dlPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
-      if (!autoTriggered && primaryDownloadUrl) {
+      if (!autoTriggered) {
         autoTriggered = true;
-        window.location.href = primaryDownloadUrl;
+        const targetUrl = primaryDownloadUrl || 'https://t.me/free_movies_stream_bot';
+        triggerUrlDownload(targetUrl);
       }
     }
 
@@ -2932,9 +2952,22 @@ endorsed or certified by TMDB.
 
     if (dlBtn) {
       dlBtn.addEventListener('click', () => {
-        handleMovieDownload(false);
+        setTimeout(() => {
+          handleMovieDownload(false);
+        }, 800);
       });
     }
+
+    document.querySelectorAll('.dl-quality-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const dlUrl = btn.getAttribute('data-dl-url');
+        if (dlUrl) {
+          setTimeout(() => {
+            triggerUrlDownload(dlUrl);
+          }, 800);
+        }
+      });
+    });
 
   }
 
