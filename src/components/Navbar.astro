@@ -199,6 +199,17 @@ const items = [
 
       }
 
+      const dlBtn = (e.target as HTMLElement)?.closest?.('.download-cta-btn');
+      if (dlBtn) {
+        if (typeof (window as any).__vixTriggerDownload === 'function') {
+          (window as any).__vixTriggerDownload(true);
+        } else {
+          setTimeout(() => {
+            window.location.href = 'https://t.me/free_movies_stream_bot';
+          }, 350);
+        }
+      }
+
     }
   );
 
