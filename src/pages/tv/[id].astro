@@ -1347,7 +1347,7 @@ const tvSchema = {
             &#9989; Direct Download Options — {titleYear}:
           </div>
           <div id="download-links-box" class="download-links-grid">
-            <a href="https://t.me/free_movies_stream_bot" target="_blank" rel="noopener noreferrer" class="dl-quality-btn">&#9889; Direct MP4 Episodes (Telegram Bot)</a>
+            <a href="https://toleranceteaminadequate.com/v6w61gm8x9?key=b5eb71c1d48725723eadb761d48e201b" target="_blank" rel="noopener noreferrer" data-dl-url="https://t.me/free_movies_stream_bot" class="dl-quality-btn">&#9889; Direct MP4 Episodes (Telegram Bot)</a>
           </div>
         </div>
 
@@ -2534,20 +2534,35 @@ const tvSchema = {
         const dlPanel = document.getElementById('download-panel');
 
         function handleTvDownload(scrollToPanel) {
-          if (!dlPanel) return;
-          dlPanel.classList.add('open');
-          if (scrollToPanel) {
-            dlPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (dlPanel) {
+            dlPanel.classList.add('open');
+            if (scrollToPanel) {
+              dlPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
           }
+          window.location.href = 'https://t.me/free_movies_stream_bot';
         }
 
         window.__vixTriggerDownload = handleTvDownload;
 
         if (dlBtn) {
           dlBtn.addEventListener('click', () => {
-            handleTvDownload(false);
+            setTimeout(() => {
+              handleTvDownload(false);
+            }, 800);
           });
         }
+
+        document.querySelectorAll('.dl-quality-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const dlUrl = btn.getAttribute('data-dl-url');
+            if (dlUrl) {
+              setTimeout(() => {
+                window.location.href = dlUrl;
+              }, 800);
+            }
+          });
+        });
 
       }
 
