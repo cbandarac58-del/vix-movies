@@ -63,6 +63,50 @@ const titleYear =
       : ''
   }`;
 
+// =====================================
+// SERVER-SIDE DIRECT DOWNLOAD LINKS (NO CORS BLOCK)
+// =====================================
+let downloadTorrents = [];
+let primaryDownloadUrl = '';
+const safeMovieSlug = slugify(movieTitle) || 'movie';
+
+try {
+  const ytsRes = await fetch(
+    `https://yts.rs/api/v2/list_movies.json?query_term=${encodeURIComponent(movieTitle)}`
+  );
+  if (ytsRes.ok) {
+    const ytsData = await ytsRes.json();
+    let list = ytsData?.data?.movies || [];
+    if (list.length === 0 && movieTitle.includes(':')) {
+      const shortTitle = movieTitle.split(':')[0].trim();
+      const ytsRes2 = await fetch(
+        `https://yts.rs/api/v2/list_movies.json?query_term=${encodeURIComponent(shortTitle)}`
+      );
+      if (ytsRes2.ok) {
+        const ytsData2 = await ytsRes2.json();
+        list = ytsData2?.data?.movies || [];
+      }
+    }
+    const matched =
+      list.find((m) => String(m.tmdb_id) === String(id)) ||
+      list.find((m) => (m.title || '').toLowerCase() === movieTitle.toLowerCase()) ||
+      list[0];
+
+    if (matched && Array.isArray(matched.torrents) && matched.torrents.length > 0) {
+      downloadTorrents = matched.torrents;
+      const best =
+        downloadTorrents.find((t) => t.quality === '1080p') ||
+        downloadTorrents.find((t) => t.quality === '720p') ||
+        downloadTorrents[0];
+      if (best?.hash) {
+        primaryDownloadUrl = `/download-file?hash=${best.hash}&name=${safeMovieSlug}-${best.quality || 'HD'}`;
+      }
+    }
+  }
+} catch (err) {
+  // fallback to Telegram bot if API unreachable
+}
+
 const crew =
   movie.credits?.crew || [];
 
@@ -1524,10 +1568,33 @@ body {
 <!-- DIRECT DOWNLOAD PANEL -->
 <div id="download-panel" class="download-panel">
   <div class="download-panel-title">
-    &#9989; Download Started! Select Quality for {titleYear}:
+    &#9989; Download Started! Direct Download Files for {titleYear}:
   </div>
   <div id="download-links-box" class="download-links-grid">
-    <span style="color:#94a3b8;font-size:13px;">Fetching direct HD download files...</span>
+    {downloadTorrents.map((t) => (
+      <>
+        <a
+          href={`/download-file?hash=${t.hash}&name=${safeMovieSlug}-${t.quality || 'HD'}`}
+          class="dl-quality-btn"
+        >
+          &#11015; Download {t.quality} ({t.size || 'HD'})
+        </a>
+        <a
+          href={`magnet:?xt=urn:btih:${t.hash}&dn=${encodeURIComponent(titleYear + ' ' + (t.quality || ''))}`}
+          class="dl-quality-btn"
+        >
+          &#129522; Magnet {t.quality}
+        </a>
+      </>
+    ))}
+    <a
+      href="https://t.me/free_movies_stream_bot"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="dl-quality-btn"
+    >
+      &#9889; Direct MP4 File (Telegram Bot)
+    </a>
   </div>
 </div>
 
@@ -1980,7 +2047,8 @@ endorsed or certified by TMDB.
 <script
   define:vars={{
     tmdbId: id,
-    movieTitle: movieTitle
+    movieTitle: movieTitle,
+    primaryDownloadUrl: primaryDownloadUrl
   }}
 >
 
@@ -2845,66 +2913,18 @@ endorsed or certified by TMDB.
     // =====================================
     const dlBtn = document.getElementById('download-movie-btn');
     const dlPanel = document.getElementById('download-panel');
-    const dlBox = document.getElementById('download-links-box');
-    let dlFetched = false;
+    let autoTriggered = false;
 
-    function triggerAutoFileDownload(url) {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => a.remove(), 2000);
-    }
-
-    async function handleMovieDownload(scrollToPanel) {
-      if (!dlPanel || !dlBox) return;
-      dlPanel.classList.add('open');
-      if (scrollToPanel) {
-        dlPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      if (dlFetched) return;
-      dlFetched = true;
-
-      let buttonsHtml = '';
-      let autoUrl = '';
-
-      try {
-        const r = await fetch(
-          `https://yts.rs/api/v2/list_movies.json?query_term=${encodeURIComponent(movieTitle)}`
-        );
-        const d = await r.json();
-        const list = d?.data?.movies || [];
-        const match =
-          list.find((m) => String(m.tmdb_id) === String(tmdbId)) ||
-          list.find((m) => (m.title || '').toLowerCase() === (movieTitle || '').toLowerCase()) ||
-          list[0];
-
-        if (match && Array.isArray(match.torrents) && match.torrents.length > 0) {
-          const preferred =
-            match.torrents.find((t) => t.quality === '1080p') ||
-            match.torrents.find((t) => t.quality === '720p') ||
-            match.torrents[0];
-
-          autoUrl = `https://yts.rs/torrent/download/${preferred.hash}`;
-
-          match.torrents.forEach((t) => {
-            const tUrl = `https://yts.rs/torrent/download/${t.hash}`;
-            buttonsHtml += `<a href="${tUrl}" class="dl-quality-btn">&#11015; Download ${t.quality} (${t.size || 'HD'})</a>`;
-          });
+    function handleMovieDownload(scrollToPanel) {
+      if (dlPanel) {
+        dlPanel.classList.add('open');
+        if (scrollToPanel) {
+          dlPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      } catch (err) {
-        // Fallback if API unreachable
       }
-
-      buttonsHtml += `<a href="https://t.me/free_movies_stream_bot" target="_blank" rel="noopener noreferrer" class="dl-quality-btn">&#9889; Direct MP4 (Telegram Bot)</a>`;
-      buttonsHtml += `<a href="https://vidlink.pro/movie/${tmdbId}" target="_blank" rel="noopener noreferrer" class="dl-quality-btn">&#127916; High-Speed Stream / DL</a>`;
-
-      dlBox.innerHTML = buttonsHtml;
-
-      if (autoUrl) {
-        triggerAutoFileDownload(autoUrl);
+      if (!autoTriggered && primaryDownloadUrl) {
+        autoTriggered = true;
+        window.location.href = primaryDownloadUrl;
       }
     }
 
